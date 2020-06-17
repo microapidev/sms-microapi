@@ -1,4 +1,9 @@
+#FORMAT FOR CONTRIBUTORS LIST
+
+FULL NAME - SLACK USERNAME
 Kenenna Onwuagba - @Kenenna
+Yusuf Braimoh - @Yusuf_B
+Nsongurua Johnson - @Nsongurua
 Chibuzo Miracle - @eMiracle
 Olatunbosun Omogboyega- @Bossman
 Ogunbanwo Opeyemi -@papycoda
@@ -10,3 +15,5 @@ Ajadi Paul - @ajadi
 Stephen Ogbodo - @steven
 Aladimma Chukwuemeka - @Acel
 Olufunso Soile - @funsoadetola
+Akinola Oladayo - @deegitalhub
+Vikas Rathore - @Vikas
