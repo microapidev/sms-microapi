@@ -1,1 +1,6 @@
+#FORMAT FOR CONTRIBUTORS LIST
+
+FULL NAME - SLACK USERNAME - GITHUB USERNAME
+
 Kenenna Onwuagba - @Kenenna
+Yusuf Braimoh - @Yusuf_B - Yusuf-AH
