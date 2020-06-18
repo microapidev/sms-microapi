@@ -23,4 +23,5 @@ doc_view = get_swagger_view(title="SMS API documentation")
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('doc/', doc_view),
+	  path('', sms-api-interface.urls),
 ]
