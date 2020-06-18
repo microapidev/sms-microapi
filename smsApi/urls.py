@@ -24,5 +24,4 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('smsApp.urls')),
     path('doc/', doc_view),
-	  path('', sms-api-interface.urls),
 ]
