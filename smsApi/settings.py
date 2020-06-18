@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     #'smsApp',
     'rest_framework',
     'rest_framework_swagger',
+    'sms-api-interface',
 ]
 
 MIDDLEWARE = [
