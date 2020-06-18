@@ -1,0 +1,48 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sms-interface</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <link href="https://fonts.googleapis.com/css?family=Iceland:regular" rel="stylesheet" />
+</head>
+<body>
+    <div class="heading">
+        <h2>WELCOME TO SMS SENDER</h2>
+    </div>
+        <div class="intro">
+        <div class="left">
+            <h2>CREATE MESSAGES AND SEND<span> TO YOUR LOVED ONES</span></h2>
+        </div>
+        <div class="right">
+            <img src="{% static 'img/pride.png' %}" alt="">
+        </div>
+    </div>
+     
+
+        <main>
+            <div class="hero">
+            <div class="header">
+                <p>Enter recipient Phone number:
+                <input class="recipient"type="text"></p>
+                <img src="{% static 'img/plus.png' %}">
+            </div>
+            <br><br>
+            <div class="bottom">
+                <img src="{% static 'img/images.png' %}" alt="">
+                <img src="{% static 'img/camera.png' %}" alt="">
+                <img src="{% static 'img/plus.png' %}" alt="">
+                <input class="msg" type="text-area" placeholder="Type your message">
+                <button class="btn">send</button>
+            </div>
+            </div>
+            <div>
+                <p id="copyright">&copy; Deegitalhub 2020</p>
+            </div>
+        </main>
+    </div>
+    
+</body>
+</html>

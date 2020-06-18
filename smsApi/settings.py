@@ -37,6 +37,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'smsApp',
+    'rest_framework',
+    'rest_framework_swagger',
+	'sms-api-interface',
 ]
 
 MIDDLEWARE = [
@@ -68,6 +72,11 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'smsApi.wsgi.application'
+
+REST_FRAMEWORK = { 
+    'DEFAULT_SCHEMA_CLASS': (
+        'rest_framework.schemas.coreapi.AutoSchema'
+    )}
 
 
 # Database
