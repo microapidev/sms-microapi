@@ -7,9 +7,9 @@ This is the sms microapi which is used to for communicating with users using SMS
 
 ### To Contribute:
 * Create a personal fork of this repo on your Github.
-* Clone the fork to your PC using the command "git clone ~url to your fork~" 
+* Clone the fork to your PC using the command `git clone ~url to your fork~` 
 * Change to the newly created directory on your PC
-* Create a branch with the feature name you wish to contribute using the command "git checkout -b ~name of new brach~"
+* Create a branch with the feature name you wish to contribute using the command `git checkout -b ~name of new brach~`
 * Make any changes
 * Ensure you are working with an up to date version of the repo to avoid merge conflicts
 * Push your changes to your fork
