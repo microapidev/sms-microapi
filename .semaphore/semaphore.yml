@@ -27,13 +27,13 @@ blocks:
       jobs:
         - name: Unit tests
           commands:
-            - cd smsApp
+            - cd smsApi
             - python manage.py makemigrations
             - python manage.py migrate
             - python manage.py test
         - name: Checklist
           commands:
-            - cd smsApp
+            - cd smsApi
             - python manage.py check --deploy
         - name: Style check
           commands:
