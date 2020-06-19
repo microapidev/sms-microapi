@@ -32,3 +32,5 @@ twilio==6.42.0
 uritemplate==3.0.1
 urllib3==1.25.9
 wrapt==1.12.1
+martor 
+gunicorn 
