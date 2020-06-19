@@ -35,7 +35,7 @@ def sendmessage(request):
     clients = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
     for recipient in serialized_users:
         number = recipient.phone_number
-        clients.messages.create(to=recipient,
+        clients.messages.create(to=number,
                                    from_=settings.TWILIO_NUMBER,
                                    body=message)
     return HttpResponse("messages sent!", 200)
