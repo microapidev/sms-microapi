@@ -33,6 +33,7 @@ TWILIO_NUMBER = os.getenv("TWILIO_NUMBER")
 # Application definition
 
 INSTALLED_APPS = [
+    'smsApp.apps.SmsappConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -43,6 +44,10 @@ INSTALLED_APPS = [
     'rest_framework_swagger',
     'smsApp',
     
+
+    #'smsApp',
+    'rest_framework',
+    'rest_framework_swagger',
 ]
 
 MIDDLEWARE = [
@@ -74,6 +79,11 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'smsApi.wsgi.application'
+
+REST_FRAMEWORK = { 
+    'DEFAULT_SCHEMA_CLASS': (
+        'rest_framework.schemas.coreapi.AutoSchema'
+    )}
 
 
 # Database
