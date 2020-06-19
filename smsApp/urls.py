@@ -3,5 +3,5 @@ from django.urls import path
 
 urlpatterns = [
     path('user/',userdetails),
-    #path('sms',sendmessage)
+    path('sms/',sendmessage)
 ]

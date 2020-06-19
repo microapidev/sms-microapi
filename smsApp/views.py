@@ -9,6 +9,7 @@ from twilio.rest import Client
 from django.conf import settings 
 from django.http import HttpResponse
 
+
 # Create your views here.
 @api_view(['GET','POST'])
 def userdetails(request):
@@ -24,14 +25,14 @@ def userdetails(request):
         return Response(userserializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
 
-# def sendmessage(request):
-#     users = user.objects.all()
-#     serialized_users = userserializer(users, many = True)
-#     message = ('hello world')
-#     clients = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
-#     for recipient in serialized_users:
-#         number = recipient.get('phone_number')
-#         clients.messages.create(to=recipient,
-#                                    from_=settings.TWILIO_NUMBER,
-#                                    body=message)
-#     return HttpResponse("messages sent!", 200)
+def sendmessage(request):
+    users = user.objects.all()
+    serialized_users = userserializer(users, many = True)
+    message = ('hello world')
+    clients = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+    for recipient in serialized_users:
+        number = recipient.phone_number
+        clients.messages.create(to=recipient,
+                                   from_=settings.TWILIO_NUMBER,
+                                   body=message)
+    return HttpResponse("messages sent!", 200)
