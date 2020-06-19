@@ -29,6 +29,8 @@ def userdetails(request):
 def sendmessage(request):
     users = user.objects.all()
     serialized_users = userserializer(users, many = True)
+    for number in serialized_users:
+        phone_number = number.phone_number
     message = ('sample message')
     clients = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
     for recipient in serialized_users:
