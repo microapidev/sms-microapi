@@ -26,7 +26,7 @@ SECRET_KEY = '135h@wno6!3$uyd*u=ie_(0b&y-wv$n7g*0dd7r1o6ce8k*iwy'
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
+#add twillio sid , authentication token and your twilio number
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_NUMBER = os.getenv("TWILIO_NUMBER")
