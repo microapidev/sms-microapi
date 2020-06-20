@@ -6,7 +6,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from twilio.rest import Client
-from django.conf import settings 
+#from django.conf import settings 
 from django.http import HttpResponse
 
 
@@ -27,16 +27,24 @@ def userdetails(request):
         
 #send message to users using twillio
 def sendmessage(request):
+    #add twilio sid, auth token and twilio number
+    account_sid = ""
+    auth_token = ""
+    twilio_number = ""
     users = user.objects.all()
     serialized_users = userserializer(users, many = True)
-    for number in serialized_users:
-        phone_number = number.phone_number
-    message = ('sample message')
-    clients = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+    # for number in serialized_users:
+    #     phone_number = number.phone_number
+    message = ('Hello world message')
+    
+    clients = Client(account_sid,auth_token)
+    #loop over users in database and obtain their phone numbers and assign them to number variable
+    
     for recipient in serialized_users:
         number = recipient.phone_number
+    
         clients.messages.create(to=number,
-                                   from_=settings.TWILIO_NUMBER,
+                                   from_= twilio_number,
                                    body=message)
     return HttpResponse("messages sent!", 200)
 
