@@ -1,3 +1,11 @@
+from .views import userdetails,sendmessage
+from django.urls import path
+
+urlpatterns = [
+    path('user/',userdetails),
+    path('sms/',sendmessage)
+]
+
 from django.urls import path
 
 from .views import create_receipents_details, get_recipient_details, save_recipients_details
