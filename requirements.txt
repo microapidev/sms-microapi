@@ -23,7 +23,7 @@ phonenumbers==8.12.5
 PyJWT==1.7.1
 pylint==2.5.3
 pytz==2020.1
-requests==2.23.0
+
 simplejson==3.17.0
 six==1.15.0
 sqlparse==0.3.1
