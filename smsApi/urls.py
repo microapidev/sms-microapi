@@ -15,13 +15,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from rest_framework.schemas.coreapi import AutoSchema
-from rest_framework_swagger.views import get_swagger_view
-
-doc_view = get_swagger_view(title="SMS API documentation")
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('smsApp.urls')),
-    path('doc/', doc_view),
-]
+    # path('', include('sms_api_interface.urls')),
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

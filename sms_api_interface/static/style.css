@@ -1,0 +1,94 @@
+*{
+    margin: 0px;
+    padding: 0px;
+    box-sizing: border-box;
+}
+body{
+    background-color:#fff;
+}
+.heading{
+    background-color: blueviolet;
+    height: 100px;
+    text-align: center;
+    padding-top: 20px;
+    padding-bottom: 20px;
+
+}
+.intro{
+    display: flex;
+    margin-top: 60px;
+}
+.left, .right{
+    flex-basis: 50%;
+}
+.right img{
+    width: 100%;
+}
+.left{
+    margin-top: 50px;
+    margin-left: 20px;
+    font-size: 25px;
+    margin-bottom: 10px;
+}
+span{
+    color: blueviolet;
+}
+
+
+.hero{
+    background-color:blueviolet;
+    height: 400px;
+    align-items: center;
+   
+}
+.header{
+    display: flex;
+    font-size: large;
+}
+.header p{
+    margin-left: 20px;
+    padding-top: 20px;
+}
+.header img{
+    height: 15px;
+    width: 20px;
+    margin-left: 20px;
+    margin-top: 20px;
+    cursor: pointer;
+   
+}
+
+.recipient{
+    background-color:white;
+}
+.bottom{
+   width: 100%;
+   
+}
+.msg{
+    width: 300px;
+    height: 200px;
+    margin-top: 10px;
+    margin-left: 40px;
+
+}
+.bottom img{
+    height: 15px;
+    width: 20px;
+    margin-left: 40px;
+    cursor: pointer;
+}
+.btn{
+    padding: 10px 10px;
+    cursor: pointer;
+}
+.btn:hover{
+    color: violet;
+}
+
+
+#copyright{
+    background-color: white;
+    text-align: center;
+    margin-top: 10px;
+}
