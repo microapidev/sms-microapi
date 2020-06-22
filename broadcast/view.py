@@ -1,3 +1,4 @@
+"""We need to write that function within broadcast/views.py to handle sending the messages"""
 from django.conf import settings
 from django.http import HttpResponse
 from twilio.rest import Client
