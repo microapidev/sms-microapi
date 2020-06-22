@@ -96,10 +96,3 @@ twilio==6.42.0
 uritemplate==3.0.1
 urllib3==1.25.9
 wrapt==1.12.1
-<<<<<<< HEAD
-=======
-gunicorn 
-martor 
->>>>>>> 18e6164a73ab7268ad46441dc6ceee65eb7f03ab
-martor 
-gunicorn 
