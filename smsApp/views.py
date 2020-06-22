@@ -8,7 +8,10 @@ from rest_framework import status
 from twilio.rest import Client
 #from django.conf import settings 
 from django.http import HttpResponse
+from django.http import JsonResponse
 
+from .models import Receipent
+from .serializers import RecepientSerializer
 
 # Create your views here.
 @api_view(['GET','POST'])
@@ -47,17 +50,6 @@ def sendmessage(request):
                                    from_= twilio_number,
                                    body=message)
     return HttpResponse("messages sent!", 200)
-
-=======
-from django.http import JsonResponse
-
-# Create your views here.
-from rest_framework import status
-from rest_framework.decorators import api_view
-
-from .models import Receipent
-from .serializers import RecepientSerializer
-
 
 # Create your views here.
 

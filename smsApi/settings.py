@@ -33,23 +33,14 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'smsApp.apps.SmsappConfig',
+    # 'smsApp.apps.SmsappConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-<<<<<<< HEAD
     'smsApp',
-=======
-    'rest_framework',
-    'rest_framework_swagger',
-    'smsApp',
-    
-
-    #'smsApp',
->>>>>>> 18e6164a73ab7268ad46441dc6ceee65eb7f03ab
     'rest_framework',
     'rest_framework_swagger',
 ]
