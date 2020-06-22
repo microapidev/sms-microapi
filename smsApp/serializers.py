@@ -6,10 +6,7 @@ class userserializer(serializers.ModelSerializer):
         model = user
         fields = "__all__"
 
-
 class RecepientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Receipent
         fields = "__all__"
-
-

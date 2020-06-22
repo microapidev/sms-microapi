@@ -27,22 +27,22 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 #add twillio sid , authentication token and your twilio number
-# TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
-# TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
-# TWILIO_NUMBER = os.getenv("TWILIO_NUMBER")
+TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
+TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
+TWILIO_NUMBER = os.getenv("TWILIO_NUMBER")
 # Application definition
 
 INSTALLED_APPS = [
-    # 'smsApp.apps.SmsappConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'smsApp',
     'rest_framework',
     'rest_framework_swagger',
+    'smsApp',
+    'sms_api_interface',
 ]
 
 MIDDLEWARE = [
@@ -129,6 +129,3 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
-MEDIA_URL = '/media/'
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
