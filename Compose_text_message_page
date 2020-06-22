@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <title>Compose message</title> 
+    <script src="https://kit.fontawesome.com/1d2e760fea.js" crossorigin="anonymous"></script>
+    <style> 
+.topnav {
+position: absolute;
+width: 1440px;
+height: 270px;
+left: 0px;
+top: 0px;
+background: linear-gradient(180deg, #26933E 0%, #FFFFFF 181.9%);
+} 
+.navbar {
+list-style-type: none;
+}
+.topnav li {
+position: absolute;
+width: 100px;
+height: 28px;
+left: 58px;
+top: 44px;
+font-family: Roboto;
+font-style: normal;
+font-weight: 500;
+font-size: 24px;
+line-height: 28px;
+color: #FFFFFF; 
+} 
+.topnav p {
+position: absolute;
+width: 322px;
+height: 29px;
+left: 58px;
+top: 216px;
+font-family: Montserrat;
+font-style: normal;
+font-weight: 500;
+font-size: 24px;
+line-height: 29px;
+color: #FFFFFF; 
+} 
+main {
+background: #E5E5E5;
+} 
+.section1 p {
+position: absolute;
+width: 161px;
+height: 28px;
+left: 445px;
+top: 312px;
+font-family: Roboto;
+font-style: normal;
+font-weight: normal;
+font-size: 24px;
+line-height: 28px;
+color: #000000;  
+} 
+.section1 input {
+position: absolute;
+width: 496px;
+height: 66px;
+left: 445px;
+top: 368px;
+background: #F5F5F5;
+border-radius: 10px; 
+} 
+.section1 .dropdown-content a {
+float: none;
+color: black;
+padding: 12px 16px;
+text-decoration: none;
+display: block;
+text-align: left; 
+} 
+.section2 p {
+position: absolute;
+width: 27px;
+height: 28px;
+left: 445px;
+top: 454px;
+font-family: Roboto;
+font-style: normal;
+font-weight: normal;
+font-size: 24px;
+line-height: 28px;
+color: #000000;
+} 
+.section2 input {
+position: absolute;
+width: 496px;
+height: 66px;
+left: 445px;
+top: 510px;
+background: #F5F5F5;
+border-radius: 10px;
+} 
+.section3 p {
+position: absolute;
+width: 155px;
+height: 28px;
+left: 445px;
+top: 596px;
+font-family: Roboto;
+font-style: normal;
+font-weight: normal;
+font-size: 24px;
+line-height: 28px;
+color: #000000;
+} 
+.section3 input {
+position: absolute;
+width: 496px;
+height: 244px;
+left: 445px;
+top: 650px;
+background: #F5F5F5;
+border-radius: 10px;
+} 
+.section4 {
+position: absolute;
+width: 153px;
+height: 52px;
+left: 788px;
+top: 926px;
+background: #26933E;
+border-radius: 10px; 
+text-align: center; 
+outline: 0px solid transparent; 
+} 
+.section4 .text{ 
+width: 71px;
+height: 0px;
+left: 829px;
+top: 908px; 
+font-family: Montserrat;
+font-style: normal;
+font-weight: 500;
+font-size: 24px;
+line-height: 29px;
+color: #FFFFFF;
+border: none; 
+}
+    </style> 
+</head>
+<body> 
+        <div class="topnav">
+            <nav>
+                <ul class="navbar">
+                    <li class="nav-item active">
+                        <a class="nav-link" href="#home"><img src="Microapi-logo.png"></a>
+                    </li>
+                </ul> 
+                <p class="nav-item2 active">
+                              COMPOSE TEXT MESSAGE
+                <p>
+            </nav> 
+        </div> 
+    <main> 
+        <div class="section1">
+            <p>
+                Message Type : 
+            </p>
+            <input type="text">
+            <i class="fa fa-caret-down"></i> 
+            </input> 
+                <div class="dropdown-content">
+                  <a href="#">Link 1</a>
+                  <a href="#">Link 2</a>
+                  <a href="#">Link 3</a>
+                </div>
+        </div> 
+        <div class="section2"> 
+            <p>
+                To 
+            </p> 
+            <input type="text"> 
+
+            </input>
+        </div> 
+        <div class="section3"> 
+            <p>
+                Message Text : 
+            </p> 
+            <input type="text"> 
+
+            </input>
+        </div> 
+        <div class="section4"> 
+          <button type="button" class="text">SEND</button> 
+        </div>
+    </main> 
+</body>
+
+
+</html> 
