@@ -15,3 +15,6 @@ class Receipent(models.Model):
     email = models.EmailField(unique=True, max_length=50, null=True)
     phone_number = models.CharField(unique=True, null=True, blank=False, max_length=100)
 
+    def __str__(self):
+        return self.id
+
