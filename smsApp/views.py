@@ -8,6 +8,8 @@ from rest_framework.decorators import api_view
 from .models import Receipent
 from .serializers import RecepientSerializer
 
+from twilio.rest import Client
+from django.http import HttpResponse
 
 # Create your views here.
 
@@ -59,3 +61,22 @@ def save_recipients_details(request):
             return JsonResponse(data, status=status.HTTP_200_OK)
         except:
             return JsonResponse({"error": "There is no recipient with this name"}, status=status.HTTP_200_OK)
+
+#send message using twilio
+def sendmessage(request):
+    number = ""
+    #add twilio sid, auth token and twilio number
+    account_sid = "AC4f766d8ee6ca70651fcc97924896c8de"
+    auth_token = "3046f474851be549eae649726c84a573"
+    twilio_number = ""
+    
+    for e in Receipent.objects.all():
+        for key,value in e:
+            if key == "phone_number":
+                number = value     
+    message = ('Hello world message')    
+    clients = Client(account_sid,auth_token)
+    clients.messages.create(to=number,
+                            from_= twilio_number,
+                             body=message)
+    return HttpResponse("messages sent!", 200)
