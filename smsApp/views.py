@@ -66,8 +66,8 @@ def save_recipients_details(request):
 def sendmessage(request):
     number = ""
     #add twilio sid, auth token and twilio number
-    account_sid = "AC4f766d8ee6ca70651fcc97924896c8de"
-    auth_token = "3046f474851be549eae649726c84a573"
+    account_sid = ""
+    auth_token = ""
     twilio_number = ""
     
     for e in Receipent.objects.all():
