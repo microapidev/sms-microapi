@@ -42,8 +42,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_swagger',
     'smsApp',
+    'django_twilio',
     'sms_api_interface',
-    'broadcast'
+    'broadcast',
 ]
 
 MIDDLEWARE = [
@@ -143,3 +144,9 @@ STATICFILES_DIRS = (
 
 #  Add configuration for static files storage using whitenoise
 STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
+
+#Twilio Configuration from twilio dashboard (Keys visible for testing)
+TWILIO_ACCOUNT_SID = 'AC64b91f74f71a7fee2f292eeee0230f70'
+TWILIO_AUTH_TOKEN = '9079136078278e88f391a58d168f8007'
+#phone number +12054795418
+#API key SK196fc6512aacb225450ce01959a07fb7
