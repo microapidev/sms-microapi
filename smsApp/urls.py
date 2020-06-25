@@ -1,4 +1,4 @@
-from .views import userdetails,sendmessage
+from .views import userdetails, sendmessage, translateMessages
 from django.urls import path
 from .views import create_receipents_details, get_recipient_details, save_recipients_details
 from rest_framework.schemas.coreapi import AutoSchema
@@ -12,6 +12,7 @@ urlpatterns = [
     path('v1/sms/recipient/create', create_receipents_details),
     path('v1/sms/recipient/save', save_recipients_details),
     path('v1/sms/recipient/all', get_recipient_details),
+    path('translate', translateMessages),
     # path('doc/', doc_view),
     path('', doc_view),
 ]
