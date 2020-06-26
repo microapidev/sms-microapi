@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import user, Receipent
+from .models import user, Receipent, Message
 
 class userserializer(serializers.ModelSerializer):
     class Meta:
@@ -10,3 +10,10 @@ class RecepientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Receipent
         fields = "__all__"
+    
+class MessageSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Message
+        fields = ["receiver", "author", "date_created", "content", "price", "status"]
+

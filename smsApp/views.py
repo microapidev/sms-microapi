@@ -1,6 +1,6 @@
 from django.shortcuts import render
-from .models import user
-from .serializers import userserializer
+from smsApp.models import user
+from smsApp.serializers import userserializer
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -9,9 +9,10 @@ from twilio.rest import Client
 from django.conf import settings
 from django.http import HttpResponse
 from django.http import JsonResponse
-
-from .models import Receipent
-from .serializers import RecepientSerializer
+from twilio.base.exceptions import TwilioRestException
+import json
+from .models import Receipent, Message
+from .serializers import RecepientSerializer, MessageSerializer
 from googletrans import Translator
 
 
@@ -100,6 +101,32 @@ def save_recipients_details(request):
 
 
 @api_view(['GET'])
+def sms_list(request):
+    """
+    This API will retrieve every message sent by customer.
+    """
+    if request.method == 'GET':
+        #Connect to Twilio and Authenticate
+        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+        try:
+            #Pull information from Twilio
+            messages = client.messages.list(limit=10)
+            sms = []
+            for record in messages:
+                message = {
+                    "content" : record.body,
+                    "account_sid": record.sid,
+                    "receiver" : record.to,
+                    "date_created": record.date_created,
+                    "price": record.price,
+                    "status": record.status
+                }
+                #append to the sms list.
+                sms.append(message)
+            return JsonResponse(sms, status=200, safe=False)
+        except TwilioRestException as e:
+            return JsonResponse({"e": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 def translateMessages(request):
     if request.method == 'GET':
         """

@@ -1,11 +1,11 @@
 from .views import userdetails, sendmessage, translateMessages
 from django.urls import path
-from .views import create_receipents_details, get_recipient_details, save_recipients_details
+from .views import create_receipents_details, get_recipient_details, save_recipients_details, sms_list
 from rest_framework.schemas.coreapi import AutoSchema
 from rest_framework_swagger.views import get_swagger_view
 
+app_name = 'smsApp'
 doc_view = get_swagger_view(title="SMS API documentation")
-
 urlpatterns = [
     path('user/',userdetails),
     path('sms/',sendmessage),
@@ -13,6 +13,8 @@ urlpatterns = [
     path('v1/sms/recipient/save', save_recipients_details),
     path('v1/sms/recipient/all', get_recipient_details),
     path('v1/sms/message/translate', translateMessages),
+    path('v1/sms/message/history', sms_list),
     # path('doc/', doc_view),
     path('', doc_view),
 ]
+
