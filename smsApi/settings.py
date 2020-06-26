@@ -11,7 +11,8 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
-
+from dotenv import load_dotenv
+load_dotenv()
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -20,7 +21,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '135h@wno6!3$uyd*u=ie_(0b&y-wv$n7g*0dd7r1o6ce8k*iwy'
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -43,7 +44,7 @@ INSTALLED_APPS = [
     'rest_framework_swagger',
     'smsApp',
     'sms_api_interface',
-    'broadcast'
+    'broadcast',
 ]
 
 MIDDLEWARE = [
@@ -134,8 +135,10 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 PROJECT_ROOT   =   os.path.join(os.path.abspath(__file__))
-# STATIC_ROOT  =   os.path.join(PROJECT_ROOT, 'static')
 
+# STATIC_ROOT  =   os.path.join(PROJECT_ROOT, 'static')
+FORCE_SCRIPT_NAME = '/smsApp'
+STATIC_URL = FORCE_SCRIPT_NAME + '/static/'
 # Extra lookup directories for collectstatic to find static files
 STATICFILES_DIRS = (
     os.path.join(PROJECT_ROOT, 'static'),

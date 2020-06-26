@@ -32,10 +32,13 @@ class Receipent(models.Model):
 
 
 class Message(models.Model):
-    receiver = models.ForeignKey(Receipent,on_delete=models.CASCADE)
-    author = models.ForeignKey(user, on_delete=models.CASCADE)
-    dateCreated = models.DateTimeField(auto_now_add=True)
+    receiver = models.CharField(max_length=80)
+    # author = models.ForeignKey(user, on_delete=models.CASCADE, default=1)
+    account_sid = models.CharField(max_length=80, blank=True, null=True)
+    date_created = models.DateTimeField(auto_now_add=True)
     content = models.TextField()
+    price = models.FloatField(blank=True, null=True)
+    status = models.CharField(max_length=100, default="Sent", blank=True, null=True)
     DRAFT = 'D'
     SENT = 'S'
     FAILED = 'F'

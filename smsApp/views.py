@@ -1,6 +1,6 @@
 from django.shortcuts import render
-from .models import user
-from .serializers import userserializer
+from smsApp.models import user
+from smsApp.serializers import userserializer
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -9,9 +9,10 @@ from twilio.rest import Client
 from django.conf import settings 
 from django.http import HttpResponse
 from django.http import JsonResponse
-
-from .models import Receipent
-from .serializers import RecepientSerializer
+from twilio.base.exceptions import TwilioRestException
+from smsApp.models import Receipent, Message
+from smsApp.serializers import RecepientSerializer, MessageSerializer
+import json
 
 # Create your views here.
 @api_view(['GET','POST'])
@@ -93,3 +94,32 @@ def save_recipients_details(request):
             return JsonResponse(data, status=status.HTTP_200_OK)
         except:
             return JsonResponse({"error": "There is no recipient with this name"}, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def sms_list(request):
+    """
+    This API will retrieve every messages, and a single message sent via Twillo.
+    """
+    if request.method == 'GET':
+        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+        try:
+            messages = client.messages.list(limit=10)
+            sms = []
+            for record in messages:
+                message = {
+                    "content" : record.body,
+                    "account_sid": record.sid,
+                    "receiver" : record.to,
+                    "date_created": record.date_created,
+                    "price": record.price,
+                    "status": record.status
+                }
+                sms.append(message)
+            return JsonResponse(sms, status=200, safe=False)
+        except TwilioRestException as e:
+            return JsonResponse({"error": "You have not sent SMS"}, str(e), status=status.HTTP_400_BAD_REQUEST)
+# client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+# messages = client.messages.list(limit=10)
+# for record in messages:
+#     print(record.date_created) 
