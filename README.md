@@ -17,3 +17,6 @@ SMS microapi that connects with Twillo to allow users send sms.
 * Your PR should contain descriptions so it's easier to read and merge
 * Test, Test and Test
 
+### PACKAGES TO BE INSTALLED
+* RABBITMQ DOWNLOAD -> https://www.rabbitmq.com/download.html
+
