@@ -143,7 +143,7 @@ STATICFILES_DIRS = (
 )
 
 #  Add configuration for static files storage using whitenoise
-STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
+# STATICFILES_STORAGE = 'whitenoise.django.CompressedManifestStaticFilesStorage'
 
 #Twilio Configuration from twilio dashboard (Keys visible for testing)
 TWILIO_ACCOUNT_SID = 'AC64b91f74f71a7fee2f292eeee0230f70'
