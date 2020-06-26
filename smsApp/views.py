@@ -9,18 +9,12 @@ from twilio.rest import Client
 from django.conf import settings
 from django.http import HttpResponse
 from django.http import JsonResponse
-<<<<<<< HEAD
 from twilio.base.exceptions import TwilioRestException
-from smsApp.models import Receipent, Message
-from smsApp.serializers import RecepientSerializer, MessageSerializer
 import json
-=======
-
-from .models import Receipent
-from .serializers import RecepientSerializer
+from .models import Receipent, Message
+from .serializers import RecepientSerializer, MessageSerializer
 from googletrans import Translator
 
->>>>>>> 0203683e4658ef6e4e85179df18ba85d7d6e4789
 
 # Create your views here.
 @api_view(['GET', 'POST'])
@@ -112,8 +106,10 @@ def sms_list(request):
     This API will retrieve every message sent by customer.
     """
     if request.method == 'GET':
+        #Connect to Twilio and Authenticate
         client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
         try:
+            #Pull information from Twilio
             messages = client.messages.list(limit=10)
             sms = []
             for record in messages:
@@ -125,14 +121,12 @@ def sms_list(request):
                     "price": record.price,
                     "status": record.status
                 }
+                #append to the sms list.
                 sms.append(message)
             return JsonResponse(sms, status=200, safe=False)
         except TwilioRestException as e:
             return JsonResponse({"e": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-# client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
-# messages = client.messages.list(limit=10)
-# for record in messages:
-#     print(record.date_created) 
+
 def translateMessages(request):
     if request.method == 'GET':
         """
