@@ -102,15 +102,9 @@ def save_recipients_details(request):
 @api_view(['GET'])
 def translateMessages(request):
     if request.method == 'GET':
-        # if request.data['messages'] is None:
-        #     return JsonResponse({"error": "Enter message"}, status=status.HTTP_400_BAD_REQUEST)
-        # if len(request.data['messages'])==0:
-        #     return JsonResponse({"error": "Enter message"}, status=status.HTTP_400_BAD_REQUEST)
-        # if request.data['destination'] is None:
-        #     return JsonResponse({"error": "Enter destination"}, status=status.HTTP_400_BAD_REQUEST)
         """
         Translates multiple messages in a single go to the specified language
-        Need send messages and destination(the language you want to translate) 
+        Need to send message and language(the language you want to translate) 
         Set of languages supported are 
         The destination here must be a key of the below dictionary(eg:af)
         {
@@ -222,26 +216,26 @@ def translateMessages(request):
     'he': 'Hebrew'
 }
         """
-        if request.query_params.get('destination') is None:
+        if request.query_params.get('language') is None:
             return JsonResponse({"error": "Enter the language you want to translate"},
                                 status=status.HTTP_400_BAD_REQUEST)
-        if len(request.GET.getlist('messages')) == 0:
-            return JsonResponse({"error": "Enter messages"}, status=status.HTTP_400_BAD_REQUEST)
+        if len(request.GET.getlist('message')) == 0:
+            return JsonResponse({"error": "Enter message"}, status=status.HTTP_400_BAD_REQUEST)
         try:
-            messages = request.GET.getlist('messages')
-            destination = request.query_params.get('destination')
+            messages = request.GET.getlist('message')
+            language = request.query_params.get('language')
             # Customizing service URL We can use another google translate domain for translation. If multiple URLs
             # are provided it then randomly chooses a domain.
             translator = Translator(service_urls=[
                 'translate.google.com',
                 'translate.google.co.kr',
             ])
-            translations = translator.translate(messages, dest=destination)
+            translations = translator.translate(messages, dest=language)
             result = []
             for translation in translations:
                 result.append({
-                    'origin': translation.origin,
-                    'destination': translation.text
+                    'original text': translation.origin,
+                    'translated text': translation.text
                 })
             return JsonResponse({"message": "Translated all the texts successfully", "data": result},
                                 status=status.HTTP_200_OK)

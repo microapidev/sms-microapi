@@ -12,7 +12,7 @@ urlpatterns = [
     path('v1/sms/recipient/create', create_receipents_details),
     path('v1/sms/recipient/save', save_recipients_details),
     path('v1/sms/recipient/all', get_recipient_details),
-    path('translate', translateMessages),
+    path('v1/sms/message/translate', translateMessages),
     # path('doc/', doc_view),
     path('', doc_view),
 ]
