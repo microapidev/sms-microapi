@@ -1,6 +1,7 @@
+import requests
 from django.shortcuts import render
 from smsApp.models import user
-from smsApp.serializers import userserializer
+from smsApp.serializers import UserSerializer
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -11,6 +12,8 @@ from django.http import HttpResponse
 from django.http import JsonResponse
 from twilio.base.exceptions import TwilioRestException
 import json
+
+from .infobip import send_single_message_ibp, delivery_reports_ibp
 from .models import Receipent, Message
 from .serializers import RecepientSerializer, MessageSerializer
 from googletrans import Translator
@@ -33,6 +36,7 @@ def userdetails(request):
 
 
 # send message to users using twillio
+@csrf_exempt
 def sendmessage(request):
     users = user.objects.all()
     serialized_users = userserializer(users, many=True)
@@ -103,29 +107,30 @@ def save_recipients_details(request):
 @api_view(['GET'])
 def sms_list(request):
     """
-    This API will retrieve every message sent by customer.
+    This view will retrieve every message sent by customer.
     """
     if request.method == 'GET':
-        #Connect to Twilio and Authenticate
+        # Connect to Twilio and Authenticate
         client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
         try:
-            #Pull information from Twilio
+            # Pull information from Twilio
             messages = client.messages.list(limit=10)
             sms = []
             for record in messages:
                 message = {
-                    "content" : record.body,
+                    "content": record.body,
                     "account_sid": record.sid,
-                    "receiver" : record.to,
+                    "receiver": record.to,
                     "date_created": record.date_created,
                     "price": record.price,
                     "status": record.status
                 }
-                #append to the sms list.
+                # append to the sms list.
                 sms.append(message)
             return JsonResponse(sms, status=200, safe=False)
         except TwilioRestException as e:
             return JsonResponse({"e": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 
 def translateMessages(request):
     if request.method == 'GET':
@@ -268,3 +273,34 @@ def translateMessages(request):
                                 status=status.HTTP_200_OK)
         except Exception as error:
             return JsonResponse({"error": error}, status=status.HTTP_400_BAD_REQUEST)
+
+
+# Infobip
+@api_view(['POST'])
+def sendmessage_infobip(request):
+    users = user.objects.all()
+    serialized_users = UserSerializer(users, many=True)
+    message = request.data["message"]
+    for recipient in serialized_users.data:
+        number = recipient.phone_number
+        send_single_message_ibp(message, number)
+    return HttpResponse("Messages Sent!", 200)
+
+
+@api_view(['GET'])
+def get_recipients_ibp(request):
+    reports = delivery_reports_ibp()
+    return JsonResponse(reports)
+
+
+# nuObjects
+@api_view(['POST'])
+def nuobj_api(request):
+    users = user.objects.all()
+    serialized_users = UserSerializer(users, many=True)
+    message = request.data["message"]
+    for recipient in serialized_users.data:
+        # User and pass (username and password) can be stored in env variables for live testing
+        data = {'user': 'demo', 'pass': 'pass', 'to': recipient, 'from': 'Testing', 'msg': message}
+        response = requests.post('https://cloud.nuobjects.com/api/send/', data=data)
+    return HttpResponse("Messages Sent!", 200)
