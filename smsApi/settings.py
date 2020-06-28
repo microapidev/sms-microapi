@@ -14,11 +14,11 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 
 import os
 from dotenv import load_dotenv
+
 load_dotenv()
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
@@ -29,12 +29,19 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*'] ##allows all hosts
-#add twillio sid , authentication token and your twilio number
+ALLOWED_HOSTS = ['*']  ##allows all hosts
+# add twillio sid , authentication token and your twilio number
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_NUMBER = os.getenv("TWILIO_NUMBER")
+
+# add infobip login credentials
+INFOBIP_USERNAME = os.getenv("USERNAME")
+INFOBIP_PASSWORD = os.getenv("PASSWORD")
+INFOBIP_APIKEY = os.getenv("APIKEY")
+
 # Application definition
+
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -60,7 +67,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware', #whitenoise middleware
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # whitenoise middleware
 ]
 
 ROOT_URLCONF = 'smsApi.urls'
@@ -83,7 +90,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'smsApi.wsgi.application'
 
-REST_FRAMEWORK = { 
+REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': (
         'rest_framework.schemas.coreapi.AutoSchema'
     )}
@@ -99,7 +106,6 @@ DATABASES = {
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
@@ -119,7 +125,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/3.0/topics/i18n/
 
@@ -133,13 +138,12 @@ USE_L10N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-PROJECT_ROOT   =   os.path.join(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.join(os.path.abspath(__file__))
 
 # STATIC_ROOT  =   os.path.join(PROJECT_ROOT, 'static')
 FORCE_SCRIPT_NAME = '/smsApp'
