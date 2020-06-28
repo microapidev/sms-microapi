@@ -40,4 +40,5 @@ urllib3==1.25.9
 whitenoise==5.1.0
 wrapt==1.12.1
 googletrans==3.0.0
+pika=1.1.0
 drf_yasg==1.17.1
