@@ -1,6 +1,6 @@
 from .views import userdetails, sendmessage, translateMessages
 from django.urls import path
-from .views import create_receipents_details, get_recipient_details, save_recipients_details
+from .views import create_receipents_details, get_recipient_details, save_recipients_details, sms_list
 from rest_framework.schemas.coreapi import AutoSchema
 from rest_framework_swagger.views import get_swagger_view
 from rest_framework import permissions
@@ -34,4 +34,7 @@ urlpatterns = [
     #path('swagger(P<format>\.json|\.yaml)', schema_view.without_ui(cache_timeout=0), name='schema-json'), #not used for now
     path('', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+    path('v1/sms/message/history', sms_list),
+    # path('doc/', doc_view),
 ]
+
