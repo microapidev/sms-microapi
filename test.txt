@@ -1,0 +1,1 @@
+##This file should store your endpoints as well as test parameters and necessary credentials

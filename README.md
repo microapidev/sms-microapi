@@ -10,6 +10,8 @@ SMS microapi that connects with Twillo to allow users send sms.
 * Run the command `pip install -r requirements.txt`
 * Make your changes
 * Ensure you are working with an up to date version of the repo to avoid merge conflicts
+* Before pushing, please pull the develop branch
+* Run the command `pip freeze > requirements.txt` to update the requirements file with any dependency you used
 * Push your changes to your fork
 * Make a pull request to the Develop branch of the main repo
 

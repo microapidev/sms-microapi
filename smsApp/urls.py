@@ -34,7 +34,6 @@ urlpatterns = [
     path('', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     path('v1/sms/message/history', sms_list),
-    # path('doc/', doc_view),
     # infobip view
     path('v1/sms/infobip/send', sendmessage_infobip),
     path('v1/sms/infobip/reports', get_recipients_ibp),
