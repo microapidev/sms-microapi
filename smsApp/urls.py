@@ -1,4 +1,4 @@
-from .views import userdetails, sendmessage, translateMessages, sendmessage_infobip, get_recipients_ibp, nuobj_api
+from .views import userdetails, sendmessage, translateMessages, nuobj_api #sendmessage_infobip, get_recipients_ibp
 from django.urls import path
 from .views import create_receipents_details, get_recipient_details, save_recipients_details, sms_list
 from rest_framework.schemas.coreapi import AutoSchema
@@ -17,8 +17,8 @@ urlpatterns = [
     # path('doc/', doc_view),
     path('', doc_view),
     # infobip view
-    path('v1/sms/infobip/send', sendmessage_infobip),
-    path('v1/sms/infobip/reports', get_recipients_ibp),
+    # path('v1/sms/infobip/send', sendmessage_infobip),
+    # path('v1/sms/infobip/reports', get_recipients_ibp),
     path('v1/sms/nuobjects/send',nuobj_api),
 ]
 
