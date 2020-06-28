@@ -25,21 +25,21 @@ from googletrans import Translator
 def userdetails(request):
     if request.method == 'GET':
         users = user.objects.all()
-        serialized_users = Userserializer(users, many=True)
+        serialized_users = UserSerializer(users, many=True)
         return Response(serialized_users.data)
     elif request.method == 'POST':
-        serialized_users = Userserializer(data=request.data)
+        serialized_users = UserSerializer(data=request.data)
         if serialized_users.is_valid():
             serialized_users.save()
             return Response(serialized_users.data, status=status.HTTP_201_CREATED)
-        return Response(Userserializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(UserSerializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # send message to users using twillio
 @csrf_exempt
 def sendmessage(request):
     users = user.objects.all()
-    serialized_users = Userserializer(users, many=True)
+    serialized_users = UserSerializer(users, many=True)
     for number in serialized_users:
         phone_number = number.phone_number
     message = ('sample message')

@@ -24,8 +24,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '5^$)+bzc1qdjzxuqjrd41dsn)$239tt-m24=9o*+@8hlmb1*yv'
 
+# SECRET_KEY = os.environ.get('SECRET_KEY')
+SECRET_KEY='lmrffsgfhrilklg-za7#57vi!zr)ps8)2anyona25###dl)s-#s=7=vn_'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -51,11 +52,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'rest_framework_swagger',
+    # 'rest_framework_swagger',
     'smsApp.apps.SmsappConfig',
     'django_twilio',
     'sms_api_interface',
     'broadcast',
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
@@ -140,13 +142,16 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
+MEDIA_ROOT = os.path.join(BASE_DIR,'media')
+MEDIA_URL = '/media/'
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 PROJECT_ROOT = os.path.join(os.path.abspath(__file__))
 
 # STATIC_ROOT  =   os.path.join(PROJECT_ROOT, 'static')
-FORCE_SCRIPT_NAME = '/smsApp'
-STATIC_URL = FORCE_SCRIPT_NAME + '/static/'
+# FORCE_SCRIPT_NAME = '/smsApp'
+# STATIC_URL = FORCE_SCRIPT_NAME + '/static/'
+
 # Extra lookup directories for collectstatic to find static files
 STATICFILES_DIRS = (
     os.path.join(PROJECT_ROOT, 'static'),
