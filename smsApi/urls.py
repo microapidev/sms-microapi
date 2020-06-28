@@ -14,13 +14,12 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
-from rest_framework.schemas.coreapi import AutoSchema
-from rest_framework_swagger.views import get_swagger_view
-
-doc_view = get_swagger_view(title="SMS API documentation")
+from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('doc/', doc_view),
-]
+    path('', include('smsApp.urls')),
+    # path('', include('sms_api_interface.urls')),
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
