@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'django_twilio',
     'sms_api_interface',
     'broadcast',
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
