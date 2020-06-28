@@ -51,7 +51,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'rest_framework_swagger',
+    #'rest_framework_swagger', not used
+    'drf_yasg', #new generator
     'smsApp.apps.SmsappConfig',
     'django_twilio',
     'sms_api_interface',

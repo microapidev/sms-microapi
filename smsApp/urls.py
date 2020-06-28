@@ -8,7 +8,6 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
 #doc_view = get_swagger_view(title="SMS API documentation") #This generator is no longer used
-
 schema_view = get_schema_view(
    openapi.Info(
       title="SMS API",
@@ -40,5 +39,6 @@ urlpatterns = [
     path('v1/sms/infobip/send', sendmessage_infobip),
     path('v1/sms/infobip/reports', get_recipients_ibp),
     path('v1/sms/nuobjects/send',nuobj_api),
+    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
 ]
 
