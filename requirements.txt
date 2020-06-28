@@ -42,5 +42,6 @@ wrapt==1.12.1
 <<<<<<< HEAD
 =======
 googletrans==3.0.0
+pika=1.1.0
 drf_yasg==1.17.1
 >>>>>>> ab5349f6d3b7c3ee201da93679d62ae8fad8f367
