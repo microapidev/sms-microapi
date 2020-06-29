@@ -1,11 +1,13 @@
-from .views import sendmessage, translateMessages, sendmessage_infobip, get_recipients_ibp, nuobj_api, CreateUser, ListUser
+from .views import sendmessage, translateMessages, sendmessage_infobip, get_recipients_ibp, nuobj_api, CreateUser, ListRecipients
 from django.urls import path
 from .views import create_receipents_details, get_recipient_details, save_recipients_details, sms_list
 from rest_framework.schemas.coreapi import AutoSchema
 from rest_framework_swagger.views import get_swagger_view
 from rest_framework import permissions
+from rest_framework.authtoken.views import obtain_auth_token
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
+
 
 #doc_view = get_swagger_view(title="SMS API documentation") #This generator is no longer used
 schema_view = get_schema_view(
@@ -23,12 +25,14 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path('user/', CreateUser.as_view(), name="userdet"),
-    path('user/list', ListUser.as_view(), name="userlist"),
+    path('user/list', ListRecipients.as_view(), name="userlist"),
+    path("v1/register", CreateUser.as_view(), name="register"),
     path('sms/',sendmessage),
     path('v1/sms/recipient/create', create_receipents_details),
     path('v1/sms/recipient/save', save_recipients_details),
     path('v1/sms/recipient/all', get_recipient_details),
     path('v1/sms/message/translate', translateMessages),
+    path('v1/api-token-auth', obtain_auth_token),
     #path('doc/', doc_view), #oldswagger generator endpoint
     #path('', doc_view), #old swagger generator endpoint
     #path('swagger(P<format>\.json|\.yaml)', schema_view.without_ui(cache_timeout=0), name='schema-json'), #not used for now

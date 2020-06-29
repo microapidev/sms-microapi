@@ -5,7 +5,7 @@ from .models import User, Receipent, Message
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ("username", "phoneNumber", "email")
+        fields = ("username", "phoneNumber", "email", "password")
 
 
 class RecepientSerializer(serializers.ModelSerializer):

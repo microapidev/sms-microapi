@@ -16,12 +16,12 @@ from twilio.base.exceptions import TwilioRestException
 import json
 from rest_framework import generics
 from django.http import Http404
-
 from .infobip import send_single_message_ibp, delivery_reports_ibp
 from .models import Receipent, Message
 from .serializers import RecepientSerializer, MessageSerializer
 from googletrans import Translator
-
+from  rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
 
 # def add_user(request):
 
@@ -45,10 +45,11 @@ class CreateUser(generics.CreateAPIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
  
-class ListUser(generics.ListAPIView):
-    serializer_class = UserSerializer
-    queryset = User.objects.all()
-   
+class ListRecipients(generics.ListAPIView):
+    serializer_class = RecepientSerializer
+    queryset = Receipent.objects.all()
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
         
 
 

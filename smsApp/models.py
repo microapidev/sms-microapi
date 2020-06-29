@@ -1,22 +1,25 @@
 from django.db import models
+from django.db.models.signals import post_save
 import uuid
 from django.utils import timezone
 from django.contrib.auth.models import AbstractUser
 from django.core.files.storage import FileSystemStorage
 from .managers import CustomUserManager
-
+from django.dispatch import receiver
+from django.conf import settings
+from rest_framework.authtoken.models import Token
 # Create your models here.
 uploads = FileSystemStorage(location='/media/uploads')
 
 class User(AbstractUser):
     email = models.EmailField(unique=True) 
-    username = models.CharField(max_length=30)
+    name = models.CharField(max_length=30)
     phoneNumber = models.CharField(max_length=100, unique=True)
     otp = models.CharField(max_length=6)
     is_active = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'phoneNumber'
-    REQUIRED_FIELDS = ["username", "email"]
+    REQUIRED_FIELDS = ["name", "email"]
 
     objects = CustomUserManager()
 
@@ -73,3 +76,7 @@ class Media(models.Model):
     def __str__(self):
         return self.id
 
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def create_token(sender, instance, created, **kwargs):
+    if created:
+        Token.objects.create(user=instance)
