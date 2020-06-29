@@ -5,8 +5,9 @@ SMS microapi that connects with Twillo to allow users send sms.
 * Create a personal fork of this repo
 * Clone the fork to your PC using the command `git clone ~url to your fork~` 
 * Change to the newly created directory on your PC
-* Create a branch with the feature name you wish to contribute using the command `git checkout -b ~name of new brach~`
-* Install the RabbitMQ package (see link in packages below)
+* Switch to develop branch using the command `git checkout develop`
+* Install RabbitMQ (see link in packages below)
+* Create your virtual environment
 * Run the command `pip install -r requirements.txt`
 * Make your changes
 * Ensure you are working with an up to date version of the repo to avoid merge conflicts
