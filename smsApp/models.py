@@ -9,14 +9,16 @@ from .managers import CustomUserManager
 uploads = FileSystemStorage(location='/media/uploads')
 
 class User(AbstractUser):
+    username = None
     email = models.EmailField(unique=True) 
-    username = models.CharField(max_length=30)
+    name = models.CharField(max_length=30)
     phoneNumber = models.CharField(max_length=100, unique=True)
     otp = models.CharField(max_length=6)
     is_active = models.BooleanField(default=False)
+    service = models.CharField(max_length=50, default="twillo")
 
-    USERNAME_FIELD = 'phoneNumber'
-    REQUIRED_FIELDS = ["username", "email"]
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ["name", "phoneNumber"]
 
     objects = CustomUserManager()
 

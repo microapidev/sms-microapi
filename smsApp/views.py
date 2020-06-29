@@ -3,30 +3,33 @@ import string
 import requests
 from django.shortcuts import render
 from .models import User
-from smsApp.serializers import UserSerializer
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework import status
 from twilio.rest import Client
 from django.conf import settings
 from django.http import HttpResponse
+from django.contrib.auth import authenticate
 from django.http import JsonResponse
 from twilio.base.exceptions import TwilioRestException
 import json
-from rest_framework import generics
+from rest_framework import generics, views, status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.authentication import TokenAuthentication
 from django.http import Http404
-
 # from .infobip import send_single_message_ibp, delivery_reports_ibp
 from .models import Receipent, Message
-from .serializers import RecepientSerializer, MessageSerializer
+from .serializers import RecepientSerializer, MessageSerializer, UserSerializer
 from googletrans import Translator
-
 
 
 # def add_user(request):
 
 class CreateUser(generics.CreateAPIView):
+
+    """
+    This allows for User Registration.
+    """
     serializer_class = UserSerializer
 
     def get_object(self, name):
@@ -37,36 +40,70 @@ class CreateUser(generics.CreateAPIView):
  
     def post(self, request):
         otp = "".join(random.choice(string.digits) for i in range(6))
-        request_dict = request.data 
-        request_dict["otp"] = otp 
-        print(request_dict)
-        serializer = UserSerializer(data=request_dict)
+        # request_dict = request.data 
+        # request_dict["otp"] = otp 
+        serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
+            user_email = request.data["email"]
+            user = User.objects.get(email=user_email)
+            user.otp = otp
+            user.save()
+            print(otp) # print to screen for now, when sms is enabled, then it'd be changed to send as sms
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
  
 class ListUser(generics.ListAPIView):
+    """
+
+    Only for admins.   
+    Shows the list of users registered on the platform.   
+    To test, endpoint - 'user/list', add given token in the key-value format and send a GET request 
+    """
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
     serializer_class = UserSerializer
     queryset = User.objects.all()
-   
+
+"""
+For function based views, please add these decorators at the top
+@permission_class(["IsAuthenticated"])
+@authentication_classes(["TokenAuthentication"])
+
+For class based views, inside the class, add the following 
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+All these are necessary for authentication
+"""  
+
+class VerifyAccount(views.APIView):
+    """
+    Verify phone number using OTP to make account active. This must be done
+    before any transaction can occur on the account.
+    To verify, visit the endpoint and post email, phoneNumber and otp using those variables as keys
+
+    """
+    def post(self, request):
+        try:
+            otp = request.data["otp"]
+            email = request.data["email"]
+            phone = request.data["phoneNumber"]
+            try:
+                user = User.objects.get(email=email)
+            except User.DoesNotExist:
+                return Http404
+                
+            if user.phoneNumber == phone:
+                if user.otp == otp:
+                    user.is_active = True
+                    user.save()
+                    return Response({"details":f"{user.name} is now active"}, status=status.HTTP_202_ACCEPTED)
+                return Response({"details":"OTP not valid"}, status=status.HTTP_400_BAD_REQUEST)
+        except:
+            return Response({"details":"Credentials not valid"}, status=status.HTTP_400_BAD_REQUEST)
         
 
-
-# @api_view(['GET', 'POST'])
-# # post and get methods on users
-# def userdetails(request):
-#     if request.method == 'GET':
-#         users = user.objects.all()
-#         serialized_users = UserSerializer(users, many=True)
-#         return Response(serialized_users.data)
-#     elif request.method == 'POST':
-#         print(request.data)
-#         serialized_users = UserSerializer(data=request.data)
-#         if serialized_users.is_valid():
-#             serialized_users.save()
-#             return Response(serialized_users.data, status=status.HTTP_201_CREATED)
-#         return Response(UserSerializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 
