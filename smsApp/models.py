@@ -1,19 +1,24 @@
 from django.db import models
 import uuid
 from django.utils import timezone
-from django.contrib.auth.models import AbstractUser, User
+from django.contrib.auth.models import AbstractUser
 from django.core.files.storage import FileSystemStorage
+from .managers import CustomUserManager
 
 # Create your models here.
 uploads = FileSystemStorage(location='/media/uploads')
 
-class user(AbstractUser):
-    email = models.EmailField(unique=True)
-    name = models.CharField(max_length=30)
+class User(AbstractUser):
+    email = models.EmailField(unique=True) 
+    username = models.CharField(max_length=30)
     phoneNumber = models.CharField(max_length=100, unique=True)
+    otp = models.CharField(max_length=6)
+    is_active = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'phoneNumber'
-    REQUIRED_FIELDS = [name, phoneNumber, email]
+    REQUIRED_FIELDS = ["username", "email"]
+
+    objects = CustomUserManager()
 
     def __str__(self):
         return self.phoneNumber
@@ -21,19 +26,19 @@ class user(AbstractUser):
 
 class Group(models.Model):
     groupID = models.UUIDField()
-    sender = models.ForeignKey(user, on_delete=models.CASCADE)
+    sender = models.ForeignKey(User, on_delete=models.CASCADE)
     groupName = models.CharField(max_length=80)
     dateCreated = models.DateTimeField(default=timezone.now)
 
 
 class Receipent(models.Model):
-   user = models.OneToOneField(user, on_delete=models.CASCADE)
+   user = models.OneToOneField(User, on_delete=models.CASCADE)
    groupID = models.ForeignKey(Group, on_delete=models.CASCADE)
 
 
 class Message(models.Model):
     receiver = models.CharField(max_length=80)
-    # author = models.ForeignKey(user, on_delete=models.CASCADE, default=1)
+    # author = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
     account_sid = models.CharField(max_length=80, blank=True, null=True)
     date_created = models.DateTimeField(auto_now_add=True)
     content = models.TextField()
@@ -59,7 +64,7 @@ class Message(models.Model):
     dateScheduled = models.DateTimeField(null=True)
 
 class Media(models.Model):
-    author = models.ForeignKey(user,on_delete=models.CASCADE)
+    author = models.ForeignKey(User,on_delete=models.CASCADE)
     messageID = models.ForeignKey(Message,on_delete=models.CASCADE)
     media = models.ImageField(storage=uploads) ##catering for only images at the moment
 

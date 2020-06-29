@@ -1,6 +1,8 @@
+import random
+import string
 import requests
 from django.shortcuts import render
-from smsApp.models import user
+from .models import User
 from smsApp.serializers import UserSerializer
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
@@ -12,6 +14,8 @@ from django.http import HttpResponse
 from django.http import JsonResponse
 from twilio.base.exceptions import TwilioRestException
 import json
+from rest_framework import generics
+from django.http import Http404
 
 from .infobip import send_single_message_ibp, delivery_reports_ibp
 from .models import Receipent, Message
@@ -19,20 +23,49 @@ from .serializers import RecepientSerializer, MessageSerializer
 from googletrans import Translator
 
 
-# Create your views here.
-@api_view(['GET', 'POST'])
-# post and get methods on users
-def userdetails(request):
-    if request.method == 'GET':
-        users = user.objects.all()
-        serialized_users = userserializer(users, many=True)
-        return Response(serialized_users.data)
-    elif request.method == 'POST':
-        serialized_users = userserializer(data=request.data)
-        if serialized_users.is_valid():
-            serialized_users.save()
-            return Response(serialized_users.data, status=status.HTTP_201_CREATED)
-        return Response(userserializer.errors, status=status.HTTP_400_BAD_REQUEST)
+# def add_user(request):
+
+class CreateUser(generics.CreateAPIView):
+    serializer_class = UserSerializer
+
+    def get_object(self, name):
+        try:
+            return User.objects.get(username=name)
+        except User.DoesNotExist:
+            raise Http404
+ 
+    def post(self, request):
+        otp = "".join(random.choice(string.digits) for i in range(6))
+        request_dict = request.data 
+        request_dict["otp"] = otp 
+        print(request_dict)
+        serializer = UserSerializer(data=request_dict)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+ 
+class ListUser(generics.ListAPIView):
+    serializer_class = UserSerializer
+    queryset = User.objects.all()
+   
+        
+
+
+# @api_view(['GET', 'POST'])
+# # post and get methods on users
+# def userdetails(request):
+#     if request.method == 'GET':
+#         users = user.objects.all()
+#         serialized_users = UserSerializer(users, many=True)
+#         return Response(serialized_users.data)
+#     elif request.method == 'POST':
+#         print(request.data)
+#         serialized_users = UserSerializer(data=request.data)
+#         if serialized_users.is_valid():
+#             serialized_users.save()
+#             return Response(serialized_users.data, status=status.HTTP_201_CREATED)
+#         return Response(UserSerializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # send message to users using twillio
