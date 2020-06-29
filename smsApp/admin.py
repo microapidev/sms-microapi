@@ -4,7 +4,7 @@ from django.contrib import admin
 from .models import Receipent, User
 
 class UserAdmin(admin.ModelAdmin):
-    list_display = ("phoneNumber", "username", "email", "otp")
+    list_display = ("phoneNumber", "name", "email", "is_active", "service")
 
 
 admin.site.register(Receipent)

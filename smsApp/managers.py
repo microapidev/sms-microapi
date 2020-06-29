@@ -21,7 +21,7 @@ class CustomUserManager(BaseUserManager):
         if not isinstance(phoneNumber, int):
             raise ValueError("Wrong phone number")
             
-        user = self.model(email=email, name=name,  phoneNumber=phoneNumber, **extra_fields)
+        user = self.model(email=email, name=name, phoneNumber=phoneNumber, **extra_fields)
         user.set_password(password)
         user.save()
         return user
@@ -38,4 +38,4 @@ class CustomUserManager(BaseUserManager):
             raise ValueError(_('Superuser must have is_staff=True.'))
         if extra_fields.get('is_superuser') is not True:
             raise ValueError(_('Superuser must have is_superuser=True.'))
-        return self.create_user(email, name, phoneNumber, password=None, **extra_fields)
+        return self.create_user(email, name, phoneNumber, password, **extra_fields)

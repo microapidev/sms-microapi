@@ -15,14 +15,14 @@ from django.http import JsonResponse
 from twilio.base.exceptions import TwilioRestException
 import json
 from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.authentication import TokenAuthentication
 from django.http import Http404
-
 # from .infobip import send_single_message_ibp, delivery_reports_ibp
 from .models import Receipent, Message
 from .serializers import RecepientSerializer, MessageSerializer
 from googletrans import Translator
-from  rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated 
+
 
 
 # def add_user(request):
@@ -47,29 +47,23 @@ class CreateUser(generics.CreateAPIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
  
-class ListRecipients(generics.ListAPIView):
-    serializer_class = RecepientSerializer
-    queryset = Receipent.objects.all()
+class ListUser(generics.ListAPIView):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
-        
+    serializer_class = UserSerializer
+    queryset = User.objects.all()
 
+"""
+For function based views authetication, please add these decorators at the top
+@permission_class(["IsAuthenticated"])
+@authentication_classes(["TokenAuthentication"])
 
-# @api_view(['GET', 'POST'])
-# # post and get methods on users
-# def userdetails(request):
-#     if request.method == 'GET':
-#         users = user.objects.all()
-#         serialized_users = UserSerializer(users, many=True)
-#         return Response(serialized_users.data)
-#     elif request.method == 'POST':
-#         print(request.data)
-#         serialized_users = UserSerializer(data=request.data)
-#         if serialized_users.is_valid():
-#             serialized_users.save()
-#             return Response(serialized_users.data, status=status.HTTP_201_CREATED)
-#         return Response(UserSerializer.errors, status=status.HTTP_400_BAD_REQUEST)
+For class based views, inside the class, add the following 
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
 
+All these are necessary for authentication
+"""  
 
 
 # send message to users using twillio

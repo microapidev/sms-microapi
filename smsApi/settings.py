@@ -32,9 +32,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']  ##allows all hosts
 # add twillio sid , authentication token and your twilio number
-TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
-TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
-TWILIO_NUMBER = os.getenv("TWILIO_NUMBER")
+# TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
+# TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
+# TWILIO_NUMBER = os.getenv("TWILIO_NUMBER")
 
 # add infobip login credentials
 INFOBIP_USERNAME = os.getenv("USERNAME")
@@ -166,3 +166,10 @@ STATICFILES_DIRS = (
 # TWILIO_AUTH_TOKEN = '9079136078278e88f391a58d168f8007'
 # #phone number +12054795418
 # #API key SK196fc6512aacb225450ce01959a07fb7
+# Django SECRET_KEY for sessions                                                                                                                              
+# SECRET_KEY = 'o_-fp91f1j911ob2fu-q!-1k0ghho#_ywot$d#h@l#3^!*la$6' 
+
+# Twilio credentials and phone number
+TWILIO_ACCOUNT_SID='AC296fa803ff255fb99eefac30eb1df72d' # obtained from twilio.com/console
+TWILIO_AUTH_TOKEN='4eb428211d6ae606b737e2f10670bb5a' # also obtained from twilio.com/console
+TWILIO_NUMBER='+17177460412' # use the number you received when signing up or buy a new number
