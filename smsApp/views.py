@@ -16,12 +16,14 @@ from twilio.base.exceptions import TwilioRestException
 import json
 from rest_framework import generics
 from django.http import Http404
-from .infobip import send_single_message_ibp, delivery_reports_ibp
+
+# from .infobip import send_single_message_ibp, delivery_reports_ibp
 from .models import Receipent, Message
 from .serializers import RecepientSerializer, MessageSerializer
 from googletrans import Translator
 from  rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated 
+
 
 # def add_user(request):
 
@@ -69,11 +71,12 @@ class ListRecipients(generics.ListAPIView):
 #         return Response(UserSerializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+
 # send message to users using twillio
 @csrf_exempt
 def sendmessage(request):
     users = user.objects.all()
-    serialized_users = userserializer(users, many=True)
+    serialized_users = UserSerializer(users, many=True)
     for number in serialized_users:
         phone_number = number.phone_number
     message = ('sample message')
@@ -310,21 +313,21 @@ def translateMessages(request):
 
 
 # Infobip
-@api_view(['POST'])
-def sendmessage_infobip(request):
-    users = user.objects.all()
-    serialized_users = UserSerializer(users, many=True)
-    message = request.data["message"]
-    for recipient in serialized_users.data:
-        number = recipient.phone_number
-        send_single_message_ibp(message, number)
-    return HttpResponse("Messages Sent!", 200)
+# @api_view(['POST'])
+# def sendmessage_infobip(request):
+#     users = user.objects.all()
+#     serialized_users = UserSerializer(users, many=True)
+#     message = request.data["message"]
+#     for recipient in serialized_users.data:
+#         number = recipient.phone_number
+#         send_single_message_ibp(message, number)
+#     return HttpResponse("Messages Sent!", 200)
 
 
-@api_view(['GET'])
-def get_recipients_ibp(request):
-    reports = delivery_reports_ibp()
-    return JsonResponse(reports)
+# @api_view(['GET'])
+# def get_recipients_ibp(request):
+#     reports = delivery_reports_ibp()
+#     return JsonResponse(reports)
 
 
 # nuObjects
