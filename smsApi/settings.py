@@ -1,3 +1,4 @@
+import django_heroku
 """
 Django settings for smsApi project.
 
@@ -165,3 +166,6 @@ STATICFILES_DIRS = (
 # TWILIO_AUTH_TOKEN = '9079136078278e88f391a58d168f8007'
 # #phone number +12054795418
 # #API key SK196fc6512aacb225450ce01959a07fb7
+
+# Activate Django-Heroku.
+django_heroku.settings(locals())
