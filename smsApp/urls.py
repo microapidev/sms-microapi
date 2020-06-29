@@ -36,8 +36,8 @@ urlpatterns = [
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     path('v1/sms/message/history', sms_list),
     # infobip view
-    path('v1/sms/infobip/send', sendmessage_infobip),
-    path('v1/sms/infobip/reports', get_recipients_ibp),
+    # path('v1/sms/infobip/send', sendmessage_infobip),
+    # path('v1/sms/infobip/reports', get_recipients_ibp),
     path('v1/sms/nuobjects/send',nuobj_api),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
 ]
