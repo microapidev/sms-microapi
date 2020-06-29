@@ -1,6 +1,8 @@
 # sms-microapi
 SMS microapi that connects with Twillo to allow users send sms.
 
+This API requires python 3.++
+
 ### To Contribute:
 * Create a personal fork of this repo
 * Clone the fork to your PC using the command `git clone ~url to your fork~` 
@@ -24,4 +26,4 @@ SMS microapi that connects with Twillo to allow users send sms.
 
 ### PACKAGES TO BE INSTALLED
 * RABBITMQ DOWNLOAD -> https://www.rabbitmq.com/download.html
-
+* To install infobip, run python -m pip install git+https://github.com/jonathan-golorry/infobip-api-python-client.git@python3
