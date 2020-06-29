@@ -28,6 +28,10 @@ from googletrans import Translator
 # def add_user(request):
 
 class CreateUser(generics.CreateAPIView):
+
+    """
+    This allows for User Registration.
+    """
     serializer_class = UserSerializer
 
     def get_object(self, name):
@@ -48,6 +52,12 @@ class CreateUser(generics.CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
  
 class ListUser(generics.ListAPIView):
+    """
+
+    Only for admins.   
+    Shows the list of users registered on the platform.   
+    To test, endpoint - 'user/list', add given token in the key-value format and send a GET request 
+    """
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
     serializer_class = UserSerializer

@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'sms_api_interface',
     'broadcast',
     'drf_yasg',
+    'coreapi',
 ]
 
 MIDDLEWARE = [
