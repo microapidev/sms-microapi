@@ -25,7 +25,7 @@ SECRET_KEY = '135h@wno6!3$uyd*u=ie_(0b&y-wv$n7g*0dd7r1o6ce8k*iwy'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*'] ##allows all hosts
 #add twillio sid , authentication token and your twilio number
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
@@ -42,7 +42,10 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_swagger',
     'smsApp',
+    'django_twilio',
     'sms_api_interface',
+    'broadcast',
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
@@ -53,6 +56,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', #whitenoise middleware
 ]
 
 ROOT_URLCONF = 'smsApi.urls'
@@ -80,6 +84,7 @@ REST_FRAMEWORK = {
         'rest_framework.schemas.coreapi.AutoSchema'
     )}
 
+AUTH_USER_MODEL = "smsApp.user"
 
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
@@ -129,3 +134,20 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+PROJECT_ROOT   =   os.path.join(os.path.abspath(__file__))
+# STATIC_ROOT  =   os.path.join(PROJECT_ROOT, 'static')
+
+# Extra lookup directories for collectstatic to find static files
+STATICFILES_DIRS = (
+    os.path.join(PROJECT_ROOT, 'static'),
+)
+
+#  Add configuration for static files storage using whitenoise
+# STATICFILES_STORAGE = 'whitenoise.django.CompressedManifestStaticFilesStorage'
+
+#Twilio Configuration from twilio dashboard (Keys visible for testing)
+TWILIO_ACCOUNT_SID = 'AC64b91f74f71a7fee2f292eeee0230f70'
+TWILIO_AUTH_TOKEN = '9079136078278e88f391a58d168f8007'
+#phone number +12054795418
+#API key SK196fc6512aacb225450ce01959a07fb7

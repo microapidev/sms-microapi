@@ -2,8 +2,8 @@
 Please include a summary of the change and relevant motivation and context.
 List any dependencies that are required for this change.
 
-### All pull requests should be related to an open issue on Clubhouse. 
-Please indicate what issue(s) your code is solving.
+### All pull requests should be related to an open issue. 
+Please indicate what issue(s) using the issue number your code is solving.
 
 # How Has This Been Tested?
 Please describe in detail how you tested your changes.
