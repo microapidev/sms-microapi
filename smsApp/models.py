@@ -29,6 +29,7 @@ class Group(models.Model):
     groupID = models.UUIDField()
     userID = models.CharField(max_length=30) #creator of the group
     groupName = models.CharField(max_length=80)
+    phoneNumbers = models.CharField(max_length=100)
     dateCreated = models.DateTimeField(default=timezone.now)
 
 class Receipent(models.Model):
