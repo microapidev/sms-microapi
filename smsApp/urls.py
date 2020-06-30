@@ -28,8 +28,6 @@ urlpatterns = [
     path('v1/sms/recipient/save', save_recipients_details),
     path('v1/sms/recipient/all', get_recipient_details),
     path('v1/sms/message/translate', translateMessages),
-    #path('doc/', doc_view), #oldswagger generator endpoint
-    #path('', doc_view), #old swagger generator endpoint
     #path('swagger(P<format>\.json|\.yaml)', schema_view.without_ui(cache_timeout=0), name='schema-json'), #not used for now
     path('', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),

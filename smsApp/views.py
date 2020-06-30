@@ -1,7 +1,7 @@
 import requests
 from django.shortcuts import render
-from smsApp.models import user
-from smsApp.serializers import UserSerializer
+# from smsApp.models import user
+# from smsApp.serializers import UserSerializer
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
