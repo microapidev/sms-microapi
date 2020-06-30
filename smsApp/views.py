@@ -18,8 +18,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
 from django.http import Http404
 # from .infobip import send_single_message_ibp, delivery_reports_ibp
-from .models import Receipent, Message, Group, GroupUnique
-from .serializers import RecepientSerializer, MessageSerializer, UserSerializer, GroupSerializer, GroupUniqueSerializer
+from .models import Receipent, Message, Group
+from .serializers import RecepientSerializer, MessageSerializer, UserSerializer, GroupSerializer 
 from googletrans import Translator
 
 
@@ -378,57 +378,13 @@ def nuobj_api(request):
     return HttpResponse("Messages Sent!", 200)
 
 
-#This is the function for creation of Groups
-class GroupUniqueList(generics.ListCreateAPIView):
-    """
-    This allows users create a unique group which is tied to a unqiue name
-    The user needs to specify the instance of user when logged in.
-    """
-    queryset = GroupUnique.objects.all()
-    serializer_class = GroupUniqueSerializer
 
-    # def create(self, request, *args,**kwargs):
-    #     serializer = GroupUniqueSerializer(data=request.data)
-    #     if serializer.is_valid:
-    #         if GroupUnique(groupName__iexact=request.data['groupName']):
-    #             return Response({"This Recipient":"Exists"},status=status.HTTP_200_OK)
-    #         else:
-    #             serializer.save()
-    #             return Response(serializer.data)
-
-
-#This is the function for Deleting of Groups
-class GroupUniqueDelete(generics.DestroyAPIView):
-    """
-    This allows users delete a group which is tied to a unqiue user
-    The user needs to specify the instance of user when logged in.
-    """
-    queryset = GroupUnique.objects.all()
-    serializer_class = GroupUniqueSerializer
-
-# class GroupUniqueDetail(DeleteView):
-#     """
-#     Update or delete a Group instance.
-#     """
-#     def get_object(self, pk):
-#         try:
-#             return GroupUnique.objects.get(pk=pk)
-#         except GroupUnique.DoesNotExist:
-#             raise Http404
-#     """
-#     This Deletes the information of the added recipient
-#     """
-
-#     def delete(self, request, pk, format=None):
-#         group = self.get_object(pk)
-#         group.delete()
-#         return Response({"Item":"Successfully Deleted"},status=status.HTTP_200_OK)
 
 #This is the function for Listing and creating A GroupList
 class GroupList(generics.ListCreateAPIView):
     """
-    This allows users add the recipient's numbers to the new group.
-    It requires the ID of the already created group
+    This allows users add the recipient's numbers to the new group and create a group.
+    It requires the ID of the already created group Default is "fdbcc88b-6c00-46a8-a639-f5e5de70cef3"
     Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.
     """
     queryset = Group.objects.all()

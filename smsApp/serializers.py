@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Receipent, Message, GroupUnique, Group
+from .models import User, Receipent, Message, Group
 
 
 
@@ -28,12 +28,12 @@ class MessageSerializer(serializers.ModelSerializer):
         fields = ["receiver", "author", "date_created",
                   "content", "price", "status"]
 
-class GroupUniqueSerializer(serializers.ModelSerializer):
-    dateCreated = serializers.DateTimeField(read_only=True)
-    # user = serializers.PrimaryKeyRelatedField(read_only=True, default=serializers.CurrentUserDefault())
-    class Meta:
-        model = GroupUnique
-        fields = "__all__"
+# class GroupUniqueSerializer(serializers.ModelSerializer):
+#     dateCreated = serializers.DateTimeField(read_only=True)
+#     # user = serializers.PrimaryKeyRelatedField(read_only=True, default=serializers.CurrentUserDefault())
+#     class Meta:
+#         model = GroupUnique
+#         fields = "__all__"
 
 class GroupSerializer(serializers.ModelSerializer):
     dateCreated = serializers.DateTimeField(read_only=True)
