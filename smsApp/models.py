@@ -4,6 +4,7 @@ from django.utils import timezone
 from django.contrib.auth.models import AbstractUser
 from django.core.files.storage import FileSystemStorage
 from .managers import CustomUserManager
+from django.core.validators import RegexValidator
 
 # Create your models here.
 uploads = FileSystemStorage(location='/media/uploads')
@@ -25,12 +26,24 @@ class User(AbstractUser):
     def __str__(self):
         return self.phoneNumber
 
+class GroupUnique(models.Model):
+    groupName = models.CharField(max_length=80, default='grp1')
+    user = models.ForeignKey(User, verbose_name='owner', on_delete=models.CASCADE)
+    dateCreated = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return self.groupName
 
 class Group(models.Model):
-    groupID = models.UUIDField()
-    sender = models.ForeignKey(User, on_delete=models.CASCADE)
-    groupName = models.CharField(max_length=80)
+    groupID = models.ForeignKey(GroupUnique, related_name='grp_id', on_delete=models.CASCADE)
+    phone_regex = RegexValidator(regex=r'^\+?1?\d{9,15}$', message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.")
+    recipient = models.CharField(validators=[phone_regex], max_length=15, blank=True) # validators should be a list
     dateCreated = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return self.groupName
+
+
 
 
 class Receipent(models.Model):

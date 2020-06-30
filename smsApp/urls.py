@@ -1,4 +1,4 @@
-from .views import sendmessage, translateMessages,  nuobj_api, CreateUser, ListUser, VerifyAccount #sendmessage_infobip, get_recipients_ibp
+from .views import sendmessage, translateMessages,  nuobj_api, CreateUser, ListUser, VerifyAccount, GroupUniqueList, GroupUniqueDelete, GroupList, GroupDetail #sendmessage_infobip, get_recipients_ibp
 from django.urls import path
 from .views import create_receipents_details, get_recipient_details, save_recipients_details, sms_list
 from rest_framework.schemas.coreapi import AutoSchema
@@ -50,6 +50,10 @@ urlpatterns = [
     # path('v1/sms/infobip/send', sendmessage_infobip),
     # path('v1/sms/infobip/reports', get_recipients_ibp),
     path('v1/sms/nuobjects/send',nuobj_api),
+    path("v1/sms/group/", GroupUniqueList.as_view(), name="create-group"),
+    path("v1/sms/group/<int:pk>", GroupUniqueDelete.as_view(), name="delete-group"),
+    path("v1/sms/grp-recipient", GroupList.as_view(), name="update-group"),
+    path("v1/sms/grp-recipient/<int:pk>", GroupDetail.as_view(), name="update-group"),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('', include_docs_urls(title='SMS API', description=
     """
