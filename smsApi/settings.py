@@ -99,8 +99,7 @@ REST_FRAMEWORK = {
         'rest_framework.schemas.coreapi.AutoSchema'
     )}
 
-
-# AUTH_USER_MODEL = "smsApp.user"
+AUTH_USER_MODEL = "smsApp.User"
 
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
