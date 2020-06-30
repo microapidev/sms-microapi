@@ -46,6 +46,20 @@ class Message(models.Model):
     content = models.TextField()
     # price = models.FloatField(blank=True, null=True)
     status = models.CharField(max_length=100, default="Sent", blank=True, null=True)
+    INFOBIP = 'IF'
+    TWILLO = 'TW'
+    NUOBJECT = 'NU'
+    MSG91 = 'MS'
+    SERVICE_CHOICES = [
+        (INFOBIP, 'D'),
+        (TWILLO, 'S'),
+        (NUOBJECT, 'F'),       
+		(MSG91, 'R'),
+    ]
+    service_type = models.CharField(
+        max_length=2,
+        choices=SERVICE_CHOICES
+    )
     DRAFT = 'D'
     SENT = 'S'
     FAILED = 'F'
