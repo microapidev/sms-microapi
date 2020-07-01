@@ -360,7 +360,9 @@ class GroupCreate(generics.CreateAPIView):
     
     def post(self, request, *args, **kwargs):
         phoneNumbers = request.data.get("phoneNumbers")
-        queryset = Group.objects.filter(phoneNumbers=phoneNumbers)
+        groupName = request.data.get("groupName")
+        queryset = Group.objects.filter(phoneNumbers=phoneNumbers, groupName=groupName)
+        
         if queryset.exists() :
             raise ValidationError('This Number exists in group, please enter another')
         else:
