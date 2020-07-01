@@ -1,6 +1,6 @@
 from rest_framework import serializers
-# from .models import user, Receipent, Message
-from .models import Receipent, Message
+from .models import Receipent, Message, Group
+
 
 # class UserSerializer(serializers.ModelSerializer):
 #     class Meta:
@@ -17,4 +17,12 @@ class RecepientSerializer(serializers.ModelSerializer):
 class MessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Message
-        fields = ["receiver", "author", "date_created", "content", "price", "status"]
+        fields = ["receiver", "transactionID", "date_created", "content", "status", "senderID"]
+
+
+class GroupSerializer(serializers.ModelSerializer):
+    dateCreated = serializers.DateTimeField(read_only=True)
+
+    class Meta:
+        model = Group
+        fields = "__all__"

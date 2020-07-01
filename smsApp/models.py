@@ -3,6 +3,8 @@ import uuid
 from django.utils import timezone
 # from django.contrib.auth.models import AbstractUser
 from django.core.files.storage import FileSystemStorage
+from django.core.validators import RegexValidator
+from django.utils.translation import ugettext_lazy as _
 # from .managers import CustomUserManager
 
 # Create your models here.
@@ -22,15 +24,18 @@ from django.core.files.storage import FileSystemStorage
 
 #     objects = CustomUserManager()
 
-#     def __str__(self):
-#         return self.phoneNumber
 
 class Group(models.Model):
-    groupID = models.UUIDField()
-    userID = models.CharField(max_length=30) #creator of the group
-    groupName = models.CharField(max_length=80)
-    phoneNumbers = models.CharField(max_length=100)
+    # groupID = models.ForeignKey(GroupUnique, related_name='grp_id', on_delete=models.SET_NULL)
+    groupName = models.CharField(max_length=80, default='grp1')
+    userID = models.CharField(max_length=30, default="user") #creator of the group123e4567-e89b-12d3-a456-426652340000
+    groupID = models.UUIDField(default=uuid.uuid4, editable=False)
+    phone_regex = RegexValidator(regex=r'^\+?1?\d{9,15}$', message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.")
+    phoneNumbers = models.CharField(validators=[phone_regex], max_length=200, blank=True) # validators should be a list
     dateCreated = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return self.groupName
 
 class Receipent(models.Model):
     userID = models.CharField(max_length=30) #user who added the recipient
@@ -39,14 +44,14 @@ class Receipent(models.Model):
     dateCreated = models.DateTimeField(default=timezone.now)
 
 class Message(models.Model):
-    transactionID = models.UUIDField(default=uuid.uuid4, unique=True)
+    transactionID = models.UUIDField(default=uuid.uuid4)
     receiver = models.CharField(max_length=80)
     senderID = models.CharField(max_length=30) 
     # account_sid = models.CharField(max_length=80, blank=True, null=True)
     date_created = models.DateTimeField(auto_now_add=True)
-    content = models.TextField()
+    content = models.TextField(default="test")
+    status = models.CharField(max_length=100, default="Sent", blank=True, null=True)
     # price = models.FloatField(blank=True, null=True)
-    # status = models.CharField(max_length=100, default="Sent", blank=True, null=True)
     INFOBIP = 'IF'
     TWILLO = 'TW'
     NUOBJECT = 'NU'
