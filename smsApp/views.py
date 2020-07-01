@@ -1,110 +1,41 @@
-import random
-import string
 import requests
-from django.shortcuts import render
-from .models import User
+from django.shortcuts import render, get_object_or_404
+# from smsApp.models import user
+# from smsApp.serializers import UserSerializer
+from django.core.exceptions import ValidationError
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
+from rest_framework.views import APIView
+from rest_framework import generics, views
 from rest_framework.response import Response
+from rest_framework import status
 from twilio.rest import Client
 from django.conf import settings
 from django.http import HttpResponse
-from django.contrib.auth import authenticate
 from django.http import JsonResponse
 from twilio.base.exceptions import TwilioRestException
 import json
-from rest_framework import generics, views, status
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.authentication import TokenAuthentication
-from django.http import Http404
+
 # from .infobip import send_single_message_ibp, delivery_reports_ibp
 from .models import Receipent, Message, Group
-from .serializers import RecepientSerializer, MessageSerializer, UserSerializer, GroupSerializer 
+from .serializers import RecepientSerializer, MessageSerializer, GroupSerializer 
 from googletrans import Translator
 
 
-# def add_user(request):
-
-class CreateUser(generics.CreateAPIView):
-
-    """
-    This allows for User Registration.
-    """
-    serializer_class = UserSerializer
-
-    def get_object(self, name):
-        try:
-            return User.objects.get(username=name)
-        except User.DoesNotExist:
-            raise Http404
- 
-    def post(self, request):
-        otp = "".join(random.choice(string.digits) for i in range(6))
-        # request_dict = request.data 
-        # request_dict["otp"] = otp 
-        serializer = UserSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            user_email = request.data["email"]
-            user = User.objects.get(email=user_email)
-            user.otp = otp
-            user.save()
-            print(otp) # print to screen for now, when sms is enabled, then it'd be changed to send as sms
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
- 
-class ListUser(generics.ListAPIView):
-    """
-
-    Only for admins.   
-    Shows the list of users registered on the platform.   
-    To test, endpoint - 'user/list', add given token in the key-value format and send a GET request 
-    """
-    authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticated]
-    serializer_class = UserSerializer
-    queryset = User.objects.all()
-
-"""
-For function based views, please add these decorators at the top
-@permission_class(["IsAuthenticated"])
-@authentication_classes(["TokenAuthentication"])
-
-For class based views, inside the class, add the following 
-    authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticated]
-
-All these are necessary for authentication
-"""  
-
-class VerifyAccount(views.APIView):
-    """
-    Verify phone number using OTP to make account active. This must be done
-    before any transaction can occur on the account.
-    To verify, visit the endpoint and post email, phoneNumber and otp using those variables as keys
-
-    """
-    def post(self, request):
-        try:
-            otp = request.data["otp"]
-            email = request.data["email"]
-            phone = request.data["phoneNumber"]
-            try:
-                user = User.objects.get(email=email)
-            except User.DoesNotExist:
-                return Http404
-                
-            if user.phoneNumber == phone:
-                if user.otp == otp:
-                    user.is_active = True
-                    user.save()
-                    return Response({"details":f"{user.name} is now active"}, status=status.HTTP_202_ACCEPTED)
-                return Response({"details":"OTP not valid"}, status=status.HTTP_400_BAD_REQUEST)
-        except:
-            return Response({"details":"Credentials not valid"}, status=status.HTTP_400_BAD_REQUEST)
-        
-
-
+# Create your views here.
+@api_view(['GET', 'POST'])
+# post and get methods on users
+def userdetails(request):
+    if request.method == 'GET':
+        users = user.objects.all()
+        serialized_users = UserSerializer(users, many=True)
+        return Response(serialized_users.data)
+    elif request.method == 'POST':
+        serialized_users = UserSerializer(data=request.data)
+        if serialized_users.is_valid():
+            serialized_users.save()
+            return Response(serialized_users.data, status=status.HTTP_201_CREATED)
+        return Response(UserSerializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # send message to users using twillio
@@ -202,6 +133,30 @@ def sms_list(request):
             return JsonResponse(sms, status=200, safe=False)
         except TwilioRestException as e:
             return JsonResponse({"e": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+class SmsHistoryList(generics.ListAPIView):
+    """
+    This is used to pull sms history on database
+    """
+    queryset = Message.objects.all()
+
+    def list(self, request):
+        queryset = self.get_queryset()
+        serializer = MessageSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+class SmsHistoryDetail(generics.RetrieveAPIView):
+    """
+    Call a particular History of user with users senderID
+    """
+    serializer = MessageSerializer
+    queryset = Message.objects.all()
+
+    # def retrieve(self, request, *args, **kwargs):
+    #     instance = self.get_object()
+    #     serializer = self.get_serializer(instance)
+    #     return Response(serializer.data)
+
 
 
 def translateMessages(request):
@@ -381,7 +336,20 @@ def nuobj_api(request):
 
 
 #This is the function for Listing and creating A GroupList
-class GroupList(generics.ListCreateAPIView):
+
+class GroupList(generics.ListAPIView):
+    """
+    This allows view the list of the groups available to a user.
+    """
+    queryset = Group.objects.all()
+
+    def list(self, request):
+        queryset = self.get_queryset()
+        serializer = GroupSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+
+class GroupCreate(generics.CreateAPIView):
     """
     This allows users add the recipient's numbers to the new group and create a group.
     It requires the ID of the already created group Default is "fdbcc88b-6c00-46a8-a639-f5e5de70cef3"
@@ -389,6 +357,15 @@ class GroupList(generics.ListCreateAPIView):
     """
     queryset = Group.objects.all()
     serializer_class= GroupSerializer
+    
+    def post(self, request, *args, **kwargs):
+        groupName = request.data.get("groupName")
+        queryset = Group.objects.filter(groupName=groupName)
+        if queryset.exists() :
+            raise ValidationError('This group exists, please enter another')
+        else:
+            return self.create(request, *args, **kwargs)
+
 
 #This is the function for updating and deleting each recipient in a list
 class GroupDetail(views.APIView):
