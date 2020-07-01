@@ -359,10 +359,10 @@ class GroupCreate(generics.CreateAPIView):
     serializer_class= GroupSerializer
     
     def post(self, request, *args, **kwargs):
-        groupName = request.data.get("groupName")
-        queryset = Group.objects.filter(groupName=groupName)
+        phoneNumbers = request.data.get("phoneNumbers")
+        queryset = Group.objects.filter(phoneNumbers=phoneNumbers)
         if queryset.exists() :
-            raise ValidationError('This group exists, please enter another')
+            raise ValidationError('This Number exists in group, please enter another')
         else:
             return self.create(request, *args, **kwargs)
 
