@@ -39,22 +39,23 @@ class Receipent(models.Model):
     dateCreated = models.DateTimeField(default=timezone.now)
 
 class Message(models.Model):
+    transactionID = models.UUIDField(default=uuid.uuid4, unique=True)
     receiver = models.CharField(max_length=80)
     senderID = models.CharField(max_length=30) 
     # account_sid = models.CharField(max_length=80, blank=True, null=True)
     date_created = models.DateTimeField(auto_now_add=True)
     content = models.TextField()
     # price = models.FloatField(blank=True, null=True)
-    status = models.CharField(max_length=100, default="Sent", blank=True, null=True)
+    # status = models.CharField(max_length=100, default="Sent", blank=True, null=True)
     INFOBIP = 'IF'
     TWILLO = 'TW'
     NUOBJECT = 'NU'
     MSG91 = 'MS'
     SERVICE_CHOICES = [
-        (INFOBIP, 'D'),
-        (TWILLO, 'S'),
-        (NUOBJECT, 'F'),       
-		(MSG91, 'R'),
+        (INFOBIP, 'IF'),
+        (TWILLO, 'TW'),
+        (NUOBJECT, 'NU'),       
+		(MSG91, 'MS'),
     ]
     service_type = models.CharField(
         max_length=2,
