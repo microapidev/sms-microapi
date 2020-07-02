@@ -304,3 +304,23 @@ def nuobj_api(request):
         data = {'user': 'demo', 'pass': 'pass', 'to': recipient, 'from': 'Testing', 'msg': message}
         response = requests.post('https://cloud.nuobjects.com/api/send/', data=data)
     return HttpResponse("Messages Sent!", 200)
+
+# sending sms with twilio
+#class twilio_sendsms(views.APIView):
+@api_view(['POST'])
+    
+def twilio_sendsms (self, request):
+
+    phone = request.data["phone"]
+    senderID = request.data["senderID"]
+    #message = request.data["message"]
+    #body = request.data["body"]
+    client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+    
+    message = client.messages.create(body= "Thanks for using our service",
+    from_ =settings.TWILIO_NUMBER,
+    to = phone)
+    userID = senderID
+    return HttpResponse("Messages Sent!", 200), message
+    #else:
+        #return HttpResponse({"details":"Invalid senderID"}, status=status.HTTP_400_BAD_REQUEST)
