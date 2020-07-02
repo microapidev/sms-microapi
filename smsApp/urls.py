@@ -40,7 +40,7 @@ urlpatterns = [
     # path('v1/sms/infobip/send', sendmessage_infobip),
     # path('v1/sms/infobip/reports', get_recipients_ibp),
     path('v1/sms/nuobjects/send',nuobj_api),
-    path("v1/sms/list_group", GroupList.as_view(), name="list-group"),
+    path("v1/sms/list_group/<senderID>", GroupList.as_view(), name="list-group"),
     path("v1/sms/create_group", GroupCreate.as_view(), name="update-group"),
     path("v1/sms/group_update/<str:pk>", GroupDetail.as_view(), name="update-group"),
    #Nuobjects
