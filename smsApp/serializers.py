@@ -5,7 +5,7 @@ from .models import Receipent, Message, Group
 # class UserSerializer(serializers.ModelSerializer):
 #     class Meta:
 #         model = user
-#         fields = "__all__"
+#         fields =  "__all__"
 
 
 class RecepientSerializer(serializers.ModelSerializer):
@@ -17,7 +17,7 @@ class RecepientSerializer(serializers.ModelSerializer):
 class MessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Message
-        fields = ["receiver", "transactionID", "date_created", "content", "status", "senderID"]
+        fields = ["senderID", "content", "receiver"]
 
 
 class GroupSerializer(serializers.ModelSerializer):
