@@ -1,6 +1,7 @@
 from .views import sendmessage, translateMessages, userdetails, nuobj_api, GroupList, GroupDetail, GroupCreate, SmsHistoryList, SmsHistoryDetail #sendmessage_infobip, get_recipients_ibp
 from django.urls import path
-from .views import create_receipents_details, get_recipient_details, save_recipients_details, sms_list
+from .views import create_receipents_details, save_recipients_details, sms_list, ReceipientList
+from .views import NuobjectsSendMessage, NuobjectsGetBalance, NuobjectsMessageList
 from rest_framework.schemas.coreapi import AutoSchema
 from rest_framework_swagger.views import get_swagger_view
 from rest_framework import permissions
@@ -26,7 +27,7 @@ urlpatterns = [
     path("v1/sms/Twillo_send_sms", sendmessage),
     path('v1/sms/recipient/create', create_receipents_details),
     path('v1/sms/recipient/save', save_recipients_details),
-    path('v1/sms/recipient/all', get_recipient_details),
+    path('v1/sms/recipient/all', ReceipientList.as_view(), name="get-all-recipients"),
     path('v1/sms/message/translate', translateMessages),
     #path('swagger(P<format>\.json|\.yaml)', schema_view.without_ui(cache_timeout=0), name='schema-json'), #not used for now
     path('', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
@@ -41,6 +42,11 @@ urlpatterns = [
     path("v1/sms/list_group/<senderID>", GroupList.as_view(), name="list-group"),
     path("v1/sms/create_group", GroupCreate.as_view(), name="update-group"),
     path("v1/sms/group_update/<str:pk>", GroupDetail.as_view(), name="update-group"),
+   #Nuobjects
+    path("v1/sms/nuobjects_message_list", NuobjectsMessageList.as_view(), name="nuobjects-message-list"),
+    path("v1/sms/nuobjects_send_message/", NuobjectsSendMessage.as_view(), name="nuobjects-send-message"),
+    path("v1/sms/nuobjects_get_balance/", NuobjectsGetBalance.as_view(), name="nuobjects-get-balance"),
+   #  swagger
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
 ]
 
