@@ -79,6 +79,20 @@ class ReceipientList(APIView):
         return Response(serializer.data)
 
 
+class ReceipientCreate(generics.CreateAPIView):
+    queryset = Receipent.objects.all()
+    serializer_class= RecepientSerializer
+    
+    def post(self, request, *args, **kwargs):
+        recipientNumber = request.data.get("recipientNumber")
+        queryset = Receipent.objects.filter(recipientNumber=recipientNumber)
+        
+        if queryset.exists():
+            raise ValidationError('This Id or Number already exists, please enter another number and ID')
+        else:
+            return self.create(request, *args, **kwargs)
+
+
 @api_view(['POST'])
 def create_receipents_details(request):
     print(request.data)
@@ -426,39 +440,39 @@ class NuobjectsMessageList(APIView):
         return Response(serializer.data)
 
 
-class InfobipSendMessage(generics.CreateAPIView):
-    """
-    This allows users send messages to recipient's.
-    """
-    queryset = Message.objects.all()
-    serializer_class= MessageSerializer
+# class InfobipSendMessage(generics.CreateAPIView):
+#     """
+#     This allows users send messages to recipient's.
+#     """
+#     queryset = Message.objects.all()
+#     serializer_class= MessageSerializer
     
-    def post(self, request, *args, **kwargs):
-        sender = request.data.get("senderID")
-        text = request.data.get("content")
-        receiver = request.data.get("receiver")
+#     def post(self, request, *args, **kwargs):
+#         sender = request.data.get("senderID")
+#         text = request.data.get("content")
+#         receiver = request.data.get("receiver")
 
-        data = send_single_message_ibp(text, receiver)
+#         data = send_single_message_ibp(text, receiver)
 
 
-        # conn = http.client.HTTPSConnection("jdd8zk.api.infobip.com")
-        # payload = '''{\"messages\":[
-        #                 {\"from\":\"{sender}\",
-        #                 \"destinations\":[{\"to\":\"+2347069501730\"}],
-        #                 \"text\":\"{text}\",
-        #                 \"flash\":true}]}'''
-        # authorization = {'username':'philemonapi', 'password':'Microapipassword1'}
-        # headers = {
-        #     'Authorization': f'{authorization}',
-        #     'Content-Type': 'application/json',
-        #     'Accept': 'application/json'
-        # }
+#         # conn = http.client.HTTPSConnection("jdd8zk.api.infobip.com")
+#         # payload = '''{\"messages\":[
+#         #                 {\"from\":\"{sender}\",
+#         #                 \"destinations\":[{\"to\":\"+2347069501730\"}],
+#         #                 \"text\":\"{text}\",
+#         #                 \"flash\":true}]}'''
+#         # authorization = {'username':'philemonapi', 'password':'Microapipassword1'}
+#         # headers = {
+#         #     'Authorization': f'{authorization}',
+#         #     'Content-Type': 'application/json',
+#         #     'Accept': 'application/json'
+#         # }
 
-        # conn.request("POST", "/sms/2/text/advanced", payload, headers)
-        # res = conn.getresponse()
-        # data = res.read()
-        # print(data.decode("utf-8"))
-        return
+#         # conn.request("POST", "/sms/2/text/advanced", payload, headers)
+#         # res = conn.getresponse()
+#         # data = res.read()
+#         # print(data.decode("utf-8"))
+#         return
 
 
 class InfobipSingleMessage(generics.RetrieveAPIView):
