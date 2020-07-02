@@ -353,8 +353,6 @@ def nuobj_api(request):
     return HttpResponse("Messages Sent!", 200)
 
 
-
-
 #This is the function for Listing and creating A GroupList
 
 class GroupList(generics.ListAPIView):
@@ -421,104 +419,24 @@ class GroupDetail(views.APIView):
         group.delete()
         return Response({"Item":"Successfully Deleted"},status=status.HTTP_200_OK)
 
+class TwilioSendSms(views.APIView):
 
-class NuobjectsMessageList(APIView):
-    """
-    This allows view the list of the Infobip Messages Sent by all users.
-    """
-    # queryset = Message.objects.filter(service_type='IF')
-    serializer_class= MessageSerializer
+    try:
+        def post(self, request):
+            receiver = request.data["receiver"]
+            senderID = request.data["senderID"]
+            content = request.data["content"]
+            serializer_message = MessageSerializer(data=request.data)
+            
+            client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
 
-    # def list(self, request):
-    #     queryset = self.get_queryset()
-    #     serializer = MessageSerializer(queryset, many=True)
-    #     return Response(serializer.data)
-
-    def get(self, request, format=None):
-        messages = Message.objects.filter(service_type='NU')
-        serializer = MessageSerializer(messages, many=True)
-        return Response(serializer.data)
-
-
-# class InfobipSendMessage(generics.CreateAPIView):
-#     """
-#     This allows users send messages to recipient's.
-#     """
-#     queryset = Message.objects.all()
-#     serializer_class= MessageSerializer
-    
-#     def post(self, request, *args, **kwargs):
-#         sender = request.data.get("senderID")
-#         text = request.data.get("content")
-#         receiver = request.data.get("receiver")
-
-#         data = send_single_message_ibp(text, receiver)
-
-
-#         # conn = http.client.HTTPSConnection("jdd8zk.api.infobip.com")
-#         # payload = '''{\"messages\":[
-#         #                 {\"from\":\"{sender}\",
-#         #                 \"destinations\":[{\"to\":\"+2347069501730\"}],
-#         #                 \"text\":\"{text}\",
-#         #                 \"flash\":true}]}'''
-#         # authorization = {'username':'philemonapi', 'password':'Microapipassword1'}
-#         # headers = {
-#         #     'Authorization': f'{authorization}',
-#         #     'Content-Type': 'application/json',
-#         #     'Accept': 'application/json'
-#         # }
-
-#         # conn.request("POST", "/sms/2/text/advanced", payload, headers)
-#         # res = conn.getresponse()
-#         # data = res.read()
-#         # print(data.decode("utf-8"))
-#         return
-
-
-class InfobipSingleMessage(generics.RetrieveAPIView):
-    """
-    This allows view a single Infobip Message Sent by a distinct users.
-    """
-    def get_object(self, senderID):
-        try:
-            Message.objects.filter(service_type='IF').filter(senderID=senderID)
-        except Message.DoesNotExist:
-            raise Http404
-
-    def get(self, request, senderID, format=None):
-        message = self.get_object(senderID)
-        serializer = MessageSerializer(message)
-        return JsonResponse(serializer.data)
-
-
-class NuobjectsSendMessage(generics.CreateAPIView):
-    """
-    This allows users send messages to recipient's.
-    """
-    queryset = Message.objects.all()
-    serializer_class= MessageSerializer
-    
-    def post(self, request, *args, **kwargs):
-        # message = request.data["message"]
-        # sender = request.data.get("senderID")
-        # text = request.data.get("content")
-        # receiver = request.data.get("receiver")
-        # response = requests.post('https://cloud.nuobjects.com/api/credit/?user=philemon&pass=Microapipassword1')
-        response = requests.post('https://cloud.nuobjects.com/api/send/?user=philemon&pass=Microapipassword1&to=2347069501730&from=phil&msg=HelloWorld')
-        return HttpResponse(response)
-
-
-class NuobjectsGetBalance(APIView):
-    """
-    This allows users send messages to recipient's.
-    """
-    queryset = Message.objects.all()
-    serializer_class= MessageSerializer
-    
-    def get(self, request, format=None):
-        messages = Message.objects.filter(service_type='IF')
-        # encoded = urlencode(dict(user='philemon', password='Microapipassword1'))
-        # url = urllib.parse.quote('https://cloud.nuobjects.com/api/credit/?{encoded}')
-        response = requests.post('http://https%3A//cloud.nuobjects.com/api/credit/%3Fuser%3Dphilemon%26pass%3DMicroapipassword1')
-        # response = requests.post(f'https://cloud.nuobjects.com/api/send/?user=philemon&pass=Microapipassword1&to=2347069501730&from=phil&msg=HelloWorld')
-        return HttpResponse(response)
+            if serializer_message.is_valid:
+                message = client.messages.create(
+                    from_ = settings.TWILIO_NUMBER,
+                    to = receiver,
+                    body = content)
+                senderID = senderID
+                return Response({"details":"Message sent!"}, 200)
+    except TwilioRestException as e:
+        return Response({"Invalid Credentials": str(e)},status=status.HTTP_400_BAD_REQUEST)
+  

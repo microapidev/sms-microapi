@@ -87,7 +87,7 @@ smsvenv/
 ENV/ 
 env.bak/ 
 venv.bak/ 
-
+femvenv/
 
 # mkdocs documentation 
 /site 
