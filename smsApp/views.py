@@ -87,8 +87,7 @@ class ReceipientCreate(generics.CreateAPIView):
     
     def post(self, request, *args, **kwargs):
         recipientNumber = request.data.get("recipientNumber")
-        userID = request.data.get("userID")
-        queryset = Receipent.objects.filter(recipientNumber=recipientNumber).filter(userID=userID)
+        queryset = Receipent.objects.filter(recipientNumber=recipientNumber)
         
         if queryset.exists():
             raise ValidationError('This Id or Number already exists, please enter another number and ID')
