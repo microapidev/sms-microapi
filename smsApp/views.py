@@ -421,19 +421,22 @@ class GroupDetail(views.APIView):
 
 class TwilioSendSms(views.APIView):
 
-    def post(self, request):
-        receiver = request.data["receiver"]
-        senderID = request.data["senderID"]
-        content = request.data["content"]
-        serializer_message = MessageSerializer(data=request.data)
-        
-        client = Client (settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+    try:
+        def post(self, request):
+            receiver = request.data["receiver"]
+            senderID = request.data["senderID"]
+            content = request.data["content"]
+            serializer_message = MessageSerializer(data=request.data)
+            
+            client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
 
-        if serializer_message.is_valid:
-            message = client.messages.create(
-                from_ = settings.TWILIO_NUMBER,
-                to = receiver,
-                body = content,
-                userID = senderID)
-        return Response('Message sent!', 200), message
+            if serializer_message.is_valid:
+                message = client.messages.create(
+                    from_ = settings.TWILIO_NUMBER,
+                    to = receiver,
+                    body = content)
+                senderID = senderID
+                return Response({"details":"Message sent!"}, 200)
+    except TwilioRestException as e:
+        return Response({"Invalid Credentials": str(e)},status=status.HTTP_400_BAD_REQUEST)
   
