@@ -41,8 +41,6 @@ def userdetails(request):
 # send message to users using twillio
 @csrf_exempt
 def sendmessage(request):
-    users = user.objects.all()
-    serialized_users = UserSerializer(users, many=True)
     for number in serialized_users:
         phone_number = number.phone_number
     message = ('sample message')
@@ -341,12 +339,13 @@ class GroupList(generics.ListAPIView):
     """
     This allows view the list of the groups available to a user.
     """
-    queryset = Group.objects.all()
+    serializer_class = GroupSerializer
 
-    def list(self, request):
-        queryset = self.get_queryset()
-        serializer = GroupSerializer(queryset, many=True)
-        return Response(serializer.data)
+    def get_queryset(self):
+        senderID = self.kwargs["senderID"]
+        queryset = Group.objects.filter(userID=senderID)
+        return queryset
+
 
 
 class GroupCreate(generics.CreateAPIView):
