@@ -21,7 +21,6 @@ from urllib.parse import urlencode
 # import http.client
 # import http
 # import mimetypes
-from .infobip import send_single_message_ibp
 
 # from .infobip import send_single_message_ibp, delivery_reports_ibp
 from .models import Receipent, Message, Group
@@ -410,7 +409,7 @@ class GroupDetail(views.APIView):
         return Response({"Item":"Successfully Deleted"},status=status.HTTP_200_OK)
 
 
-class InfoBipMessageList(APIView):
+class NuobjectsMessageList(APIView):
     """
     This allows view the list of the Infobip Messages Sent by all users.
     """
@@ -423,7 +422,7 @@ class InfoBipMessageList(APIView):
     #     return Response(serializer.data)
 
     def get(self, request, format=None):
-        messages = Message.objects.filter(service_type='IF')
+        messages = Message.objects.filter(service_type='NU')
         serializer = MessageSerializer(messages, many=True)
         return Response(serializer.data)
 
