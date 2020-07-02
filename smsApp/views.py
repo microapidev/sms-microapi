@@ -1,3 +1,5 @@
+import os
+import json
 import requests
 from django.shortcuts import render, get_object_or_404
 # from smsApp.models import user
@@ -12,13 +14,13 @@ from rest_framework import status
 from twilio.rest import Client
 from django.conf import settings
 from django.http import HttpResponse
-from django.http import JsonResponse
+from django.http import JsonResponse, request
 from twilio.base.exceptions import TwilioRestException
 import json
 
 # from .infobip import send_single_message_ibp, delivery_reports_ibp
 from .models import Receipent, Message, Group
-from .serializers import RecepientSerializer, MessageSerializer, GroupSerializer 
+from .serializers import RecepientSerializer, MessageSerializer, GroupSerializer
 from googletrans import Translator
 
 
@@ -134,6 +136,7 @@ def sms_list(request):
         except TwilioRestException as e:
             return JsonResponse({"e": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+
 class SmsHistoryList(generics.ListAPIView):
     """
     This is used to pull sms history on database
@@ -144,6 +147,7 @@ class SmsHistoryList(generics.ListAPIView):
         queryset = self.get_queryset()
         serializer = MessageSerializer(queryset, many=True)
         return Response(serializer.data)
+
 
 class SmsHistoryDetail(generics.RetrieveAPIView):
     """
@@ -156,7 +160,6 @@ class SmsHistoryDetail(generics.RetrieveAPIView):
     #     instance = self.get_object()
     #     serializer = self.get_serializer(instance)
     #     return Response(serializer.data)
-
 
 
 def translateMessages(request):
@@ -302,24 +305,6 @@ def translateMessages(request):
             return JsonResponse({"error": error}, status=status.HTTP_400_BAD_REQUEST)
 
 
-# Infobip
-# @api_view(['POST'])
-# def sendmessage_infobip(request):
-#     users = user.objects.all()
-#     serialized_users = UserSerializer(users, many=True)
-#     message = request.data["message"]
-#     for recipient in serialized_users.data:
-#         number = recipient.phone_number
-#         send_single_message_ibp(message, number)
-#     return HttpResponse("Messages Sent!", 200)
-
-
-# @api_view(['GET'])
-# def get_recipients_ibp(request):
-#     reports = delivery_reports_ibp()
-#     return JsonResponse(reports)
-
-
 # nuObjects
 @api_view(['POST'])
 def nuobj_api(request):
@@ -333,9 +318,7 @@ def nuobj_api(request):
     return HttpResponse("Messages Sent!", 200)
 
 
-
-
-#This is the function for Listing and creating A GroupList
+# This is the function for Listing and creating A GroupList
 
 class GroupList(generics.ListAPIView):
     """
@@ -356,29 +339,31 @@ class GroupCreate(generics.CreateAPIView):
     Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.
     """
     queryset = Group.objects.all()
-    serializer_class= GroupSerializer
-    
+    serializer_class = GroupSerializer
+
     def post(self, request, *args, **kwargs):
         phoneNumbers = request.data.get("phoneNumbers")
         groupName = request.data.get("groupName")
         queryset = Group.objects.filter(phoneNumbers=phoneNumbers, groupName=groupName)
-        
-        if queryset.exists() :
+
+        if queryset.exists():
             raise ValidationError('This Number exists in group, please enter another')
         else:
             return self.create(request, *args, **kwargs)
 
 
-#This is the function for updating and deleting each recipient in a list
+# This is the function for updating and deleting each recipient in a list
 class GroupDetail(views.APIView):
     """
     Update or delete a recipient instance.
     """
+
     def get_object(self, pk):
         try:
             return Group.objects.get(pk=pk)
         except Group.DoesNotExist:
             raise Http404
+
     """
     This Updates the information of the added recipient
     """
@@ -390,7 +375,7 @@ class GroupDetail(views.APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
     """
     This Deletes the information of the added recipient
     """
@@ -398,4 +383,23 @@ class GroupDetail(views.APIView):
     def delete(self, request, pk, format=None):
         group = self.get_object(pk)
         group.delete()
-        return Response({"Item":"Successfully Deleted"},status=status.HTTP_200_OK)
+        return Response({"Item": "Successfully Deleted"}, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+def send_with_infobip(request):
+    message = request.data['message']
+    # recipients = Receipent.objects.filter()
+    # serializer = RecepientSerializer(data=recipients,many=True)
+    # serializer.is_valid()
+    # info = serializer.data
+    # response = json.dumps(info)
+    data = {
+        "from": "InfoSMS",
+        "to": "41793026727",
+        "text": message
+    }
+    headers = {'Authorization': os.getenv("TOKEN")}
+    r = requests.post('https://9rr9dr.api.infobip.com/', data=data,headers=headers)
+    response = r.status_code
+    return JsonResponse(response,safe=False)
