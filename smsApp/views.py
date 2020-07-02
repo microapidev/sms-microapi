@@ -22,7 +22,7 @@ from urllib.parse import urlencode
 # import http
 # import mimetypes
 
-# from .infobip import send_single_message_ibp, delivery_reports_ibp
+
 from .models import Receipent, Message, Group
 from .serializers import RecepientSerializer, MessageSerializer, GroupSerializer 
 from googletrans import Translator
@@ -59,8 +59,32 @@ def sendmessage(request):
     return HttpResponse("messages sent!", 200)
 
 
-# Create your views here.
+class InfobipSms(APIView):
+    """
+    Send messages with INFOBIP
+    """
+    def post(self):
+        message = request.data['message']
+        # recipients = Receipent.objects.filter()
+        # serializer = RecepientSerializer(data=recipients,many=True)
+        # serializer.is_valid()
+        # info = serializer.data
+        # response = json.dumps(info)
+        phone = request.data["phone"]
+        data = {
+            "from": "InfoSMS",
+            "to": phone,
+            "text": message
+        }
+        headers = {'Authorization': os.getenv("TOKEN")}
+        r = requests.post('https://9rr9dr.api.infobip.com/', data=data,headers=headers)
+        response = r.status_code
+        return JsonResponse(response,safe=False)
 
+
+
+
+# Create your views here.
 class ReceipientList(APIView):
     """
     This allows view the list of the Infobip Messages Sent by all users.
@@ -158,12 +182,10 @@ class SmsHistoryList(generics.ListAPIView):
     """
     This is used to pull sms history on database
     """
-    queryset = Message.objects.all()
+    def get_queryset(self):
+        senderID = self.kwargs["senderID"]
+        return Message.objects.filter(senderID=senderID)
 
-    def list(self, request):
-        queryset = self.get_queryset()
-        serializer = MessageSerializer(queryset, many=True)
-        return Response(serializer.data)
 
 class SmsHistoryDetail(generics.RetrieveAPIView):
     """
@@ -354,6 +376,40 @@ def nuobj_api(request):
 
 
 
+def get_number_from_group(request, groupID):
+    group = Group.objects.filter(groupID=groupID)
+    return group.phoneNumbers
+
+@api_view(["POST"])
+def send_group_twillo(request):
+    """
+    Send to an already created group. Format should be {"content":"", "groupID":"" }
+    """
+    msgstatus = []
+    content = request.data["content"]
+    groupID = request.data["groupID"]
+    senderID = request.data["senderID"]
+    numbers = get_number_from_group(request, groupID)
+
+    client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+    for number in numbers:
+        payload = {'content':content, "reciever":number, "senderID":senderID}
+        serializer = MessageSerializer(data=payload)
+        if serializer.is_valid():
+            try:
+                client.messages.create(
+                    from_ = settings.TWILIO_NUMBER,
+                    to=number,
+                    message = content
+                )
+                msgstatus.append(f"sent to {number}")
+            except Exception as e:
+                print(e)
+                msgstatus.append(f"{number} can't be sent to, invalid details")
+        else:
+            msgstatus.append(f"something went wrong while sending to {number}")
+    return Response({"details":msgstatus})
+
 
 #This is the function for Listing and creating A GroupList
 
@@ -367,7 +423,6 @@ class GroupList(generics.ListAPIView):
         senderID = self.kwargs["senderID"]
         queryset = Group.objects.filter(userID=senderID)
         return queryset
-
 
 
 class GroupCreate(generics.CreateAPIView):

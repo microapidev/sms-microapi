@@ -1,4 +1,4 @@
-from .views import sendmessage, translateMessages, userdetails, nuobj_api, GroupList, GroupDetail, GroupCreate, SmsHistoryList, SmsHistoryDetail #sendmessage_infobip, get_recipients_ibp
+from .views import sendmessage, translateMessages, userdetails, nuobj_api, GroupList, GroupDetail, GroupCreate, SmsHistoryList, SmsHistoryDetail, send_group_twillo #sendmessage_infobip, get_recipients_ibp
 from django.urls import path
 from .views import save_recipients_details, sms_list
 from .views import NuobjectsSendMessage, NuobjectsGetBalance, NuobjectsMessageList
@@ -30,6 +30,7 @@ urlpatterns = [
     path('v1/sms/recipient/save', save_recipients_details),
     path('v1/sms/recipient/all', ReceipientList.as_view(), name="get-all-recipients"),
     path('v1/sms/message/translate', translateMessages),
+    path('v1/sms/Twillo_sms_group', send_group_twillo),
     #path('swagger(P<format>\.json|\.yaml)', schema_view.without_ui(cache_timeout=0), name='schema-json'), #not used for now
     path('', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
