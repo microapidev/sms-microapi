@@ -181,9 +181,9 @@ STATICFILES_DIRS = (
 # SECRET_KEY = 'o_-fp91f1j911ob2fu-q!-1k0ghho#_ywot$d#h@l#3^!*la$6' 
 
 # Twilio credentials and phone number
-TWILIO_ACCOUNT_SID='ACb60fcefbc82206fdc32956a496d15c26' # obtained from twilio.com/console AC296fa803ff255fb99eefac30eb1df72d
-TWILIO_AUTH_TOKEN='dd420ab34669139f4baf85264dfd6ce9' # also obtained from twilio.com/console 4eb428211d6ae606b737e2f10670bb5a
-TWILIO_NUMBER='+12058391366' # use the number you received when signing up or buy a new number +17177460412
+TWILIO_ACCOUNT_SID='AC296fa803ff255fb99eefac30eb1df72d' # obtained from twilio.com/console 
+TWILIO_AUTH_TOKEN='4eb428211d6ae606b737e2f10670bb5a' # also obtained from twilio.com/console 
+TWILIO_NUMBER='+17177460412' # use the number you received when signing up or buy a new number 
 
 # Activate Django-Heroku.
 django_heroku.settings(locals())
