@@ -15,6 +15,12 @@ from django.http import HttpResponse
 from django.http import JsonResponse
 from twilio.base.exceptions import TwilioRestException
 import json
+import urllib.parse
+from urllib.parse import urlencode
+
+# import http.client
+# import http
+# import mimetypes
 
 # from .infobip import send_single_message_ibp, delivery_reports_ibp
 from .models import Receipent, Message, Group
@@ -55,20 +61,36 @@ def sendmessage(request):
 
 # Create your views here.
 
-@api_view(['GET'])
-def get_recipient_details(request):
+class ReceipientList(APIView):
     """
-        List of all recipients
-        """
-    if request.method == 'GET':
-        receipents = Receipent.objects.filter()
-        receipentData = RecepientSerializer(receipents, many=True)
-        data = {
-            'message': 'Retreived token successfully',
-            'data': receipentData.data,
-            "status": status.HTTP_200_OK
-        }
-        return JsonResponse(data, status=status.HTTP_200_OK)
+    This allows view the list of the Infobip Messages Sent by all users.
+    """
+    # queryset = Message.objects.filter(service_type='IF')
+    serializer_class= RecepientSerializer
+
+    # def list(self, request):
+    #     queryset = self.get_queryset()
+    #     serializer = MessageSerializer(queryset, many=True)
+    #     return Response(serializer.data)
+
+    def get(self, request, format=None):
+        receipents = Receipent.objects.all()
+        serializer = RecepientSerializer(receipents, many=True)
+        return Response(serializer.data)
+
+
+class ReceipientCreate(generics.CreateAPIView):
+    queryset = Receipent.objects.all()
+    serializer_class= RecepientSerializer
+    
+    def post(self, request, *args, **kwargs):
+        recipientNumber = request.data.get("recipientNumber")
+        queryset = Receipent.objects.filter(recipientNumber=recipientNumber)
+        
+        if queryset.exists():
+            raise ValidationError('This Id or Number already exists, please enter another number and ID')
+        else:
+            return self.create(request, *args, **kwargs)
 
 
 @api_view(['POST'])
@@ -321,13 +343,13 @@ def translateMessages(request):
 # nuObjects
 @api_view(['POST'])
 def nuobj_api(request):
-    users = user.objects.all()
-    serialized_users = UserSerializer(users, many=True)
+    # users = user.objects.all()
+    serializer_class= MessageSerializer
     message = request.data["message"]
-    for recipient in serialized_users.data:
-        # User and pass (username and password) can be stored in env variables for live testing
-        data = {'user': 'demo', 'pass': 'pass', 'to': recipient, 'from': 'Testing', 'msg': message}
-        response = requests.post('https://cloud.nuobjects.com/api/send/', data=data)
+    sender = request.data.get("senderID")
+    text = request.data.get("content")
+    receiver = request.data.get("receiver")
+    response = requests.post(f'https://cloud.nuobjects.com/api/send/?user={philemon}&pass={Microapipassword1}&to={receiver}&from={sender}&msg={text}')
     return HttpResponse("Messages Sent!", 200)
 
 

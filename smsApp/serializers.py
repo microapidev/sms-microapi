@@ -17,7 +17,7 @@ class RecepientSerializer(serializers.ModelSerializer):
 class MessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Message
-        fields = ["receiver", "transactionID", "date_created", "content", "status", "senderID"]
+        fields = ["senderID", "content", "receiver"]
 
 
 class GroupSerializer(serializers.ModelSerializer):

@@ -38,7 +38,7 @@ class Group(models.Model):
         return self.groupName
 
 class Receipent(models.Model):
-    userID = models.CharField(max_length=30) #user who added the recipient
+    userID = models.CharField(primary_key=True, max_length=30) #user who added the recipient
     recipientName = models.CharField(max_length=80)
     recipientNumber = models.CharField(max_length=80)
     dateCreated = models.DateTimeField(default=timezone.now)
