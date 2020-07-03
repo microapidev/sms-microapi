@@ -154,7 +154,7 @@ def save_recipients_details(request):
 @api_view(['GET'])
 def sms_list(request):
     """
-    This view will retrieve every message sent by customer.
+    This view will retrieve every message sent by all customer in twillo.
     """
     if request.method == 'GET':
         # Connect to Twilio and Authenticate
@@ -451,6 +451,7 @@ class GroupList(generics.ListAPIView):
 class GroupCreate(generics.CreateAPIView):
     """
     This allows users add the recipient's numbers to the new group and create a group.
+    format follow {"groupName":"", "userID":""}
 
     """
     queryset = Group.objects.all()
@@ -517,6 +518,8 @@ class GroupNumbersCreate(generics.CreateAPIView):
     Group is an instance...so the ID of the group is to be passed in.
     It requires the ID of the already created group.
     Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.
+    Format is as follows:
+    {"group":"<unique primarykey given upon creating a group>", "phoneNumbers":"<a phone number>"}
     """
     queryset = GroupNumbers.objects.all()
     serializer_class= GroupNumbersSerializer
@@ -668,7 +671,7 @@ class TwilioSendSms(views.APIView):
     """
     This is to send a single SMS to a user. Format is to be in
     {"receiver":"", 'senderID':"", "content":""}
-    where content is the message, senderID is the user identifying constant 
+    where content is the message, senderID is the userID 
     and the phone is the number to be sent to
     """
 
