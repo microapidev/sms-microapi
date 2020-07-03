@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from twilio.rest import Client
 from django.conf import settings
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.http import JsonResponse
 from twilio.base.exceptions import TwilioRestException
 import json
@@ -23,8 +23,8 @@ from urllib.parse import urlencode
 # import mimetypes
 
 # from .infobip import send_single_message_ibp, delivery_reports_ibp
-from .models import Receipent, Message, Group
-from .serializers import RecepientSerializer, MessageSerializer, GroupSerializer 
+from .models import Receipent, Message, Group, GroupNumbers
+from .serializers import RecepientSerializer, MessageSerializer, GroupSerializer, GroupNumbersSerializer 
 from googletrans import Translator
 
 
@@ -33,8 +33,6 @@ from googletrans import Translator
 # send message to users using twillio
 @csrf_exempt
 def sendmessage(request):
-    users = user.objects.all()
-    serialized_users = UserSerializer(users, many=True)
     for number in serialized_users:
         phone_number = number.phone_number
     message = ('sample message')
@@ -373,15 +371,25 @@ def nuobj_api(request):
     return HttpResponse("Messages Sent!", 200)
 
 
-
-
 #This is the function for Listing and creating A GroupList
 
-class GroupList(generics.ListAPIView):
+class GroupBySenderList(generics.ListAPIView):
     """
     This allows view the list of the groups available to a user.
     """
+    serializer_class = GroupSerializer
+
+    def get_queryset(self):
+        senderID = self.kwargs["senderID"]
+        queryset = Group.objects.filter(userID=senderID)
+        return queryset
+
+class GroupList(generics.ListAPIView):
+    """
+    This allows view the list of the groups available on DB.
+    """
     queryset = Group.objects.all()
+    serializer_class = GroupSerializer
 
     def list(self, request):
         queryset = self.get_queryset()
@@ -389,22 +397,26 @@ class GroupList(generics.ListAPIView):
         return Response(serializer.data)
 
 
+
 class GroupCreate(generics.CreateAPIView):
     """
     This allows users add the recipient's numbers to the new group and create a group.
-    It requires the ID of the already created group Default is "fdbcc88b-6c00-46a8-a639-f5e5de70cef3"
-    Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.
+
     """
     queryset = Group.objects.all()
     serializer_class= GroupSerializer
     
     def post(self, request, *args, **kwargs):
-        phoneNumbers = request.data.get("phoneNumbers")
         groupName = request.data.get("groupName")
-        queryset = Group.objects.filter(phoneNumbers=phoneNumbers, groupName=groupName)
+        senderID = request.data.get("userID")
+        queryset = Group.objects.filter(userID=senderID, groupName=groupName)
         
+        if senderID == "string" or senderID == None:
+            return Response({"userID":"string is empty"},status=status.HTTP_400_BAD_REQUEST)            
+        if groupName == "string" or groupName == None:
+            return Response({"groupName":"empty"},status=status.HTTP_400_BAD_REQUEST)
         if queryset.exists() :
-            raise ValidationError('This Number exists in group, please enter another')
+            return Response({"This group exists and it has same user, please specify another group with or change the senderID"},status=status.HTTP_400_BAD_REQUEST)
         else:
             return self.create(request, *args, **kwargs)
 
@@ -412,7 +424,7 @@ class GroupCreate(generics.CreateAPIView):
 #This is the function for updating and deleting each recipient in a list
 class GroupDetail(views.APIView):
     """
-    Update or delete a recipient instance.
+    The user can Update or delete a group.
     """
     def get_object(self, pk):
         try:
@@ -439,6 +451,56 @@ class GroupDetail(views.APIView):
         group = self.get_object(pk)
         group.delete()
         return Response({"Item":"Successfully Deleted"},status=status.HTTP_200_OK)
+
+class GroupNumbersList(APIView):
+    """
+    The user can List all numbers in a group, or create a new group.
+    """
+    def get(self, request, format=None):
+        groupNumber = GroupNumbers.objects.all()
+        serializer = GroupNumbersSerializer(groupNumber, many=True)
+        return Response(serializer.data)
+
+class GroupNumbersCreate(generics.CreateAPIView):
+    """
+    The user create all numbers and add to group, or create a new group.
+    Group is an instance...so the ID of the group is to be passed in.
+    It requires the ID of the already created group.
+    Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.
+    """
+    queryset = GroupNumbers.objects.all()
+    serializer_class= GroupNumbersSerializer
+
+
+class GroupNumbersDetail(APIView):
+    """
+    The user can Retrieve, update or delete a phoneNumber instance.
+    """
+    def get_object(self, pk):
+        try:
+            return GroupNumbers.objects.get(userID=pk)
+        except GroupNumbers.DoesNotExist:
+            raise Http404
+    
+    """
+    The user can update a phoneNumber instance.
+    """
+
+    def put(self, request, pk, format=None):
+        groupNumber = self.get_object(pk)
+        serializer = GroupNumbersSerializer(groupNumber, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    """
+    The user can delete a phoneNumber instance.
+    """
+    def delete(self, request, pk, format=None):
+        groupNumber = self.get_object(pk)
+        groupNumber.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 # @api_view(['POST'])
@@ -570,3 +632,24 @@ class NuobjectsGetBalance(APIView):
         response = requests.post('http://https%3A//cloud.nuobjects.com/api/credit/%3Fuser%3Dphilemon%26pass%3DMicroapipassword1')
         # response = requests.post(f'https://cloud.nuobjects.com/api/send/?user=philemon&pass=Microapipassword1&to=2347069501730&from=phil&msg=HelloWorld')
         return HttpResponse(response)
+class TwilioSendSms(views.APIView):
+
+    def post(self, request):
+        try:
+            receiver = request.data["receiver"]
+            senderID = request.data["senderID"]
+            content = request.data["content"]
+            serializer_message = MessageSerializer(data=request.data)
+            
+            client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+
+            if serializer_message.is_valid:
+                message = client.messages.create(
+                    from_ = settings.TWILIO_NUMBER,
+                    to = receiver,
+                    body = content)
+                senderID = senderID
+                return Response({"details":"Message sent!"}, 200)
+        except TwilioRestException as e:
+            return Response({"Invalid Credentials": str(e)},status=status.HTTP_400_BAD_REQUEST)
+  
