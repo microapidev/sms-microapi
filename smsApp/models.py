@@ -57,8 +57,6 @@ class Message(models.Model):
     # account_sid = models.CharField(max_length=80, blank=True, null=True)
     date_created = models.DateTimeField(auto_now_add=True)
     content = models.TextField(default="test")
-    status = models.CharField(max_length=100, default="Sent", blank=True, null=True)
-    # price = models.FloatField(blank=True, null=True)
     INFOBIP = 'IF'
     TWILLO = 'TW'
     NUOBJECT = 'NU'
@@ -91,6 +89,7 @@ class Message(models.Model):
         default=DRAFT,
     )
     dateScheduled = models.DateTimeField(null=True)
+
 
 # class Media(models.Model):
 #     senderID = models.CharField(max_length=30) 

@@ -382,7 +382,7 @@ def get_numbers_from_group(request, pk):
     return group_numbers
 
 @api_view(["POST"])
-def send_group_twillo(request):
+def send_group_twilio(request):
     """
     Send to an already created group. Format should be {"content":"", "groupID":"", "senderID":"" }
     """
@@ -395,7 +395,7 @@ def send_group_twillo(request):
 
     client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
     for number in numbers:
-        payload = {'content':content, "receiver":number, "senderID":senderID}
+        payload = {'content':content, "receiver":number, "senderID":senderID, "service_type":"TW"}
         serializer = MessageSerializer(data=payload)
         if serializer.is_valid():
             try:
@@ -405,13 +405,18 @@ def send_group_twillo(request):
                     body = content
                 )
                 msgstatus.append(f"sent to {number}")
+                value = serializer.save()
+                value.messageStatus = "S"
+                value.save()
             except Exception as e:
-                print(e)
                 msgstatus.append(f"{number} can't be sent to, invalid details")
+                value = serializer.save()
+                value.messageStatus = "F"
+                value.save()
         else:
             print(serializer.errors)
             msgstatus.append(f"something went wrong while sending to {number}")
-    return Response({"details":msgstatus})
+    return Response({"details":msgstatus, "service_type":"TWILIO", "senderID":senderID }, status=status.HTTP_200_OK)
 
 
 #This is the function for Listing and creating A GroupList
@@ -647,23 +652,36 @@ class NuobjectsGetBalance(APIView):
         # response = requests.post(f'https://cloud.nuobjects.com/api/send/?user=philemon&pass=Microapipassword1&to=2347069501730&from=phil&msg=HelloWorld')
         return HttpResponse(response)
 class TwilioSendSms(views.APIView):
+    """
+    This is to send a single SMS to a user. Format is to be in
+    {"receiver":"", 'senderID':"", "content":""}
+    where content is the message, senderID is the user identifying constant 
+    and the phone is the number to be sent to
+    """
 
     def post(self, request):
-        try:
-            receiver = request.data["receiver"]
-            senderID = request.data["senderID"]
-            content = request.data["content"]
-            serializer_message = MessageSerializer(data=request.data)
-            
-            client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
-
-            if serializer_message.is_valid:
+        receiver = request.data["receiver"]
+        content = request.data["content"]
+        request.data["service_type"] = "TW"
+        serializer_message = MessageSerializer(data=request.data)
+        
+        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+        print(serializer_message)
+        if serializer_message.is_valid():
+            try:
+                value = serializer_message.save()
                 message = client.messages.create(
                     from_ = settings.TWILIO_NUMBER,
                     to = receiver,
-                    body = content)
-                senderID = senderID
-                return Response({"details":"Message sent!"}, 200)
-        except TwilioRestException as e:
-            return Response({"Invalid Credentials": str(e)},status=status.HTTP_400_BAD_REQUEST)
+                    body = content
+                    )
+                value.messageStatus = "S"
+                value.save()
+                return Response({"details":"Message sent!", "service_type":"TWILIO"}, 200)
+            except TwilioRestException as e:
+                value.messageStatus = "F"
+                value.save()
+                return Response({f"{receiver} can't be sent to, review number": str(e)},status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"details":"Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
   
