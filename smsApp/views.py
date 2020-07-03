@@ -59,8 +59,32 @@ def sendmessage(request):
     return HttpResponse("messages sent!", 200)
 
 
-# Create your views here.
+class InfobipSms(APIView):
+    """
+    Send messages with INFOBIP
+    """
+    def post(self):
+        message = request.data['message']
+        # recipients = Receipent.objects.filter()
+        # serializer = RecepientSerializer(data=recipients,many=True)
+        # serializer.is_valid()
+        # info = serializer.data
+        # response = json.dumps(info)
+        phone = request.data["phone"]
+        data = {
+            "from": "InfoSMS",
+            "to": phone,
+            "text": message
+        }
+        headers = {'Authorization': os.getenv("TOKEN")}
+        r = requests.post('https://9rr9dr.api.infobip.com/', data=data,headers=headers)
+        response = r.status_code
+        return JsonResponse(response,safe=False)
 
+
+
+
+# Create your views here.
 class ReceipientList(APIView):
     """
     This allows view the list of the Infobip Messages Sent by all users.
@@ -130,7 +154,7 @@ def save_recipients_details(request):
 @api_view(['GET'])
 def sms_list(request):
     """
-    This view will retrieve every message sent by customer.
+    This view will retrieve every message sent by all customer in twillo.
     """
     if request.method == 'GET':
         # Connect to Twilio and Authenticate
@@ -157,13 +181,14 @@ def sms_list(request):
 class SmsHistoryList(generics.ListAPIView):
     """
     This is used to pull sms history on database
+    The senderID should be added at endpoint 
+    /v1/sms/sms_history/<senderID>
     """
-    queryset = Message.objects.all()
+    serializer_class = MessageSerializer
+    def get_queryset(self):
+        senderID = self.kwargs["senderID"]
+        return Message.objects.filter(senderID=senderID)
 
-    def list(self, request):
-        queryset = self.get_queryset()
-        serializer = MessageSerializer(queryset, many=True)
-        return Response(serializer.data)
 
 class SmsHistoryDetail(generics.RetrieveAPIView):
     """
@@ -353,11 +378,55 @@ def nuobj_api(request):
     return HttpResponse("Messages Sent!", 200)
 
 
+
+def get_numbers_from_group(request, pk):
+    group = get_object_or_404(Group, pk=pk)
+    group_numbers = [val.phoneNumbers for val in group.group.all()]
+    return group_numbers
+
+@api_view(["POST"])
+def send_group_twilio(request):
+    """
+    Send to an already created group. Format should be {"content":"", "groupID":"", "senderID":"" }
+    """
+    msgstatus = []
+    content = request.data["content"]
+    groupPK = request.data["groupPK"]
+    senderID = request.data["senderID"]
+    numbers = get_numbers_from_group(request, groupPK)
+
+
+    client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+    for number in numbers:
+        payload = {'content':content, "receiver":number, "senderID":senderID, "service_type":"TW"}
+        serializer = MessageSerializer(data=payload)
+        if serializer.is_valid():
+            try:
+                client.messages.create(
+                    from_ = settings.TWILIO_NUMBER,
+                    to = number,
+                    body = content
+                )
+                msgstatus.append(f"sent to {number}")
+                value = serializer.save()
+                value.messageStatus = "S"
+                value.save()
+            except Exception as e:
+                msgstatus.append(f"{number} can't be sent to, invalid details")
+                value = serializer.save()
+                value.messageStatus = "F"
+                value.save()
+        else:
+            msgstatus.append(f"something went wrong while sending to {number}")
+    return Response({"details":msgstatus, "service_type":"TWILIO", "senderID":senderID }, status=status.HTTP_200_OK)
+
+
 #This is the function for Listing and creating A GroupList
 
 class GroupBySenderList(generics.ListAPIView):
     """
-    This allows view the list of the groups available to a user.
+    This allows view the list of the groups created by a user.
+
     """
     serializer_class = GroupSerializer
 
@@ -379,10 +448,10 @@ class GroupList(generics.ListAPIView):
         return Response(serializer.data)
 
 
-
 class GroupCreate(generics.CreateAPIView):
     """
     This allows users add the recipient's numbers to the new group and create a group.
+    format follow {"groupName":"", "userID":""}
 
     """
     queryset = Group.objects.all()
@@ -449,9 +518,22 @@ class GroupNumbersCreate(generics.CreateAPIView):
     Group is an instance...so the ID of the group is to be passed in.
     It requires the ID of the already created group.
     Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.
+    Format is as follows:
+    {"group":"<unique primarykey given upon creating a group>", "phoneNumbers":"<a phone number>"}
     """
     queryset = GroupNumbers.objects.all()
     serializer_class= GroupNumbersSerializer
+
+
+    def post(self, request, *args, **kwargs):
+        groupID = request.data.get("group")
+        phoneNumbers = request.data.get("phoneNumbers")
+        queryset = GroupNumbers.objects.filter(group=groupID, phoneNumbers=phoneNumbers)
+        
+        if queryset.exists() :
+            return Response({"This number already exists in this group"},status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return self.create(request, *args, **kwargs)
 
 
 class GroupNumbersDetail(APIView):
@@ -586,23 +668,35 @@ class NuobjectsGetBalance(APIView):
         # response = requests.post(f'https://cloud.nuobjects.com/api/send/?user=philemon&pass=Microapipassword1&to=2347069501730&from=phil&msg=HelloWorld')
         return HttpResponse(response)
 class TwilioSendSms(views.APIView):
+    """
+    This is to send a single SMS to a user. Format is to be in
+    {"receiver":"", 'senderID':"", "content":""}
+    where content is the message, senderID is the userID 
+    and the phone is the number to be sent to
+    """
 
     def post(self, request):
-        try:
-            receiver = request.data["receiver"]
-            senderID = request.data["senderID"]
-            content = request.data["content"]
-            serializer_message = MessageSerializer(data=request.data)
-            
-            client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
-
-            if serializer_message.is_valid:
+        receiver = request.data["receiver"]
+        content = request.data["content"]
+        request.data["service_type"] = "TW"
+        serializer_message = MessageSerializer(data=request.data)
+        
+        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+        if serializer_message.is_valid():
+            try:
+                value = serializer_message.save()
                 message = client.messages.create(
                     from_ = settings.TWILIO_NUMBER,
                     to = receiver,
-                    body = content)
-                senderID = senderID
-                return Response({"details":"Message sent!"}, 200)
-        except TwilioRestException as e:
-            return Response({"Invalid Credentials": str(e)},status=status.HTTP_400_BAD_REQUEST)
+                    body = content
+                    )
+                value.messageStatus = "S"
+                value.save()
+                return Response({"details":"Message sent!", "service_type":"TWILIO"}, 200)
+            except TwilioRestException as e:
+                value.messageStatus = "F"
+                value.save()
+                return Response({f"{receiver} can't be sent to, review number": str(e)},status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"details":"Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
   
