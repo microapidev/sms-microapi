@@ -353,8 +353,6 @@ def nuobj_api(request):
     return HttpResponse("Messages Sent!", 200)
 
 
-
-
 #This is the function for Listing and creating A GroupList
 
 class GroupBySenderList(generics.ListAPIView):
@@ -587,3 +585,24 @@ class NuobjectsGetBalance(APIView):
         response = requests.post('http://https%3A//cloud.nuobjects.com/api/credit/%3Fuser%3Dphilemon%26pass%3DMicroapipassword1')
         # response = requests.post(f'https://cloud.nuobjects.com/api/send/?user=philemon&pass=Microapipassword1&to=2347069501730&from=phil&msg=HelloWorld')
         return HttpResponse(response)
+class TwilioSendSms(views.APIView):
+
+    def post(self, request):
+        try:
+            receiver = request.data["receiver"]
+            senderID = request.data["senderID"]
+            content = request.data["content"]
+            serializer_message = MessageSerializer(data=request.data)
+            
+            client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+
+            if serializer_message.is_valid:
+                message = client.messages.create(
+                    from_ = settings.TWILIO_NUMBER,
+                    to = receiver,
+                    body = content)
+                senderID = senderID
+                return Response({"details":"Message sent!"}, 200)
+        except TwilioRestException as e:
+            return Response({"Invalid Credentials": str(e)},status=status.HTTP_400_BAD_REQUEST)
+  
