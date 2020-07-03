@@ -15,9 +15,10 @@ class RecepientSerializer(serializers.ModelSerializer):
 
 
 class MessageSerializer(serializers.ModelSerializer):
+    service_type = serializers.CharField(read_only=True)
     class Meta:
         model = Message
-        fields = ["senderID", "content", "receiver"]
+        fields = ["senderID", "content", "receiver", 'service_type']
 
 
 class GroupSerializer(serializers.ModelSerializer):

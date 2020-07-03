@@ -29,20 +29,6 @@ from googletrans import Translator
 
 
 # Create your views here.
-@api_view(['GET', 'POST'])
-# post and get methods on users
-def userdetails(request):
-    if request.method == 'GET':
-        users = user.objects.all()
-        serialized_users = UserSerializer(users, many=True)
-        return Response(serialized_users.data)
-    elif request.method == 'POST':
-        serialized_users = UserSerializer(data=request.data)
-        if serialized_users.is_valid():
-            serialized_users.save()
-            return Response(serialized_users.data, status=status.HTTP_201_CREATED)
-        return Response(UserSerializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 # send message to users using twillio
 @csrf_exempt
@@ -93,6 +79,38 @@ class ReceipientCreate(generics.CreateAPIView):
             raise ValidationError('This Id or Number already exists, please enter another number and ID')
         else:
             return self.create(request, *args, **kwargs)
+
+
+#This is the function for updating and deleting each recipient in a list
+class RecipientDetail(views.APIView):
+    """
+    Update or delete a recipient instance.
+    """
+    def get_object(self, recipientNumber):
+        try:
+            return Recipient.objects.get(recipientNumber=recipientNumber)
+        except Recipient.DoesNotExist:
+            raise Http404
+    """
+    This Updates the information of the added recipient
+    """
+
+    def put(self, request, recipientNumber, format=None):
+        recipient = self.get_object(recipientNumber)
+        serializer = RecepientSerializer(recipient, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    """
+    This Deletes the information of the added recipient
+    """
+
+    def delete(self, request, recipientNumber, format=None):
+        recipient = self.get_object(recipientNumber)
+        recipient.delete()
+        return Response({"Item":"Successfully Deleted"},status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -423,57 +441,50 @@ class GroupDetail(views.APIView):
         return Response({"Item":"Successfully Deleted"},status=status.HTTP_200_OK)
 
 
-class NuobjectsMessageList(APIView):
+# @api_view(['POST'])
+# def send_with_infobip(request):
+#     # message = request.data['message']
+#     # recipients = Receipent.objects.filter()
+#     # serializer = RecepientSerializer(data=recipients,many=True)
+#     # serializer.is_valid()
+#     # info = serializer.data
+#     # response = json.dumps(info)
+#     data = {
+#         "from": "InfoSMS",
+#         "to": "+2347069501730",
+#         "text": "Hello we are testing the service"
+#     }
+#     headers = {'Authorization': '32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b'}
+#     r = requests.post("https://jdd8zk.api.infobip.com", data=data,headers=headers)
+#     response = r.status_code
+#     return JsonResponse(response,safe=False)
+
+
+class InfobipSendMessage(generics.CreateAPIView):
     """
-    This allows view the list of the Infobip Messages Sent by all users.
+    This allows users send messages to recipient's.
     """
-    # queryset = Message.objects.filter(service_type='IF')
+    queryset = Message.objects.all()
     serializer_class= MessageSerializer
-
-    # def list(self, request):
-    #     queryset = self.get_queryset()
-    #     serializer = MessageSerializer(queryset, many=True)
-    #     return Response(serializer.data)
-
-    def get(self, request, format=None):
-        messages = Message.objects.filter(service_type='NU')
-        serializer = MessageSerializer(messages, many=True)
-        return Response(serializer.data)
-
-
-# class InfobipSendMessage(generics.CreateAPIView):
-#     """
-#     This allows users send messages to recipient's.
-#     """
-#     queryset = Message.objects.all()
-#     serializer_class= MessageSerializer
     
-#     def post(self, request, *args, **kwargs):
-#         sender = request.data.get("senderID")
-#         text = request.data.get("content")
-#         receiver = request.data.get("receiver")
-
-#         data = send_single_message_ibp(text, receiver)
-
-
-#         # conn = http.client.HTTPSConnection("jdd8zk.api.infobip.com")
-#         # payload = '''{\"messages\":[
-#         #                 {\"from\":\"{sender}\",
-#         #                 \"destinations\":[{\"to\":\"+2347069501730\"}],
-#         #                 \"text\":\"{text}\",
-#         #                 \"flash\":true}]}'''
-#         # authorization = {'username':'philemonapi', 'password':'Microapipassword1'}
-#         # headers = {
-#         #     'Authorization': f'{authorization}',
-#         #     'Content-Type': 'application/json',
-#         #     'Accept': 'application/json'
-#         # }
-
-#         # conn.request("POST", "/sms/2/text/advanced", payload, headers)
-#         # res = conn.getresponse()
-#         # data = res.read()
-#         # print(data.decode("utf-8"))
-#         return
+    def post(self, request, *args, **kwargs):
+        reciever = request.data.get("receiver")
+        sender = request.data.get("senderID")
+        text = request.data.get("content")
+        data = {
+        "from": reciever,
+        "to": sender,
+        "text": text
+        }
+        headers = {'Authorization': '32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b'}
+        r = requests.post("https://jdd8zk.api.infobip.com", data=data,headers=headers)
+        response = r.status_code
+        request.data['service_type'] = 'IF'
+        # serializer = MessageSerializer(data=request.data)
+        if response == 200:
+            # serializer.save()
+            return self.create(request, *args, **kwargs)
+        return JsonResponse(response,safe=False)
 
 
 class InfobipSingleMessage(generics.RetrieveAPIView):
@@ -490,6 +501,42 @@ class InfobipSingleMessage(generics.RetrieveAPIView):
         message = self.get_object(senderID)
         serializer = MessageSerializer(message)
         return JsonResponse(serializer.data)
+
+
+class InfobipMessageList(APIView):
+    """
+    This allows view the list of the Infobip Messages Sent by all users.
+    """
+    # queryset = Message.objects.filter(service_type='IF')
+    serializer_class= MessageSerializer
+
+    # def list(self, request):
+    #     queryset = self.get_queryset()
+    #     serializer = MessageSerializer(queryset, many=True)
+    #     return Response(serializer.data)
+
+    def get(self, request, format=None):
+        messages = Message.objects.filter(service_type='IF')
+        serializer = MessageSerializer(messages, many=True)
+        return Response(serializer.data)
+
+
+class NuobjectsMessageList(APIView):
+    """
+    This allows view the list of the Infobip Messages Sent by all users.
+    """
+    # queryset = Message.objects.filter(service_type='IF')
+    serializer_class= MessageSerializer
+
+    # def list(self, request):
+    #     queryset = self.get_queryset()
+    #     serializer = MessageSerializer(queryset, many=True)
+    #     return Response(serializer.data)
+
+    def get(self, request, format=None):
+        messages = Message.objects.filter(service_type='NU')
+        serializer = MessageSerializer(messages, many=True)
+        return Response(serializer.data)
 
 
 class NuobjectsSendMessage(generics.CreateAPIView):
