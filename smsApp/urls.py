@@ -1,14 +1,11 @@
-<<<<<<< HEAD
-from .views import sendmessage, translateMessages, nuobj_api, GroupList, GroupDetail, GroupCreate, SmsHistoryList, SmsHistoryDetail #sendmessage_infobip, get_recipients_ibp
 from django.urls import path
 from .views import NuobjectsSendMessage, NuobjectsGetBalance, NuobjectsMessageList
 from .views import ReceipientCreate, ReceipientList, RecipientDetail
 from .views import InfobipSendMessage, InfobipSingleMessage, InfobipMessageList
-=======
-from .views import sendmessage, translateMessages, userdetails, nuobj_api, TwilioSendSms, GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupNumbersList,GroupNumbersCreate, GroupNumbersDetail, SmsHistoryList, SmsHistoryDetail #sendmessage_infobip, get_recipients_ibp
+from .views import GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupNumbersList,GroupNumbersCreate, GroupNumbersDetail
+from .views import sendmessage, translateMessages, userdetails, nuobj_api, TwilioSendSms, SmsHistoryList, SmsHistoryDetail #sendmessage_infobip, get_recipients_ibp
 from django.urls import path
 from .views import create_receipents_details, save_recipients_details, sms_list  #get_recipient_details
->>>>>>> d082962bcb92812fe57bdb0d8098994aa7b241cc
 from rest_framework.schemas.coreapi import AutoSchema
 from rest_framework_swagger.views import get_swagger_view
 from rest_framework import permissions
