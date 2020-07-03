@@ -3,7 +3,7 @@ from .views import NuobjectsSendMessage, NuobjectsGetBalance, NuobjectsMessageLi
 from .views import ReceipientCreate, ReceipientList, RecipientDetail
 from .views import InfobipSendMessage, InfobipSingleMessage, InfobipMessageList
 from .views import GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupNumbersList,GroupNumbersCreate, GroupNumbersDetail
-from .views import sendmessage, translateMessages, userdetails, nuobj_api, SmsHistoryList, SmsHistoryDetail #sendmessage_infobip, get_recipients_ibp
+from .views import sendmessage, translateMessages, nuobj_api, SmsHistoryList, SmsHistoryDetail #sendmessage_infobip, get_recipients_ibp
 from .views import send_group_twilio, TwilioSendSms
 from django.urls import path
 from .views import create_receipents_details, save_recipients_details, sms_list  #get_recipient_details
@@ -54,6 +54,8 @@ urlpatterns = [
    #Infobip Views
    path("v1/sms/infobip/send_sms", InfobipSendMessage.as_view(), name="infobip-send-message"),
    path("v1/sms/infobip/view_all_sms", InfobipMessageList.as_view(), name="infobip-sent-messages"),
+   path("v1/sms/infobip/view_all_sms/<str:senderID>", InfobipSingleMessage.as_view(), name="infobip-sent-messages"),
+
 
    #Twillo Views
    path("v1/sms/Twillo_send_sms", sendmessage),
@@ -71,7 +73,7 @@ urlpatterns = [
       SMS API testing - This is done using PostMan Testing tool. To start, all you need to do is have a senderID or userID. Once supplied, it would be used to 
       identify all transactions done by you. To send a single sms using an service,visit the respective endpoint and follow the instructions based on format and 
       request to be sent. Remember senderID == userID, and this is personally generated. LET'S TEST!!!."""
-   ,permission_classes=(permissions.AllowAny,)))
+   ,permission_classes=(permissions.AllowAny,))),
     
    #Message translation
    path('v1/sms/message/translate', translateMessages),
