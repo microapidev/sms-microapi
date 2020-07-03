@@ -1,117 +1,38 @@
-import random
-import string
 import requests
-from django.shortcuts import render
-from .models import User
+from django.shortcuts import render, get_object_or_404
+# from smsApp.models import user
+# from smsApp.serializers import UserSerializer
+from django.core.exceptions import ValidationError
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
+from rest_framework.views import APIView
+from rest_framework import generics, views
 from rest_framework.response import Response
+from rest_framework import status
 from twilio.rest import Client
 from django.conf import settings
-from django.http import HttpResponse
-from django.contrib.auth import authenticate
+from django.http import HttpResponse, Http404
 from django.http import JsonResponse
 from twilio.base.exceptions import TwilioRestException
 import json
-from rest_framework import generics, views, status
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.authentication import TokenAuthentication
-from django.http import Http404
+import urllib.parse
+from urllib.parse import urlencode
+
+# import http.client
+# import http
+# import mimetypes
+
 # from .infobip import send_single_message_ibp, delivery_reports_ibp
-from .models import Receipent, Message
-from .serializers import RecepientSerializer, MessageSerializer, UserSerializer
+from .models import Receipent, Message, Group, GroupNumbers
+from .serializers import RecepientSerializer, MessageSerializer, GroupSerializer, GroupNumbersSerializer 
 from googletrans import Translator
 
 
-# def add_user(request):
-
-class CreateUser(generics.CreateAPIView):
-
-    """
-    This allows for User Registration.
-    """
-    serializer_class = UserSerializer
-
-    def get_object(self, name):
-        try:
-            return User.objects.get(username=name)
-        except User.DoesNotExist:
-            raise Http404
- 
-    def post(self, request):
-        otp = "".join(random.choice(string.digits) for i in range(6))
-        # request_dict = request.data 
-        # request_dict["otp"] = otp 
-        serializer = UserSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            user_email = request.data["email"]
-            user = User.objects.get(email=user_email)
-            user.otp = otp
-            user.save()
-            print(otp) # print to screen for now, when sms is enabled, then it'd be changed to send as sms
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
- 
-class ListUser(generics.ListAPIView):
-    """
-
-    Only for admins.   
-    Shows the list of users registered on the platform.   
-    To test, endpoint - 'user/list', add given token in the key-value format and send a GET request 
-    """
-    authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticated]
-    serializer_class = UserSerializer
-    queryset = User.objects.all()
-
-"""
-For function based views, please add these decorators at the top
-@permission_class(["IsAuthenticated"])
-@authentication_classes(["TokenAuthentication"])
-
-For class based views, inside the class, add the following 
-    authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticated]
-
-All these are necessary for authentication
-"""  
-
-class VerifyAccount(views.APIView):
-    """
-    Verify phone number using OTP to make account active. This must be done
-    before any transaction can occur on the account.
-    To verify, visit the endpoint and post email, phoneNumber and otp using those variables as keys
-
-    """
-    def post(self, request):
-        try:
-            otp = request.data["otp"]
-            email = request.data["email"]
-            phone = request.data["phoneNumber"]
-            try:
-                user = User.objects.get(email=email)
-            except User.DoesNotExist:
-                return Http404
-                
-            if user.phoneNumber == phone:
-                if user.otp == otp:
-                    user.is_active = True
-                    user.save()
-                    return Response({"details":f"{user.name} is now active"}, status=status.HTTP_202_ACCEPTED)
-                return Response({"details":"OTP not valid"}, status=status.HTTP_400_BAD_REQUEST)
-        except:
-            return Response({"details":"Credentials not valid"}, status=status.HTTP_400_BAD_REQUEST)
-        
-
-
-
+# Create your views here.
 
 # send message to users using twillio
 @csrf_exempt
 def sendmessage(request):
-    users = user.objects.all()
-    serialized_users = UserSerializer(users, many=True)
     for number in serialized_users:
         phone_number = number.phone_number
     message = ('sample message')
@@ -124,22 +45,94 @@ def sendmessage(request):
     return HttpResponse("messages sent!", 200)
 
 
-# Create your views here.
-
-@api_view(['GET'])
-def get_recipient_details(request):
+class InfobipSms(APIView):
     """
-        List of all recipients
-        """
-    if request.method == 'GET':
-        receipents = Receipent.objects.filter()
-        receipentData = RecepientSerializer(receipents, many=True)
+    Send messages with INFOBIP
+    """
+    def post(self):
+        message = request.data['message']
+        # recipients = Receipent.objects.filter()
+        # serializer = RecepientSerializer(data=recipients,many=True)
+        # serializer.is_valid()
+        # info = serializer.data
+        # response = json.dumps(info)
+        phone = request.data["phone"]
         data = {
-            'message': 'Retreived token successfully',
-            'data': receipentData.data,
-            "status": status.HTTP_200_OK
+            "from": "InfoSMS",
+            "to": phone,
+            "text": message
         }
-        return JsonResponse(data, status=status.HTTP_200_OK)
+        headers = {'Authorization': os.getenv("TOKEN")}
+        r = requests.post('https://9rr9dr.api.infobip.com/', data=data,headers=headers)
+        response = r.status_code
+        return JsonResponse(response,safe=False)
+
+
+
+
+# Create your views here.
+class ReceipientList(APIView):
+    """
+    This allows view the list of the Infobip Messages Sent by all users.
+    """
+    # queryset = Message.objects.filter(service_type='IF')
+    serializer_class= RecepientSerializer
+
+    # def list(self, request):
+    #     queryset = self.get_queryset()
+    #     serializer = MessageSerializer(queryset, many=True)
+    #     return Response(serializer.data)
+
+    def get(self, request, format=None):
+        receipents = Receipent.objects.all()
+        serializer = RecepientSerializer(receipents, many=True)
+        return Response(serializer.data)
+
+
+class ReceipientCreate(generics.CreateAPIView):
+    queryset = Receipent.objects.all()
+    serializer_class= RecepientSerializer
+    
+    def post(self, request, *args, **kwargs):
+        recipientNumber = request.data.get("recipientNumber")
+        queryset = Receipent.objects.filter(recipientNumber=recipientNumber)
+        
+        if queryset.exists():
+            raise ValidationError('This Id or Number already exists, please enter another number and ID')
+        else:
+            return self.create(request, *args, **kwargs)
+
+
+#This is the function for updating and deleting each recipient in a list
+class RecipientDetail(views.APIView):
+    """
+    Update or delete a recipient instance.
+    """
+    def get_object(self, recipientNumber):
+        try:
+            return Recipient.objects.get(recipientNumber=recipientNumber)
+        except Recipient.DoesNotExist:
+            raise Http404
+    """
+    This Updates the information of the added recipient
+    """
+
+    def put(self, request, recipientNumber, format=None):
+        recipient = self.get_object(recipientNumber)
+        serializer = RecepientSerializer(recipient, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    """
+    This Deletes the information of the added recipient
+    """
+
+    def delete(self, request, recipientNumber, format=None):
+        recipient = self.get_object(recipientNumber)
+        recipient.delete()
+        return Response({"Item":"Successfully Deleted"},status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -179,7 +172,7 @@ def save_recipients_details(request):
 @api_view(['GET'])
 def sms_list(request):
     """
-    This view will retrieve every message sent by customer.
+    This view will retrieve every message sent by all customer in twillo.
     """
     if request.method == 'GET':
         # Connect to Twilio and Authenticate
@@ -202,6 +195,31 @@ def sms_list(request):
             return JsonResponse(sms, status=200, safe=False)
         except TwilioRestException as e:
             return JsonResponse({"e": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+class SmsHistoryList(generics.ListAPIView):
+    """
+    This is used to pull sms history on database
+    The senderID should be added at endpoint 
+    /v1/sms/sms_history/<senderID>
+    """
+    serializer_class = MessageSerializer
+    def get_queryset(self):
+        senderID = self.kwargs["senderID"]
+        return Message.objects.filter(senderID=senderID)
+
+
+class SmsHistoryDetail(generics.RetrieveAPIView):
+    """
+    Call a particular History of user with users senderID
+    """
+    serializer = MessageSerializer
+    queryset = Message.objects.all()
+
+    # def retrieve(self, request, *args, **kwargs):
+    #     instance = self.get_object()
+    #     serializer = self.get_serializer(instance)
+    #     return Response(serializer.data)
+
 
 
 def translateMessages(request):
@@ -368,11 +386,366 @@ def translateMessages(request):
 # nuObjects
 @api_view(['POST'])
 def nuobj_api(request):
-    users = user.objects.all()
-    serialized_users = UserSerializer(users, many=True)
+    # users = user.objects.all()
+    serializer_class= MessageSerializer
     message = request.data["message"]
-    for recipient in serialized_users.data:
-        # User and pass (username and password) can be stored in env variables for live testing
-        data = {'user': 'demo', 'pass': 'pass', 'to': recipient, 'from': 'Testing', 'msg': message}
-        response = requests.post('https://cloud.nuobjects.com/api/send/', data=data)
+    sender = request.data.get("senderID")
+    text = request.data.get("content")
+    receiver = request.data.get("receiver")
+    response = requests.post(f'https://cloud.nuobjects.com/api/send/?user={philemon}&pass={Microapipassword1}&to={receiver}&from={sender}&msg={text}')
     return HttpResponse("Messages Sent!", 200)
+
+
+
+def get_numbers_from_group(request, pk):
+    group = get_object_or_404(Group, pk=pk)
+    group_numbers = [val.phoneNumbers for val in group.group.all()]
+    return group_numbers
+
+@api_view(["POST"])
+def send_group_twilio(request):
+    """
+    Send to an already created group. Format should be {"content":"", "groupID":"", "senderID":"" }
+    """
+    msgstatus = []
+    content = request.data["content"]
+    groupPK = request.data["groupPK"]
+    senderID = request.data["senderID"]
+    numbers = get_numbers_from_group(request, groupPK)
+
+
+    client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+    for number in numbers:
+        payload = {'content':content, "receiver":number, "senderID":senderID, "service_type":"TW"}
+        serializer = MessageSerializer(data=payload)
+        if serializer.is_valid():
+            try:
+                client.messages.create(
+                    from_ = settings.TWILIO_NUMBER,
+                    to = number,
+                    body = content
+                )
+                msgstatus.append(f"sent to {number}")
+                value = serializer.save()
+                value.messageStatus = "S"
+                value.save()
+            except Exception as e:
+                msgstatus.append(f"{number} can't be sent to, invalid details")
+                value = serializer.save()
+                value.messageStatus = "F"
+                value.save()
+        else:
+            msgstatus.append(f"something went wrong while sending to {number}")
+    return Response({"details":msgstatus, "service_type":"TWILIO", "senderID":senderID }, status=status.HTTP_200_OK)
+
+
+#This is the function for Listing and creating A GroupList
+
+class GroupBySenderList(generics.ListAPIView):
+    """
+    This allows view the list of the groups created by a user.
+
+    """
+    serializer_class = GroupSerializer
+
+    def get_queryset(self):
+        senderID = self.kwargs["senderID"]
+        queryset = Group.objects.filter(userID=senderID)
+        return queryset
+
+class GroupList(generics.ListAPIView):
+    """
+    This allows view the list of the groups available on DB.
+    """
+    queryset = Group.objects.all()
+    serializer_class = GroupSerializer
+
+    def list(self, request):
+        queryset = self.get_queryset()
+        serializer = GroupSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+
+class GroupCreate(generics.CreateAPIView):
+    """
+    This allows users add the recipient's numbers to the new group and create a group.
+    format follow {"groupName":"", "userID":""}
+
+    """
+    queryset = Group.objects.all()
+    serializer_class= GroupSerializer
+    
+    def post(self, request, *args, **kwargs):
+        groupName = request.data.get("groupName")
+        senderID = request.data.get("userID")
+        queryset = Group.objects.filter(userID=senderID, groupName=groupName)
+        
+        if senderID == "string" or senderID == None:
+            return Response({"userID":"string is empty"},status=status.HTTP_400_BAD_REQUEST)            
+        if groupName == "string" or groupName == None:
+            return Response({"groupName":"empty"},status=status.HTTP_400_BAD_REQUEST)
+        if queryset.exists() :
+            return Response({"This group exists and it has same user, please specify another group with or change the senderID"},status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return self.create(request, *args, **kwargs)
+
+
+#This is the function for updating and deleting each recipient in a list
+class GroupDetail(views.APIView):
+    """
+    The user can Update or delete a group.
+    """
+    def get_object(self, pk):
+        try:
+            return Group.objects.get(pk=pk)
+        except Group.DoesNotExist:
+            raise Http404
+    """
+    This Updates the information of the added recipient
+    """
+
+    def put(self, request, pk, format=None):
+        group = self.get_object(pk)
+        serializer = GroupSerializer(group, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    """
+    This Deletes the information of the added recipient
+    """
+
+    def delete(self, request, pk, format=None):
+        group = self.get_object(pk)
+        group.delete()
+        return Response({"Item":"Successfully Deleted"},status=status.HTTP_200_OK)
+
+class GroupNumbersList(APIView):
+    """
+    The user can List all numbers in a group, or create a new group.
+    """
+    def get(self, request, format=None):
+        groupNumber = GroupNumbers.objects.all()
+        serializer = GroupNumbersSerializer(groupNumber, many=True)
+        return Response(serializer.data)
+
+class GroupNumbersCreate(generics.CreateAPIView):
+    """
+    The user create all numbers and add to group, or create a new group.
+    Group is an instance...so the ID of the group is to be passed in.
+    It requires the ID of the already created group.
+    Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.
+    Format is as follows:
+    {"group":"<unique primarykey given upon creating a group>", "phoneNumbers":"<a phone number>"}
+    """
+    queryset = GroupNumbers.objects.all()
+    serializer_class= GroupNumbersSerializer
+
+
+    def post(self, request, *args, **kwargs):
+        groupID = request.data.get("group")
+        phoneNumbers = request.data.get("phoneNumbers")
+        queryset = GroupNumbers.objects.filter(group=groupID, phoneNumbers=phoneNumbers)
+        
+        if queryset.exists() :
+            return Response({"This number already exists in this group"},status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return self.create(request, *args, **kwargs)
+
+
+class GroupNumbersDetail(APIView):
+    """
+    The user can Retrieve, update or delete a phoneNumber instance.
+    """
+    def get_object(self, pk):
+        try:
+            return GroupNumbers.objects.get(userID=pk)
+        except GroupNumbers.DoesNotExist:
+            raise Http404
+    
+    """
+    The user can update a phoneNumber instance.
+    """
+
+    def put(self, request, pk, format=None):
+        groupNumber = self.get_object(pk)
+        serializer = GroupNumbersSerializer(groupNumber, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    """
+    The user can delete a phoneNumber instance.
+    """
+    def delete(self, request, pk, format=None):
+        groupNumber = self.get_object(pk)
+        groupNumber.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# @api_view(['POST'])
+# def send_with_infobip(request):
+#     # message = request.data['message']
+#     # recipients = Receipent.objects.filter()
+#     # serializer = RecepientSerializer(data=recipients,many=True)
+#     # serializer.is_valid()
+#     # info = serializer.data
+#     # response = json.dumps(info)
+#     data = {
+#         "from": "InfoSMS",
+#         "to": "+2347069501730",
+#         "text": "Hello we are testing the service"
+#     }
+#     headers = {'Authorization': '32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b'}
+#     r = requests.post("https://jdd8zk.api.infobip.com", data=data,headers=headers)
+#     response = r.status_code
+#     return JsonResponse(response,safe=False)
+
+
+class InfobipSendMessage(generics.CreateAPIView):
+    """
+    This is to send a single SMS to a user using Infobip. Format is to be in
+    {"senderID":"", "content":"", "receiver":""}
+    where senderID is the userID, content is the message 
+    and the receiver is the number to be sent to in the format '2348038888888'
+    """
+    queryset = Message.objects.all()
+    serializer_class= MessageSerializer
+    
+    def post(self, request, *args, **kwargs):
+        receiver = request.data["receiver"]
+        text = request.data["content"]
+        sender = request.data["senderID"]
+        serializer = MessageSerializer(data=request.data)
+        if serializer.is_valid():
+            tr
+            value = serializer.save()
+            data = {
+            "from": receiver,
+            "to": sender,
+            "text": text
+            }
+            headers = {'Authorization': '32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b'}
+            r = requests.post("https://jdd8zk.api.infobip.com", data=data,headers=headers)
+            response = r.status_code
+            value.service_type = 'IF'
+            if response == 200:
+                value.save()
+        return JsonResponse(response,safe=False)
+
+
+class InfobipSingleMessage(generics.RetrieveAPIView):
+    """
+    This enpoint will retreive a all sms sent through twillo by a distinct sender. Format is to be in
+    {"senderID":""}
+    where senderID is the userID of the sender you wish to view all infobip sent sms,
+    """
+    # def get_object(self, senderID):
+    #     try:
+    #         Message.objects.filter(service_type='IF').filter(senderID=senderID)
+    #     except Message.DoesNotExist:
+    #         raise Http404
+
+    def get(self, request, senderID, format=None):
+        message = Message.objects.filter(service_type='IF').filter(senderID=senderID)
+        serializer = MessageSerializer(message, many=True)
+        return JsonResponse(serializer.data, safe=False)
+
+
+class InfobipMessageList(APIView):
+    """
+    This allows view the list of the Infobip Messages Sent by all users.
+    """
+    # queryset = Message.objects.filter(service_type='IF')
+    serializer_class= MessageSerializer
+
+    def get(self, request, format=None):
+        messages = Message.objects.filter(service_type='IF')
+        serializer = MessageSerializer(messages, many=True)
+        return Response(serializer.data)
+
+
+class NuobjectsMessageList(APIView):
+    """
+    This allows view the list of the Infobip Messages Sent by all users.
+    """
+    # queryset = Message.objects.filter(service_type='IF')
+    serializer_class= MessageSerializer
+
+    # def list(self, request):
+    #     queryset = self.get_queryset()
+    #     serializer = MessageSerializer(queryset, many=True)
+    #     return Response(serializer.data)
+
+    def get(self, request, format=None):
+        messages = Message.objects.filter(service_type='NU')
+        serializer = MessageSerializer(messages, many=True)
+        return Response(serializer.data)
+
+
+class NuobjectsSendMessage(generics.CreateAPIView):
+    """
+    This allows users send messages to recipient's.
+    """
+    queryset = Message.objects.all()
+    serializer_class= MessageSerializer
+    
+    def post(self, request, *args, **kwargs):
+        # message = request.data["message"]
+        # sender = request.data.get("senderID")
+        # text = request.data.get("content")
+        # receiver = request.data.get("receiver")
+        # response = requests.post('https://cloud.nuobjects.com/api/credit/?user=philemon&pass=Microapipassword1')
+        response = requests.post('https://cloud.nuobjects.com/api/send/?user=philemon&pass=Microapipassword1&to=2347069501730&from=phil&msg=HelloWorld')
+        return HttpResponse(response)
+
+
+class NuobjectsGetBalance(APIView):
+    """
+    This allows users send messages to recipient's.
+    """
+    queryset = Message.objects.all()
+    serializer_class= MessageSerializer
+    
+    def get(self, request, format=None):
+        messages = Message.objects.filter(service_type='IF')
+        # encoded = urlencode(dict(user='philemon', password='Microapipassword1'))
+        # url = urllib.parse.quote('https://cloud.nuobjects.com/api/credit/?{encoded}')
+        response = requests.post('http://https%3A//cloud.nuobjects.com/api/credit/%3Fuser%3Dphilemon%26pass%3DMicroapipassword1')
+        # response = requests.post(f'https://cloud.nuobjects.com/api/send/?user=philemon&pass=Microapipassword1&to=2347069501730&from=phil&msg=HelloWorld')
+        return HttpResponse(response)
+class TwilioSendSms(views.APIView):
+    """
+    This is to send a single SMS to a user. Format is to be in
+    {"receiver":"", 'senderID':"", "content":""}
+    where content is the message, senderID is the userID 
+    and the phone is the number to be sent to
+    """
+
+    def post(self, request):
+        receiver = request.data["receiver"]
+        content = request.data["content"]
+        request.data["service_type"] = "TW"
+        serializer_message = MessageSerializer(data=request.data)
+        
+        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+        if serializer_message.is_valid():
+            try:
+                value = serializer_message.save()
+                message = client.messages.create(
+                    from_ = settings.TWILIO_NUMBER,
+                    to = receiver,
+                    body = content
+                    )
+                value.messageStatus = "S"
+                value.save()
+                return Response({"details":"Message sent!", "service_type":"TWILIO"}, 200)
+            except TwilioRestException as e:
+                value.messageStatus = "F"
+                value.save()
+                return Response({f"{receiver} can't be sent to, review number": str(e)},status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"details":"Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
+  
