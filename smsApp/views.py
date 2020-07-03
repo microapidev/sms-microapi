@@ -181,7 +181,10 @@ def sms_list(request):
 class SmsHistoryList(generics.ListAPIView):
     """
     This is used to pull sms history on database
+    The senderID should be added at endpoint 
+    /v1/sms/sms_history/<senderID>
     """
+    serializer_class = MessageSerializer
     def get_queryset(self):
         senderID = self.kwargs["senderID"]
         return Message.objects.filter(senderID=senderID)
@@ -414,7 +417,6 @@ def send_group_twilio(request):
                 value.messageStatus = "F"
                 value.save()
         else:
-            print(serializer.errors)
             msgstatus.append(f"something went wrong while sending to {number}")
     return Response({"details":msgstatus, "service_type":"TWILIO", "senderID":senderID }, status=status.HTTP_200_OK)
 
@@ -518,6 +520,17 @@ class GroupNumbersCreate(generics.CreateAPIView):
     """
     queryset = GroupNumbers.objects.all()
     serializer_class= GroupNumbersSerializer
+
+
+    def post(self, request, *args, **kwargs):
+        groupID = request.data.get("group")
+        phoneNumbers = request.data.get("phoneNumbers")
+        queryset = GroupNumbers.objects.filter(group=groupID, phoneNumbers=phoneNumbers)
+        
+        if queryset.exists() :
+            return Response({"This number already exists in this group"},status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return self.create(request, *args, **kwargs)
 
 
 class GroupNumbersDetail(APIView):
@@ -666,7 +679,6 @@ class TwilioSendSms(views.APIView):
         serializer_message = MessageSerializer(data=request.data)
         
         client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
-        print(serializer_message)
         if serializer_message.is_valid():
             try:
                 value = serializer_message.save()

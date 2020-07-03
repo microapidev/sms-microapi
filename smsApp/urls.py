@@ -31,8 +31,8 @@ urlpatterns = [
     #path('swagger(P<format>\.json|\.yaml)', schema_view.without_ui(cache_timeout=0), name='schema-json'), #not used for now
     path('', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
-    path('v1/sms/Twillo_sms_history', sms_list),
-    path('v1/sms/sms_history', SmsHistoryList.as_view(), name="history"),
+    path('v1/sms/twillo_sms_history', sms_list),
+    path('v1/sms/sms_history/<senderID>', SmsHistoryList.as_view(), name="history"),
     path('v1/sms/sms_history/<str:pk>', SmsHistoryDetail.as_view(), name="history_"),
     path('v1/sms/twilio_send_single', TwilioSendSms.as_view(), name="sendsms"),
     # infobip view
