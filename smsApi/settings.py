@@ -19,14 +19,14 @@ DEBUG = False
 ALLOWED_HOSTS = ['*']  ##allows all hosts
 
 # add twillio sid , authentication token and your twilio number
-TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID") # obtained from twilio.com/console 
-TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN") # also obtained from twilio.com/console 
-TWILIO_NUMBER = os.getenv("TWILIO_NUMBER")  # use the number you received when signing up or buy a new number 
+TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID") # obtained from twilio.com/console 
+TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN") # also obtained from twilio.com/console 
+TWILIO_NUMBER = os.environ.get("TWILIO_NUMBER")  # use the number you received when signing up or buy a new number 
 
 # add infobip login credentials
-INFOBIP_USERNAME = os.getenv("INFOBIP_USERNAME")
-INFOBIP_PASSWORD = os.getenv("INFOBIP_PASSWORD")
-INFOBIP_APIKEY = os.getenv("INFOBIP_APIKEY")
+INFOBIP_USERNAME = os.environ.get("INFOBIP_USERNAME")
+INFOBIP_PASSWORD = os.environ.get("INFOBIP_PASSWORD")
+INFOBIP_APIKEY = os.environ.get("INFOBIP_APIKEY")
 
 # Application definition
 
