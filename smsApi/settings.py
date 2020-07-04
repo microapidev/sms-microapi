@@ -89,7 +89,7 @@ REST_FRAMEWORK = {
     ]
 }
 
-AUTH_USER_MODEL = "smsApp.User"
+# AUTH_USER_MODEL = "smsApp.User"
 
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
