@@ -15,34 +15,13 @@ from django.http import HttpResponse, Http404
 from django.http import JsonResponse
 from twilio.base.exceptions import TwilioRestException
 import json
+import http.client
+import mimetypes
 import urllib.parse
 from urllib.parse import urlencode
-
-# import http.client
-# import http
-# import mimetypes
-
-# from .infobip import send_single_message_ibp, delivery_reports_ibp
 from .models import Receipent, Message, Group, GroupNumbers
 from .serializers import RecepientSerializer, MessageSerializer, GroupSerializer, GroupNumbersSerializer 
 from googletrans import Translator
-
-
-# Create your views here.
-
-# send message to users using twillio
-@csrf_exempt
-def sendmessage(request):
-    for number in serialized_users:
-        phone_number = number.phone_number
-    message = ('sample message')
-    clients = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
-    for recipient in serialized_users:
-        number = recipient.phone_number
-        clients.messages.create(to=number,
-                                from_=settings.TWILIO_NUMBER,
-                                body=message)
-    return HttpResponse("messages sent!", 200)
 
 
 # Create your views here.
@@ -52,11 +31,6 @@ class ReceipientList(APIView):
     """
     # queryset = Message.objects.filter(service_type='IF')
     serializer_class= RecepientSerializer
-
-    # def list(self, request):
-    #     queryset = self.get_queryset()
-    #     serializer = MessageSerializer(queryset, many=True)
-    #     return Response(serializer.data)
 
     def get(self, request, format=None):
         receipents = Receipent.objects.all()
@@ -181,19 +155,6 @@ class SmsHistoryList(generics.ListAPIView):
     def get_queryset(self):
         senderID = self.kwargs["senderID"]
         return Message.objects.filter(senderID=senderID)
-
-
-class SmsHistoryDetail(generics.RetrieveAPIView):
-    """
-    Call a particular History of user with users senderID
-    """
-    serializer = MessageSerializer
-    queryset = Message.objects.all()
-
-    # def retrieve(self, request, *args, **kwargs):
-    #     instance = self.get_object()
-    #     serializer = self.get_serializer(instance)
-    #     return Response(serializer.data)
 
 
 
@@ -338,38 +299,6 @@ def translateMessages(request):
                                 status=status.HTTP_200_OK)
         except Exception as error:
             return JsonResponse({"error": error}, status=status.HTTP_400_BAD_REQUEST)
-
-
-# Infobip
-# @api_view(['POST'])
-# def sendmessage_infobip(request):
-#     users = user.objects.all()
-#     serialized_users = UserSerializer(users, many=True)
-#     message = request.data["message"]
-#     for recipient in serialized_users.data:
-#         number = recipient.phone_number
-#         send_single_message_ibp(message, number)
-#     return HttpResponse("Messages Sent!", 200)
-
-
-# @api_view(['GET'])
-# def get_recipients_ibp(request):
-#     reports = delivery_reports_ibp()
-#     return JsonResponse(reports)
-
-
-# nuObjects
-@api_view(['POST'])
-def nuobj_api(request):
-    # users = user.objects.all()
-    serializer_class= MessageSerializer
-    message = request.data["message"]
-    sender = request.data.get("senderID")
-    text = request.data.get("content")
-    receiver = request.data.get("receiver")
-    response = requests.post(f'https://cloud.nuobjects.com/api/send/?user={philemon}&pass={Microapipassword1}&to={receiver}&from={sender}&msg={text}')
-    return HttpResponse("Messages Sent!", 200)
-
 
 
 def get_numbers_from_group(request, pk):

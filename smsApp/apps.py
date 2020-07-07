@@ -8,7 +8,7 @@ from smsApp.amqp import AMQPConsuming
 class SmsappConfig(AppConfig):
     name = 'smsApp'
 
-    def ready(self):
-        consumer = AMQPConsuming()
-        consumer.daemon = True
-        consumer.start()
+    # def ready(self):
+    #     consumer = AMQPConsuming()
+    #     consumer.daemon = True
+    #     consumer.start()
