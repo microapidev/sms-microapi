@@ -188,7 +188,9 @@ class SmsHistoryDetail(generics.RetrieveAPIView):
     Call a particular History of user with users senderID
     """
     serializer = MessageSerializer
-    queryset = Message.objects.all()
+    def get_queryset(self):
+        pk = self.kwargs["pk"]
+        return  Message.objects.get(pk=pk)
 
     # def retrieve(self, request, *args, **kwargs):
     #     instance = self.get_object()

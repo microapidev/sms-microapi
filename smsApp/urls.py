@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import NuobjectsSendMessage, NuobjectsGetBalance, NuobjectsMessageList
+# from .views import NuobjectsSendMessage, NuobjectsGetBalance, NuobjectsMessageList
 from .views import ReceipientCreate, ReceipientList, RecipientDetail
 from .views import InfobipSendMessage, InfobipSingleMessage, InfobipMessageList, InfobipGroupMessage
 from .views import GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupNumbersList,GroupNumbersCreate, GroupNumbersDetail
@@ -42,9 +42,8 @@ urlpatterns = [
    path('v1/sms/recipient/all', ReceipientList.as_view(), name="get-all-recipients"),
    path("v1/sms/recipient/<str:pk>", RecipientDetail.as_view(), name="update-recipient"),
    
-   #History Views, Which hostory
-   path('v1/sms/sms_history', SmsHistoryList.as_view(), name="history"),
-   path('v1/sms/sms_history/<str:pk>', SmsHistoryDetail.as_view(), name="history_"),
+   #History Views, General Histories
+   path('v1/sms/sms_history/<str:senderID>', SmsHistoryList.as_view(), name="history"),
 
    #Infobip Views
    path("v1/sms/infobip/send_sms", InfobipSendMessage.as_view(), name="infobip-send-message"),
@@ -54,7 +53,6 @@ urlpatterns = [
 
 
    #Twillo Views
-   path("v1/sms/Twillo_send_sms", sendmessage),
    path('v1/sms/Twillo_sms_history', sms_list),
    path('v1/sms/twilio_send_single', TwilioSendSms.as_view(), name="sendsms"),
    path('v1/sms/twilio_send_group', send_group_twilio),
