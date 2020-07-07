@@ -1,5 +1,4 @@
 from django.urls import path
-from .views import NuobjectsSendMessage, NuobjectsGetBalance, NuobjectsMessageList
 from .views import ReceipientCreate, ReceipientList, RecipientDetail
 from .views import InfobipSendMessage, InfobipSingleMessage, InfobipMessageList, InfobipGroupMessage
 from .views import GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupNumbersList,GroupNumbersCreate, GroupNumbersDetail
