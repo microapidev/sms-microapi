@@ -45,12 +45,7 @@ urlpatterns = [
    #History Views, Which hostory
    path('v1/sms/sms_history', SmsHistoryList.as_view(), name="history"),
    path('v1/sms/sms_history/<str:pk>', SmsHistoryDetail.as_view(), name="history_"),
-   
-   #Nuobjects Views
-   path("v1/sms/nuobjects_message_list", NuobjectsMessageList.as_view(), name="nuobjects-message-list"),
-   path("v1/sms/nuobjects_send_message/", NuobjectsSendMessage.as_view(), name="nuobjects-send-message"),
-   path("v1/sms/nuobjects_get_balance/", NuobjectsGetBalance.as_view(), name="nuobjects-get-balance"),
-   
+
    #Infobip Views
    path("v1/sms/infobip/send_sms", InfobipSendMessage.as_view(), name="infobip-send-message"),
    path("v1/sms/infobip/send_group_sms", InfobipGroupMessage.as_view(), name="infobip-group-message"),
