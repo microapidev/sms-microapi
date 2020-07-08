@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import ReceipientCreate, ReceipientList, RecipientDetail
-from .views import InfobipSendMessage, InfobipSingleMessage, InfobipMessageList, InfobipGroupMessage
+from .views import InfobipSendMessage, InfobipSingleMessage, InfobipMessageList, InfobipGroupMessage, InfobipSendMessage2
 from .views import GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupNumbersList,GroupNumbersCreate, GroupNumbersDetail
 from .views import translateMessages
 from .views import send_group_twilio, TwilioSendSms, sms_list
@@ -41,6 +41,7 @@ urlpatterns = [
 
    #Infobip Views
    path("v1/sms/infobip/send_sms", InfobipSendMessage.as_view(), name="infobip-send-message"),
+   path("v1/sms/infobip/send_sms2", InfobipSendMessage2.as_view(), name="infobip-send-message2"),
    path("v1/sms/infobip/send_group_sms", InfobipGroupMessage.as_view(), name="infobip-group-message"),
    path("v1/sms/infobip/view_all_sms", InfobipMessageList.as_view(), name="infobip-sent-messages"),
    path("v1/sms/infobip/view_all_sms/<str:senderID>", InfobipSingleMessage.as_view(), name="infobip-sent-messages"),
