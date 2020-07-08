@@ -36,7 +36,7 @@ class Group(models.Model):
         return self.groupName
 
 class GroupNumbers(models.Model):
-    group = models.ForeignKey(Group, related_name='group', on_delete=models.CASCADE)
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)
     phone_regex = RegexValidator(regex=r'^\+?1?\d{9,15}$', message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.")
     phoneNumbers = models.CharField(validators=[phone_regex], max_length=200, blank=True) # validators should be a list
     dateCreated = models.DateTimeField(default=timezone.now)
