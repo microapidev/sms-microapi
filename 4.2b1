@@ -1,8 +1,0 @@
-Collecting pyyaml
-  Downloading PyYAML-5.3.1-cp38-cp38-win32.whl (199 kB)
-Installing collected packages: pyyaml
-  Attempting uninstall: pyyaml
-    Found existing installation: PyYAML 3.13
-    Uninstalling PyYAML-3.13:
-      Successfully uninstalled PyYAML-3.13
-Successfully installed pyyaml-5.3.1
