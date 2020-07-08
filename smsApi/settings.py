@@ -103,8 +103,7 @@ REST_FRAMEWORK = {
     ]
 }
 
-
-# AUTH_USER_MODEL = "smsApp.user"
+AUTH_USER_MODEL = "smsApp.User"
 
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
@@ -187,6 +186,4 @@ TWILIO_NUMBER=' +12058391366' # use the number you received when signing up or b
 
 # Activate Django-Heroku.
 django_heroku.settings(locals())
-
-
 

@@ -27,15 +27,22 @@ from django.utils.translation import ugettext_lazy as _
 
 class Group(models.Model):
     # groupID = models.ForeignKey(GroupUnique, related_name='grp_id', on_delete=models.SET_NULL)
-    groupName = models.CharField(max_length=80, default='grp1')
+    groupName = models.CharField(max_length=80)
     userID = models.CharField(max_length=30, default="user") #creator of the group123e4567-e89b-12d3-a456-426652340000
     groupID = models.UUIDField(default=uuid.uuid4, editable=False)
+    dateCreated = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return self.groupName
+
+class GroupNumbers(models.Model):
+    group = models.ForeignKey(Group, related_name='group', on_delete=models.CASCADE)
     phone_regex = RegexValidator(regex=r'^\+?1?\d{9,15}$', message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.")
     phoneNumbers = models.CharField(validators=[phone_regex], max_length=200, blank=True) # validators should be a list
     dateCreated = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
-        return self.groupName
+        return self.phoneNumbers
 
 class Receipent(models.Model):
     userID = models.CharField(primary_key=True, max_length=30) #user who added the recipient
@@ -50,8 +57,6 @@ class Message(models.Model):
     # account_sid = models.CharField(max_length=80, blank=True, null=True)
     date_created = models.DateTimeField(auto_now_add=True)
     content = models.TextField(default="test")
-    status = models.CharField(max_length=100, default="Sent", blank=True, null=True)
-    # price = models.FloatField(blank=True, null=True)
     INFOBIP = 'IF'
     TWILLO = 'TW'
     NUOBJECT = 'NU'
@@ -84,6 +89,7 @@ class Message(models.Model):
         default=DRAFT,
     )
     dateScheduled = models.DateTimeField(null=True)
+
 
 # class Media(models.Model):
 #     senderID = models.CharField(max_length=30) 
