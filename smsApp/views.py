@@ -45,31 +45,6 @@ def sendmessage(request):
     return HttpResponse("messages sent!", 200)
 
 
-class InfobipSms(APIView):
-    """
-    Send messages with INFOBIP
-    """
-    def post(self):
-        message = request.data['message']
-        # recipients = Receipent.objects.filter()
-        # serializer = RecepientSerializer(data=recipients,many=True)
-        # serializer.is_valid()
-        # info = serializer.data
-        # response = json.dumps(info)
-        phone = request.data["phone"]
-        data = {
-            "from": "InfoSMS",
-            "to": phone,
-            "text": message
-        }
-        headers = {'Authorization': os.getenv("TOKEN")}
-        r = requests.post('https://9rr9dr.api.infobip.com/', data=data,headers=headers)
-        response = r.status_code
-        return JsonResponse(response,safe=False)
-
-
-
-
 # Create your views here.
 class ReceipientList(APIView):
     """
@@ -213,7 +188,9 @@ class SmsHistoryDetail(generics.RetrieveAPIView):
     Call a particular History of user with users senderID
     """
     serializer = MessageSerializer
-    queryset = Message.objects.all()
+    def get_queryset(self):
+        pk = self.kwargs["pk"]
+        return  Message.objects.get(pk=pk)
 
     # def retrieve(self, request, *args, **kwargs):
     #     instance = self.get_object()
@@ -620,11 +597,10 @@ class InfobipSendMessage(generics.CreateAPIView):
         sender = request.data["senderID"]
         serializer = MessageSerializer(data=request.data)
         if serializer.is_valid():
-            tr
             value = serializer.save()
             data = {
-            "from": receiver,
-            "to": sender,
+            "from": sender,
+            "to": receiver,
             "text": text
             }
             headers = {'Authorization': '32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b'}
@@ -634,6 +610,51 @@ class InfobipSendMessage(generics.CreateAPIView):
             if response == 200:
                 value.save()
         return JsonResponse(response,safe=False)
+
+
+class InfobipGroupMessage(generics.CreateAPIView):
+    """
+    This is to send a single SMS to a user using Infobip. Format is to be in
+    {"senderID":"", "content":"", "receiver":""}
+    where senderID is the userID, content is the message 
+    and the receiver is the groupid'
+    """
+    # queryset = Message.objects.all()
+    serializer_class= MessageSerializer
+    
+    def post(self, request, *args, **kwargs):
+        msgstatus = []
+        groupPK = request.data["groupPK"]
+        text = request.data["content"]
+        sender = request.data["senderID"]
+        numbers = get_numbers_from_group(request, groupPK)
+        serializer = MessageSerializer(data=request.data)
+        for number in numbers:
+            if serializer.is_valid():
+                value = serializer.save()
+                data = {
+                "from": sender,
+                "to": number,
+                "text": text
+                }
+                headers = {'Authorization': '32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b'}
+                try:
+                    r = requests.post("https://jdd8zk.api.infobip.com", data=data,headers=headers)
+                    msgstatus.append(f'succesfully sent to {number}')
+                    value.messageStatus = "S"
+                    value.save()
+                except Exception as e:
+                    msgstatus.append(f'cant send to the {number}, error: {e}, status: {r}')
+                    value.messageStatus = "F"
+                    value.save()
+                response = r.status_code
+                value.service_type = 'IF'
+                if response == 200:
+                    value.save()
+            else:
+                msgstatus.append(f"something went wrong while sending to {number}")
+        return JsonResponse(response,safe=False)
+
 
 
 class InfobipSingleMessage(generics.RetrieveAPIView):
@@ -651,7 +672,10 @@ class InfobipSingleMessage(generics.RetrieveAPIView):
     def get(self, request, senderID, format=None):
         message = Message.objects.filter(service_type='IF').filter(senderID=senderID)
         serializer = MessageSerializer(message, many=True)
-        return JsonResponse(serializer.data, safe=False)
+        if message:
+            return JsonResponse({"Success":status.HTTP_200_OK, "Message":"Messages retrieved", "Data":serializer.data })
+        else:
+            return JsonResponse({"Success":status.HTTP_204_NO_CONTENT, "Message":"NO Message from this sender", "Data":serializer.data })
 
 
 class InfobipMessageList(APIView):
@@ -664,58 +688,9 @@ class InfobipMessageList(APIView):
     def get(self, request, format=None):
         messages = Message.objects.filter(service_type='IF')
         serializer = MessageSerializer(messages, many=True)
-        return Response(serializer.data)
+        return JsonResponse({"Success":status.HTTP_200_OK, "Message":"Messages retrieved", "Data":serializer.data })
 
-
-class NuobjectsMessageList(APIView):
-    """
-    This allows view the list of the Infobip Messages Sent by all users.
-    """
-    # queryset = Message.objects.filter(service_type='IF')
-    serializer_class= MessageSerializer
-
-    # def list(self, request):
-    #     queryset = self.get_queryset()
-    #     serializer = MessageSerializer(queryset, many=True)
-    #     return Response(serializer.data)
-
-    def get(self, request, format=None):
-        messages = Message.objects.filter(service_type='NU')
-        serializer = MessageSerializer(messages, many=True)
-        return Response(serializer.data)
-
-
-class NuobjectsSendMessage(generics.CreateAPIView):
-    """
-    This allows users send messages to recipient's.
-    """
-    queryset = Message.objects.all()
-    serializer_class= MessageSerializer
-    
-    def post(self, request, *args, **kwargs):
-        # message = request.data["message"]
-        # sender = request.data.get("senderID")
-        # text = request.data.get("content")
-        # receiver = request.data.get("receiver")
-        # response = requests.post('https://cloud.nuobjects.com/api/credit/?user=philemon&pass=Microapipassword1')
-        response = requests.post('https://cloud.nuobjects.com/api/send/?user=philemon&pass=Microapipassword1&to=2347069501730&from=phil&msg=HelloWorld')
-        return HttpResponse(response)
-
-
-class NuobjectsGetBalance(APIView):
-    """
-    This allows users send messages to recipient's.
-    """
-    queryset = Message.objects.all()
-    serializer_class= MessageSerializer
-    
-    def get(self, request, format=None):
-        messages = Message.objects.filter(service_type='IF')
-        # encoded = urlencode(dict(user='philemon', password='Microapipassword1'))
-        # url = urllib.parse.quote('https://cloud.nuobjects.com/api/credit/?{encoded}')
-        response = requests.post('http://https%3A//cloud.nuobjects.com/api/credit/%3Fuser%3Dphilemon%26pass%3DMicroapipassword1')
-        # response = requests.post(f'https://cloud.nuobjects.com/api/send/?user=philemon&pass=Microapipassword1&to=2347069501730&from=phil&msg=HelloWorld')
-        return HttpResponse(response)
+        
 class TwilioSendSms(views.APIView):
     """
     This is to send a single SMS to a user. Format is to be in

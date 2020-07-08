@@ -1,7 +1,7 @@
 from django.urls import path
-from .views import NuobjectsSendMessage, NuobjectsGetBalance, NuobjectsMessageList
+# from .views import NuobjectsSendMessage, NuobjectsGetBalance, NuobjectsMessageList
 from .views import ReceipientCreate, ReceipientList, RecipientDetail
-from .views import InfobipSendMessage, InfobipSingleMessage, InfobipMessageList
+from .views import InfobipSendMessage, InfobipSingleMessage, InfobipMessageList, InfobipGroupMessage
 from .views import GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupNumbersList,GroupNumbersCreate, GroupNumbersDetail
 from .views import sendmessage, translateMessages, nuobj_api, SmsHistoryList, SmsHistoryDetail #sendmessage_infobip, get_recipients_ibp
 from .views import send_group_twilio, TwilioSendSms
@@ -42,23 +42,17 @@ urlpatterns = [
    path('v1/sms/recipient/all', ReceipientList.as_view(), name="get-all-recipients"),
    path("v1/sms/recipient/<str:pk>", RecipientDetail.as_view(), name="update-recipient"),
    
-   #History Views, Which hostory
-   path('v1/sms/sms_history', SmsHistoryList.as_view(), name="history"),
-   path('v1/sms/sms_history/<str:pk>', SmsHistoryDetail.as_view(), name="history_"),
-   
-   #Nuobjects Views
-   path("v1/sms/nuobjects_message_list", NuobjectsMessageList.as_view(), name="nuobjects-message-list"),
-   path("v1/sms/nuobjects_send_message/", NuobjectsSendMessage.as_view(), name="nuobjects-send-message"),
-   path("v1/sms/nuobjects_get_balance/", NuobjectsGetBalance.as_view(), name="nuobjects-get-balance"),
-   
+   #History Views, General Histories
+   path('v1/sms/sms_history/<str:senderID>', SmsHistoryList.as_view(), name="history"),
+
    #Infobip Views
    path("v1/sms/infobip/send_sms", InfobipSendMessage.as_view(), name="infobip-send-message"),
+   path("v1/sms/infobip/send_group_sms", InfobipGroupMessage.as_view(), name="infobip-group-message"),
    path("v1/sms/infobip/view_all_sms", InfobipMessageList.as_view(), name="infobip-sent-messages"),
    path("v1/sms/infobip/view_all_sms/<str:senderID>", InfobipSingleMessage.as_view(), name="infobip-sent-messages"),
 
 
    #Twillo Views
-   path("v1/sms/Twillo_send_sms", sendmessage),
    path('v1/sms/Twillo_sms_history', sms_list),
    path('v1/sms/twilio_send_single', TwilioSendSms.as_view(), name="sendsms"),
    path('v1/sms/twilio_send_group', send_group_twilio),
