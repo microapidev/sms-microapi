@@ -141,7 +141,8 @@ def sms_list(request):
                 }
                 # append to the sms list.
                 sms.append(message)
-            return JsonResponse(sms, status=200, safe=False)
+            return JsonResponse({"Success":status.HTTP_200_OK, "Message":"Message Sent", "Data":sms })
+            # return JsonResponse(sms, status=200, safe=False)
         except TwilioRestException as e:
             return JsonResponse({"e": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -385,14 +386,16 @@ class GroupCreate(generics.CreateAPIView):
         queryset = Group.objects.filter(userID=senderID, groupName=groupName)
         
         if senderID == "string" or senderID == None:
-            return Response({"userID":"string is empty"},status=status.HTTP_400_BAD_REQUEST)            
+            return Response({"Failure":status.HTTP_400_BAD_REQUEST, "Message":"String is empty", "Data":{"userID":"string is empty"} })
+            # return Response({"userID":"string is empty"},status=status.HTTP_400_BAD_REQUEST)            
         if groupName == "string" or groupName == None:
-            return Response({"groupName":"empty"},status=status.HTTP_400_BAD_REQUEST)
+            return Response({"Failure":status.HTTP_400_BAD_REQUEST, "Message":"String is empty", "Data":{"groupName":"empty"} })
+            # return Response({"groupName":"empty"},status=status.HTTP_400_BAD_REQUEST)
         if queryset.exists() :
             return Response({"This group exists and it has same user, please specify another group with or change the senderID"},status=status.HTTP_400_BAD_REQUEST)
         else:
-            return self.create(request, *args, **kwargs)
-
+            self.create(request, *args, **kwargs)
+            return Response({"Success":status.HTTP_201_CREATED, "Message":"Group Created", "Data":request.data })
 
 #This is the function for updating and deleting each recipient in a list
 class GroupDetail(views.APIView):
@@ -566,7 +569,7 @@ class InfobipSendMessage2(generics.CreateAPIView):
         text = {'text':text}
         sender = {'from': sender}
         array = [sender, destination, text, flash]
-        print(array)
+        # print(array)
 
         #this is the sample payload as it from the documentation
         payload = "{\"messages\":[{\"from\":\"Phli\",\"destinations\":[{\"to\":\"2347069501730\"}],\"text\":\"Text.\",\"flash\":true}]}"
@@ -580,8 +583,11 @@ class InfobipSendMessage2(generics.CreateAPIView):
         }
         conn.request("POST", "/sms/2/text/advanced", payload, headers)
         res = conn.getresponse()
-        data = res.read()
-        return Response({"Status":res.status, "Message":"", "Data":data})
+        # print(res.msg)
+        data = res.read().decode('utf-8')
+        data = data.replace('/', '')
+        # print(data)
+        return JsonResponse({"Status":res.status, "Message":"", "Data":data})
 
         # if res.status == 200:
         #     # resp = JsonResponse({"Success":res.status, "Message":"Message Sent", "Data":data.decode("utf-8")})
@@ -697,7 +703,8 @@ class TwilioSendSms(views.APIView):
                     )
                 value.messageStatus = "S"
                 value.save()
-                return Response({"details":"Message sent!", "service_type":"TWILIO"}, 200)
+                return Response({"Success":status.HTTP_200_OK, "Message":"Message Sent", "Data":value })
+                # return Response({"details":"Message sent!", "service_type":"TWILIO"}, 200)
             except TwilioRestException as e:
                 value.messageStatus = "F"
                 value.save()
