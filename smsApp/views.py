@@ -1,5 +1,6 @@
 import requests
 from django.shortcuts import render, get_object_or_404
+from rest_framework.parsers import JSONParser
 # from smsApp.models import user
 # from smsApp.serializers import UserSerializer
 from django.core.exceptions import ValidationError
@@ -412,11 +413,13 @@ class GroupCreate(generics.CreateAPIView):
 #This is the function for updating and deleting each recipient in a list
 class GroupDetail(views.APIView):
     """
-    The user can Update or delete a group.
+    The groupName is required to delete the group and userID is required alongside the groupName to update.\n
+    To update simply use: /v1/sms/group_update/nameOfGroup...then in body enter {"groupName":"", "userID":""}.\n
+    To delete simply use: /v1/sms/group_update/groupName
     """
     def get_object(self, pk):
         try:
-            return Group.objects.get(pk=pk)
+            return Group.objects.get(groupName=pk)
         except Group.DoesNotExist:
             raise Http404
     """
@@ -449,6 +452,15 @@ class GroupNumbersList(APIView):
         serializer = GroupNumbersSerializer(groupNumber, many=True)
         return Response(serializer.data)
 
+class GroupNumbersBySenderList(APIView):
+    """
+    The user can List all numbers in a specific group. This requires  {"userID":""}
+    """
+    def get(self, request, senderID, format=None):
+        groupNumber = GroupNumbers.objects.filter(group__userID=senderID)
+        serializer = GroupNumbersSerializer(groupNumber, many=True)
+        return Response(serializer.data)
+
 class GroupNumbersCreate(generics.CreateAPIView):
     """
     The user create all numbers and add to group, or create a new group.
@@ -475,33 +487,37 @@ class GroupNumbersCreate(generics.CreateAPIView):
 
 class GroupNumbersDetail(APIView):
     """
-    The user can Retrieve, update or delete a phoneNumber instance.
+    The user can delete a phoneNumber instance.
     """
     def get_object(self, pk):
         try:
-            return GroupNumbers.objects.get(userID=pk)
+            return GroupNumbers.objects.get(pk=pk)
         except GroupNumbers.DoesNotExist:
-            raise Http404
-    
-    """
-    The user can update a phoneNumber instance.
-    """
+            return HttpResponse(status=404)
 
-    def put(self, request, pk, format=None):
-        groupNumber = self.get_object(pk)
-        serializer = GroupNumbersSerializer(groupNumber, data=request.data)
+    def delete(self, request, pk, format=None):
+        groupNumber = self.get_object(pk=pk)
+        groupNumber.delete()
+        return Response({"Item":"Successfully Deleted"}, status=status.HTTP_204_NO_CONTENT)
+
+@api_view(["PUT"])    
+def update_group_number(request, pk):
+    """
+    The user can Retrieve, update or delete a phoneNumber instance.\n\n
+    In Postman: v1/sms/group_recipient_update/phoneNumber(pk)
+    This takes in this format: {"phone": "instance of Phone", "phoneNumber": ""}
+    """
+    try:
+        groupnumber = GroupNumbers.objects.get(pk=pk)
+    except GroupNumbers.DoesNotExist:
+        return HttpResponse(status=404)
+    if request.method == 'PUT':
+        data = request.data
+        serializer = GroupNumbersSerializer(groupnumber, data=data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    """
-    The user can delete a phoneNumber instance.
-    """
-    def delete(self, request, pk, format=None):
-        groupNumber = self.get_object(pk)
-        groupNumber.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+            return JsonResponse(serializer.data)
+        return JsonResponse(serializer.errors, status=400)
 
 
 # @api_view(['POST'])

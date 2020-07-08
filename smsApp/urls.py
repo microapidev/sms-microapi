@@ -1,9 +1,10 @@
 from django.urls import path
 from .views import ReceipientCreate, ReceipientList, RecipientDetail
 from .views import InfobipSendMessage, InfobipSingleMessage, InfobipMessageList, InfobipGroupMessage, InfobipSendMessage2
-from .views import GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupNumbersList,GroupNumbersCreate, GroupNumbersDetail
 from .views import translateMessages
 from .views import send_group_twilio, TwilioSendSms, sms_list
+from .views import GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupNumbersList, GroupNumbersBySenderList, GroupNumbersCreate, update_group_number, GroupNumbersDetail
+from .views import SmsHistoryList, SmsHistoryDetail
 from django.urls import path
 from .views import create_receipents_details, save_recipients_details  #get_recipient_details
 from rest_framework.schemas.coreapi import AutoSchema
@@ -73,10 +74,12 @@ urlpatterns = [
    path("v1/sms/list_group", GroupList.as_view(), name="list-group"),
    path("v1/sms/list_group/<senderID>", GroupBySenderList.as_view(), name="list-group"),
    path("v1/sms/create_group", GroupCreate.as_view(), name="update-group"),
-   path("v1/sms/group_update/<str:pk>", GroupDetail.as_view(), name="update-group"),
+   path("v1/sms/group_update/<str:groupName>", GroupDetail.as_view(), name="update-group"),
    path("v1/sms/group_recipient/", GroupNumbersList.as_view(), name="group-numbers"),
    path("v1/sms/group_recipient/create", GroupNumbersCreate.as_view(), name="create-group-numbers"),
-   path("v1/sms/group_number/<senderID>", GroupNumbersDetail.as_view(), name="update-group-umbers"),
+   path("v1/sms/group_recipient_list/<str:senderID>", GroupNumbersBySenderList.as_view(), name="list-group-numbers-senderID"),
+   path("v1/sms/group_recipient_update/<str:pk>", update_group_number, name="update-group-umbers"),
+   path("v1/sms/group_recipient_delete/<str:pk>", GroupNumbersDetail.as_view(), name="update-group-umbers"),
    
 ]
 
