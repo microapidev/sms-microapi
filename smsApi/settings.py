@@ -24,7 +24,6 @@ TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID") # obtained from twilio.com/
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN") # also obtained from twilio.com/console 
 TWILIO_NUMBER = os.getenv("TWILIO_NUMBER")  # use the number you received when signing up or buy a new number 
 
-
 # add infobip login credentials
 INFOBIP_USERNAME = os.getenv("INFOBIP_USERNAME")
 INFOBIP_PASSWORD = os.getenv("INFOBIP_PASSWORD")
