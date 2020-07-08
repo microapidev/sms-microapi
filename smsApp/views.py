@@ -158,6 +158,21 @@ class SmsHistoryList(generics.ListAPIView):
 
 
 
+class SmsHistoryDetail(generics.RetrieveAPIView):
+    """
+    Call a particular History of user with users senderID
+    """
+    serializer = MessageSerializer
+    def get_queryset(self):
+        pk = self.kwargs["pk"]
+        return  Message.objects.get(pk=pk)
+
+    # def retrieve(self, request, *args, **kwargs):
+    #     instance = self.get_object()
+    #     serializer = self.get_serializer(instance)
+    #     return Response(serializer.data)
+
+
 def translateMessages(request):
     if request.method == 'GET':
         """

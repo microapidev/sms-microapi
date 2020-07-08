@@ -38,6 +38,9 @@ urlpatterns = [
    path('v1/sms/recipient/create', ReceipientCreate.as_view(), name="create-new-recipient"),
    path('v1/sms/recipient/all', ReceipientList.as_view(), name="get-all-recipients"),
    path("v1/sms/recipient/<str:pk>", RecipientDetail.as_view(), name="update-recipient"),
+   
+   #History Views, General Histories
+   path('v1/sms/sms_history/<str:senderID>', SmsHistoryList.as_view(), name="history"),
 
    #Infobip Views
    path("v1/sms/infobip/send_sms", InfobipSendMessage.as_view(), name="infobip-send-message"),
