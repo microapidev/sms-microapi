@@ -2,7 +2,7 @@ from django.urls import path
 # from .views import NuobjectsSendMessage, NuobjectsGetBalance, NuobjectsMessageList
 from .views import ReceipientCreate, ReceipientList, RecipientDetail
 from .views import InfobipSendMessage, InfobipSingleMessage, InfobipMessageList, InfobipGroupMessage
-from .views import GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupNumbersList,GroupNumbersCreate, GroupNumbersDetail
+from .views import GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupNumbersList, GroupNumbersBySenderList, GroupNumbersCreate, update_group_number, GroupNumbersDetail
 from .views import sendmessage, translateMessages, nuobj_api, SmsHistoryList, SmsHistoryDetail #sendmessage_infobip, get_recipients_ibp
 from .views import send_group_twilio, TwilioSendSms
 from django.urls import path
@@ -76,10 +76,12 @@ urlpatterns = [
    path("v1/sms/list_group", GroupList.as_view(), name="list-group"),
    path("v1/sms/list_group/<senderID>", GroupBySenderList.as_view(), name="list-group"),
    path("v1/sms/create_group", GroupCreate.as_view(), name="update-group"),
-   path("v1/sms/group_update/<str:pk>", GroupDetail.as_view(), name="update-group"),
+   path("v1/sms/group_update/<str:groupName>", GroupDetail.as_view(), name="update-group"),
    path("v1/sms/group_recipient/", GroupNumbersList.as_view(), name="group-numbers"),
    path("v1/sms/group_recipient/create", GroupNumbersCreate.as_view(), name="create-group-numbers"),
-   path("v1/sms/group_number/<senderID>", GroupNumbersDetail.as_view(), name="update-group-umbers"),
+   path("v1/sms/group_recipient_list/<str:senderID>", GroupNumbersBySenderList.as_view(), name="list-group-numbers-senderID"),
+   path("v1/sms/group_recipient_update/<str:pk>", update_group_number, name="update-group-umbers"),
+   path("v1/sms/group_recipient_delete/<str:pk>", GroupNumbersDetail.as_view(), name="update-group-umbers"),
    
 ]
 
