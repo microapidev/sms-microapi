@@ -1,12 +1,12 @@
 from django.urls import path
-# from .views import NuobjectsSendMessage, NuobjectsGetBalance, NuobjectsMessageList
 from .views import ReceipientCreate, ReceipientList, RecipientDetail
-from .views import InfobipSendMessage, InfobipSingleMessage, InfobipMessageList, InfobipGroupMessage
+from .views import InfobipSendMessage, InfobipSingleMessage, InfobipMessageList, InfobipGroupMessage, InfobipSendMessage2
+from .views import translateMessages
+from .views import send_group_twilio, TwilioSendSms, sms_list
 from .views import GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupNumbersList, GroupNumbersBySenderList, GroupNumbersCreate, update_group_number, GroupNumbersDetail
-from .views import sendmessage, translateMessages, nuobj_api, SmsHistoryList, SmsHistoryDetail #sendmessage_infobip, get_recipients_ibp
-from .views import send_group_twilio, TwilioSendSms
+from .views import SmsHistoryList, SmsHistoryDetail
 from django.urls import path
-from .views import create_receipents_details, save_recipients_details, sms_list  #get_recipient_details
+from .views import create_receipents_details, save_recipients_details  #get_recipient_details
 from rest_framework.schemas.coreapi import AutoSchema
 from rest_framework_swagger.views import get_swagger_view
 from rest_framework import permissions
@@ -34,8 +34,6 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
-#  path('user/',userdetails),
-   path('sms/',sendmessage),
 
    #Recipient Views
    path('v1/sms/recipient/create', ReceipientCreate.as_view(), name="create-new-recipient"),
@@ -47,6 +45,7 @@ urlpatterns = [
 
    #Infobip Views
    path("v1/sms/infobip/send_sms", InfobipSendMessage.as_view(), name="infobip-send-message"),
+   path("v1/sms/infobip/send_sms2", InfobipSendMessage2.as_view(), name="infobip-send-message2"),
    path("v1/sms/infobip/send_group_sms", InfobipGroupMessage.as_view(), name="infobip-group-message"),
    path("v1/sms/infobip/view_all_sms", InfobipMessageList.as_view(), name="infobip-sent-messages"),
    path("v1/sms/infobip/view_all_sms/<str:senderID>", InfobipSingleMessage.as_view(), name="infobip-sent-messages"),
@@ -60,7 +59,6 @@ urlpatterns = [
 
    #swagger docs and etc
    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-   #path('swagger(P<format>\.json|\.yaml)', schema_view.without_ui(cache_timeout=0), name='schema-json'), #not used for now
    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
    path('', include_docs_urls(title='SMS API', description=
    """
