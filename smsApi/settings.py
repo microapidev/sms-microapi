@@ -20,9 +20,21 @@ DEBUG = True
 ALLOWED_HOSTS = ['*']  ##allows all hosts
 
 # add twillio sid , authentication token and your twilio number
-TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID") # obtained from twilio.com/console 
-TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN") # also obtained from twilio.com/console 
-TWILIO_NUMBER = os.getenv("TWILIO_NUMBER")  # use the number you received when signing up or buy a new number 
+# TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID") # obtained from twilio.com/console 
+TWILIO_ACCOUNT_SID = 'AC9340c14b83b7b52306033d14a7ef2f32' # obtained from twilio.com/console 
+
+# TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN") # also obtained from twilio.com/console 
+TWILIO_AUTH_TOKEN = 'c4c6c9a97d9ca9fba909b9c90bfe9881' # also obtained from twilio.com/console 
+
+# TWILIO_NUMBER = os.getenv("TWILIO_NUMBER")  # use the number you received when signing up or buy a new number 
+TWILIO_NUMBER = '+19037656605'  # use the number you received when signing up or buy a new number 
+# TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN") # also obtained from twilio.com/console 
+# TWILIO_NUMBER = os.getenv("TWILIO_NUMBER")  # use the number you received when signing up or buy a new number 
+
+# TWILIO_ACCOUNT_SID = os.environ.get("TWILLO_SID", "AC03c703831c8e1584dcd406add45d81b5")
+# TWILIO_AUTH_TOKEN = os.environ.get("TWILLO_TOKEN", "8762695a75a70485957f812544bda4d5")
+# TWILIO_NUMBER = os.environ.get("TWILLO_NUMBER", "+12513571496")
+
 
 
 # add infobip login credentials
