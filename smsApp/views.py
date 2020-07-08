@@ -556,12 +556,13 @@ class GroupNumbersDetail(APIView):
     def delete(self, request, pk, format=None):
         groupNumber = self.get_object(pk=pk)
         groupNumber.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response({"Item":"Successfully Deleted"}, status=status.HTTP_204_NO_CONTENT)
 
 @api_view(["PUT"])    
 def update_group_number(request, pk):
     """
     The user can Retrieve, update or delete a phoneNumber instance.\n\n
+    In Postman: v1/sms/group_recipient_update/phoneNumber(pk)
     This takes in this format: {"phone": "instance of Phone", "phoneNumber": ""}
     """
     try:
