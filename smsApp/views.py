@@ -16,34 +16,13 @@ from django.http import HttpResponse, Http404
 from django.http import JsonResponse
 from twilio.base.exceptions import TwilioRestException
 import json
+import http.client
+import mimetypes
 import urllib.parse
 from urllib.parse import urlencode
-
-# import http.client
-# import http
-# import mimetypes
-
-# from .infobip import send_single_message_ibp, delivery_reports_ibp
 from .models import Receipent, Message, Group, GroupNumbers
 from .serializers import RecepientSerializer, MessageSerializer, GroupSerializer, GroupNumbersSerializer 
 from googletrans import Translator
-
-
-# Create your views here.
-
-# send message to users using twillio
-@csrf_exempt
-def sendmessage(request):
-    for number in serialized_users:
-        phone_number = number.phone_number
-    message = ('sample message')
-    clients = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
-    for recipient in serialized_users:
-        number = recipient.phone_number
-        clients.messages.create(to=number,
-                                from_=settings.TWILIO_NUMBER,
-                                body=message)
-    return HttpResponse("messages sent!", 200)
 
 
 # Create your views here.
@@ -53,11 +32,6 @@ class ReceipientList(APIView):
     """
     # queryset = Message.objects.filter(service_type='IF')
     serializer_class= RecepientSerializer
-
-    # def list(self, request):
-    #     queryset = self.get_queryset()
-    #     serializer = MessageSerializer(queryset, many=True)
-    #     return Response(serializer.data)
 
     def get(self, request, format=None):
         receipents = Receipent.objects.all()
@@ -184,6 +158,7 @@ class SmsHistoryList(generics.ListAPIView):
         return Message.objects.filter(senderID=senderID)
 
 
+
 class SmsHistoryDetail(generics.RetrieveAPIView):
     """
     Call a particular History of user with users senderID
@@ -197,7 +172,6 @@ class SmsHistoryDetail(generics.RetrieveAPIView):
     #     instance = self.get_object()
     #     serializer = self.get_serializer(instance)
     #     return Response(serializer.data)
-
 
 
 def translateMessages(request):
@@ -341,38 +315,6 @@ def translateMessages(request):
                                 status=status.HTTP_200_OK)
         except Exception as error:
             return JsonResponse({"error": error}, status=status.HTTP_400_BAD_REQUEST)
-
-
-# Infobip
-# @api_view(['POST'])
-# def sendmessage_infobip(request):
-#     users = user.objects.all()
-#     serialized_users = UserSerializer(users, many=True)
-#     message = request.data["message"]
-#     for recipient in serialized_users.data:
-#         number = recipient.phone_number
-#         send_single_message_ibp(message, number)
-#     return HttpResponse("Messages Sent!", 200)
-
-
-# @api_view(['GET'])
-# def get_recipients_ibp(request):
-#     reports = delivery_reports_ibp()
-#     return JsonResponse(reports)
-
-
-# nuObjects
-@api_view(['POST'])
-def nuobj_api(request):
-    # users = user.objects.all()
-    serializer_class= MessageSerializer
-    message = request.data["message"]
-    sender = request.data.get("senderID")
-    text = request.data.get("content")
-    receiver = request.data.get("receiver")
-    response = requests.post(f'https://cloud.nuobjects.com/api/send/?user={philemon}&pass={Microapipassword1}&to={receiver}&from={sender}&msg={text}')
-    return HttpResponse("Messages Sent!", 200)
-
 
 
 def get_numbers_from_group(request, pk):
@@ -626,6 +568,60 @@ class InfobipSendMessage(generics.CreateAPIView):
             if response == 200:
                 value.save()
         return JsonResponse(response,safe=False)
+
+
+class InfobipSendMessage2(generics.CreateAPIView):
+    """
+    This is to send a single SMS to a user using Infobip. 
+
+    This is a Trial Account, the following defaults must hold for a message to be sent succesfully
+    1. The sender must be the Default Sender on the account which has been set to 'Phil Trial'
+    2. The number to be sent to must be verified number on the account which is '254741628438'
+
+    Format is to be in
+    {"senderID":"", "content":"", "receiver":""}
+    where senderID is the userID, content is the message 
+    and the receiver is the number to be sent to in the format '254741628438'
+    """
+    serializer_class= MessageSerializer
+    def post(self, request):
+        receiver = request.data["receiver"]
+        text = request.data["content"]
+        sender = request.data["senderID"]
+        conn = http.client.HTTPSConnection("jdd8zk.api.infobip.com")
+
+        #here i tried to break the payload into bits to try dynamic variables 
+        dest1 = {'to':receiver}
+        destination = {'destinations': dest1}
+        flash = {'flash':'true'}
+        text = {'text':text}
+        sender = {'from': sender}
+        array = [sender, destination, text, flash]
+        print(array)
+
+        #this is the sample payload as it from the documentation
+        payload = "{\"messages\":[{\"from\":\"Phli\",\"destinations\":[{\"to\":\"2347069501730\"}],\"text\":\"Text.\",\"flash\":true}]}"
+
+        #this is 'appended' payload that was broken into bits
+        payload2 = {"messages":array}
+
+        #the rest of the connection codes
+        headers = {
+            'Authorization': 'App 32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b'
+        }
+        conn.request("POST", "/sms/2/text/advanced", payload, headers)
+        res = conn.getresponse()
+        data = res.read()
+        return Response({"Status":res.status, "Message":"", "Data":data})
+
+        # if res.status == 200:
+        #     # resp = JsonResponse({"Success":res.status, "Message":"Message Sent", "Data":data.decode("utf-8")})
+        #     return JsonResponse({"Success":res.status, "Message":"Message Sent", "Data":data.decode("utf-8")})
+        # else:
+        #     return JsonResponse({"Failure":res.status, "Message":"Message Not Sent", "Data":data.decode("utf-8")})
+
+
+
 
 
 class InfobipGroupMessage(generics.CreateAPIView):
