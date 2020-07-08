@@ -27,7 +27,7 @@ from django.utils.translation import ugettext_lazy as _
 
 class Group(models.Model):
     # groupID = models.ForeignKey(GroupUnique, related_name='grp_id', on_delete=models.SET_NULL)
-    groupName = models.CharField(max_length=80)
+    groupName = models.CharField(max_length=90)
     userID = models.CharField(max_length=30, default="user") #creator of the group123e4567-e89b-12d3-a456-426652340000
     groupID = models.UUIDField(default=uuid.uuid4, editable=False)
     dateCreated = models.DateTimeField(default=timezone.now)
