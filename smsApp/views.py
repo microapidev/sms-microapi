@@ -16,6 +16,7 @@ from django.conf import settings
 from django.http import HttpResponse, Http404, JsonResponse
 from django.http import JsonResponse
 from twilio.base.exceptions import TwilioRestException
+import re
 import json
 import base64
 import http.client
@@ -908,26 +909,49 @@ class TeleSignTransactionID2(generics.ListAPIView):
     serializer_class = MessageSerializer
     def get_queryset(self, request, *args, **kwargs):
         transactionID = self.kwargs["transactionID"]
-        message = Message.objects.filter(transactionID=transactionID)
-        if message:
-            return Response({"Success":True, "Message": "Transaction Retrieved", "Data":[request.data], 'status':status.HTTP_302_FOUND})
+        uuid_regex = re.complie('[0-9a-f]{8}\-[0-9a-f]{4}\-4[0-9a-f]{3}\-[89ab][0-9a-f]{3}\-[0-9a-f]{12}')
+        if uuid_regex.match(transactionID):
+            message = get_object_or_404(Message, transactionID=transactionID)
+            if message:
+                return Response({"Success":True, "Message": "Transaction Retrieved", "Data":[request.data], 'status':status.HTTP_302_FOUND})
+            else:
+                return Response({"Success":False, "Message": "Transaction Failed", "Data":[request.data], 'status':status.HTTP_400_BAD_REQUEST})
+        else: 
+            raise ValidationError('Please enter a proper uuid field, with 32 charcters')
+        
 
+# class TeleSignTransactionID(APIView):
+#     """
+#     This allows view the list of the Infobip Messages Sent by all users.
+#     Format is to be in
+#     {'transactionID':'<a valid transaction id>'}
+#     """
+#     # queryset = Message.objects.filter(service_type='IF')
+#     serializer_class= MessageSerializer
 
-class TeleSignTransactionID(APIView):
+#     def get(self, request, transactionID, format=None):
+#         uuid_regex = re.compile('[0-9a-f]{8}\-[0-9a-f]{4}\-4[0-9a-f]{3}\-[89ab][0-9a-f]{3}\-[0-9a-f]{12}')
+#         if uuid_regex.match(transactionID) is False:
+#             return  Response({"Success":False, "Message": "Transaction Failed", "Data":"UUID needed", 'status':status.HTTP_400_BAD_REQUEST})
+#         else:
+#             transaction = get_object_or_404(Message, transactionID=transactionID)
+#             serializer_message = MessageSerializer(transaction, many=True, raise_exception=True)
+#             return Response({"Success":True, "Message": "Transaction Retrieved", "Data":serializer_message.data, 'status':status.HTTP_302_FOUND})
+
+class TeleSignTransactionID(generics.ListAPIView):
     """
-    This allows view the list of the Infobip Messages Sent by all users.
-    Format is to be in
-    {'transactionID':'<a valid transaction id>'}
+    This allows view the list of the groups available on DB.
     """
-    # queryset = Message.objects.filter(service_type='IF')
-    serializer_class= MessageSerializer
 
-    def get(self, request, transactionID, format=None):
-        transaction = Message.objects.filter(transactionID=transactionID)
-        serializer_message =MessageSerializer(transaction, many=True)
-        return Response(serializer_message.data)
+    serializer_class = MessageSerializer
 
-
+    def list(self, request, transactionID):
+        uuid_regex = re.compile('[0-9a-f]{8}\-[0-9a-f]{4}\-4[0-9a-f]{3}\-[89ab][0-9a-f]{3}\-[0-9a-f]{12}')
+        if ValueError:
+            return  Response({"Success":False, "Message": "Transaction Failed", "Data":"UUID needed", 'status':status.HTTP_400_BAD_REQUEST})
+        queryset = get_object_or_404(Message, transactionID=transactionID)
+        serializer = MessageSerializer(queryset, many=True)
+        return Response({"Success":True, "Message": "Transaction Retrieved", "Data":serializer.data, 'status':status.HTTP_302_FOUND})
 
 
 class TeleSignGroupSms(generics.CreateAPIView):
