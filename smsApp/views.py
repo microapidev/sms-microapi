@@ -473,17 +473,17 @@ class GroupNumbersCreate(generics.CreateAPIView):
     Format is as follows:
     {"group":"<unique primarykey given upon creating a group>", "phoneNumbers":"<a phone number>"}
     """
-    queryset = GroupNumbers.objects.all()
+    '''queryset = GroupNumbers.objects.all()
     serializer_class= GroupNumbersSerializer
 
-        groupID = request.data.get("group")
-        phoneNumbers = request.data.get("phoneNumbers")
-        queryset = GroupNumbers.objects.filter(group=groupID, phoneNumbers=phoneNumbers)
+    groupID = request.data.get("group")
+    phoneNumbers = request.data.get("phoneNumbers")
+    queryset = GroupNumbers.objects.filter(group=groupID, phoneNumbers=phoneNumbers)
         
-        if queryset.exists() :
-            return Response({"This number already exists in this group"},status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return self.create(request, *args, **kwargs)
+    if queryset.exists() :
+        return Response({"This number already exists in this group"},status=status.HTTP_400_BAD_REQUEST)
+    else:
+        return self.create(request, *args, **kwargs)'''
 
 
 class GroupNumbersDetail(APIView):
@@ -715,7 +715,7 @@ class TwilioSendSms(views.APIView):
     and the phone is the number to be sent to
     """
 
-    def post(self, request):
+    '''def post(self, request):
         try:
             senderID = request.data["senderID"]
             content = request.data["content"]
@@ -738,5 +738,60 @@ class TwilioSendSms(views.APIView):
                 value.save()
                 return Response({f"{receiver} can't be sent to, review number": str(e)},status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response({"details":"Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"details":"Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)'''
   
+    
+    def post(self, request):
+        receiver = request.data["receiver"]
+        content = request.data["content"]
+        request.data["service_type"] = "TW"
+        serializer_message = MessageSerializer(data=request.data)
+        
+        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+        if serializer_message.is_valid():
+            try:
+                value = serializer_message.save()
+                message = client.messages.create(
+                    from_ = settings.TWILIO_NUMBER,
+                    to = receiver,
+                    body = content
+                    )
+                value.messageStatus = "S"
+                value.save()
+                return Response({
+                    'success': 'true',
+                    'message': 'Message sent',
+                    'data': {
+                        'receiver': f"{receiver}",
+                        #'userID': f"{senderID}",
+                        'service_type':'TWILIO',
+                    }
+                }, 200)
+
+            except TwilioRestException as e:
+                value.messageStatus = "F"
+                value.save()
+                #return Response({f"{receiver} can't be sent to, review number": str(e)},status=status.HTTP_400_BAD_REQUEST)
+                return Response({
+                    'success': 'false',
+                    'message': 'Message not sent',
+                    'error': {
+                        #'userID': f"{senderID}",
+                        'recipient':f"{receiver}",
+                        'service_type':'TWILIO',
+                        'statusCode':'400',
+                        'details':'Wrong details entered'
+                    }
+                }, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({
+                    'success': 'false',
+                    'message': 'Message not sent',
+                    'error': {
+                        #'userID': f"{senderID}",
+                        'recipient':f"{receiver}",
+                        'service_type':'TWILIO',
+                        'statusCode':'400',
+                        'details':'Wrong details entered'
+                    }
+                }, status=status.HTTP_400_BAD_REQUEST)

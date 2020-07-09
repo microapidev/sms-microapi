@@ -24,7 +24,7 @@ ALLOWED_HOSTS = ['*']  ##allows all hosts
 TWILIO_ACCOUNT_SID = 'AC9340c14b83b7b52306033d14a7ef2f32' # obtained from twilio.com/console 
 
 # TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN") # also obtained from twilio.com/console 
-TWILIO_AUTH_TOKEN = 'c4c6c9a97d9ca9fba909b9c90bfe9881' # also obtained from twilio.com/console 
+TWILIO_AUTH_TOKEN = '410aea6c0b69ce7f75091e7628540463' # also obtained from twilio.com/console - c4c6c9a97d9ca9fba909b9c90bfe9881
 
 # TWILIO_NUMBER = os.getenv("TWILIO_NUMBER")  # use the number you received when signing up or buy a new number 
 TWILIO_NUMBER = '+19037656605'  # use the number you received when signing up or buy a new number 
