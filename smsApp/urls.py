@@ -4,7 +4,7 @@ from .views import InfobipSendMessage, InfobipSingleMessage, InfobipMessageList,
 from .views import translateMessages
 from .views import TeleSignSingleSms, TeleSignMessageList, TeleSignTransactionID, TeleSignGroupSms
 from .views import send_group_twilio, TwilioSendSms, sms_list
-from .views import GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupNumbersList, GroupNumbersBySenderList, GroupNumbersCreate, update_group_number, GroupNumbersDetail
+from .views import GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupDelete, GroupNumbersList, GroupNumbersBySenderList, GroupNumbersCreate, update_group_number, GroupNumbersDetail
 from .views import SmsHistoryList, SmsHistoryDetail
 from django.urls import path
 from .views import create_receipents_details, save_recipients_details  #get_recipient_details
@@ -82,6 +82,7 @@ urlpatterns = [
    path("v1/sms/list_group/<senderID>", GroupBySenderList.as_view(), name="list-group"),
    path("v1/sms/create_group", GroupCreate.as_view(), name="update-group"),
    path("v1/sms/group_update/<str:pk>", GroupDetail.as_view(), name="update-group"),
+   path("v1/sms/group_delete/<str:groupname>", GroupDelete.as_view(), name="delete-group"),
    path("v1/sms/group_recipient/", GroupNumbersList.as_view(), name="group-numbers"),
    path("v1/sms/group_recipient/create", GroupNumbersCreate.as_view(), name="create-group-numbers"),
    path("v1/sms/group_recipient_list/<str:senderID>", GroupNumbersBySenderList.as_view(), name="list-group-numbers-senderID"),
