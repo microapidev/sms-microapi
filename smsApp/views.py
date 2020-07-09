@@ -508,30 +508,18 @@ class GroupNumbersCreate(generics.CreateAPIView):
     Format is as follows:
     {"group":"<unique primarykey given upon creating a group>", "phoneNumbers":"<a phone number>"}
     """
-<<<<<<< HEAD
-    '''queryset = GroupNumbers.objects.all()
-    serializer_class= GroupNumbersSerializer
-=======
     queryset = GroupNumbers.objects.all()
     serializer_class= GroupNumbersPrimarySerializer
->>>>>>> 0eea89c27a969d529c4d07c724a95adacbf74de9
 
     groupID = request.data.get("group")
     phoneNumbers = request.data.get("phoneNumbers")
     queryset = GroupNumbers.objects.filter(group=groupID, phoneNumbers=phoneNumbers)
         
-<<<<<<< HEAD
-    if queryset.exists() :
-        return Response({"This number already exists in this group"},status=status.HTTP_400_BAD_REQUEST)
-    else:
-        return self.create(request, *args, **kwargs)'''
-=======
         if queryset.exists() :
             return Response({"This number already exists in this group"},status=status.HTTP_400_BAD_REQUEST)
         else:
             self.create(request, *args, **kwargs)
             return Response({"Success":"True", "status":status.HTTP_201_CREATED, "Message":f"PhoneNumber added to  group with Instance of {groupID}", "Number":request.data })
->>>>>>> 0eea89c27a969d529c4d07c724a95adacbf74de9
 
 
 class GroupNumbersDetail(APIView):
