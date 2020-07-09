@@ -33,7 +33,7 @@ class RecipientList(APIView):
     This allows view the list of the Recipients saved by all users.
     """
     # queryset = Message.objects.filter(service_type='IF')
-    serializer_class= RecipientSerializer
+    serializer_class = RecipientSerializer
 
     def get(self, request, format=None):
         recipient = Recipient.objects.all()
@@ -46,20 +46,19 @@ class RecipientsForUser(APIView):
     This allows view the list of the Recipients saved by all users.
     """
     # queryset = Message.objects.filter(service_type='IF')
-    serializer_class= RecipientSerializer
+    serializer_class = RecipientSerializer
 
     def get(self, request, userID, format=None):
         recipients = Recipient.objects.filter(userID=userID)
         if recipients:
             if request.data is None:
                 serializer = RecipientSerializer(recipients, many=True)
-                return Response({"Success":True, "Message": "No Recipients For User", "Data":[request.data], 'status':status.HTTP_204_NO_CONTENT})
+                return Response({"Success": True, "Message": "No Recipients For User", "Data": [request.data], 'status': status.HTTP_204_NO_CONTENT})
             else:
                 serializer = RecipientSerializer(recipients, many=True)
-                return Response({"Success":True, "Message": "Recipients Retrieved", "Data":[request.data], 'status':status.HTTP_200_OK})
+                return Response({"Success": True, "Message": "Recipients Retrieved", "Data": [request.data], 'status': status.HTTP_200_OK})
         else:
-            return Response({"Failure":True, "Message": "User Does not exist", "Data":[], 'status':status.HTTP_400_BAD_REQUEST})
-
+            return Response({"Failure": True, "Message": "User Does not exist", "Data": [], 'status': status.HTTP_400_BAD_REQUEST})
 
 
 class RecipientCreate(generics.CreateAPIView):
@@ -72,30 +71,32 @@ class RecipientCreate(generics.CreateAPIView):
     {'recipientName':<the contact name>, 'recipientNumber':<the contacts number>, 'userid':'The user who wants to save the contact'}
     '''
     queryset = Recipient.objects.all()
-    serializer_class= RecipientSerializer
-    
+    serializer_class = RecipientSerializer
+
     def post(self, request, *args, **kwargs):
         recipientNumber = request.data.get("recipientNumber")
         userID = request.data.get("userID")
-        queryset = Recipient.objects.filter(userID=userID).filter(recipientNumber=recipientNumber)
-        
+        queryset = Recipient.objects.filter(
+            userID=userID).filter(recipientNumber=recipientNumber)
+
         if queryset.exists():
-            return Response({"Failure":True, "Message": "This User Already Has This Phone number saved", "Data":[], 'status':status.HTTP_400_BAD_REQUEST})
+            return Response({"Failure": True, "Message": "This User Already Has This Phone number saved", "Data": [], 'status': status.HTTP_400_BAD_REQUEST})
         else:
             self.create(request, *args, **kwargs)
-            return Response({"Success":True, "Message": "Recipient created", "Data":[request.data], 'status':status.HTTP_201_CREATED})
+            return Response({"Success": True, "Message": "Recipient created", "Data": [request.data], 'status': status.HTTP_201_CREATED})
 
 
-#This is the function for updating and deleting each recipient in a list
+# This is the function for updating and deleting each recipient in a list
 class RecipientDetail(views.APIView):
     """
     Update or delete a recipient instance.
     """
+
     def get_object(self, recipientNumber):
         try:
             return Recipient.objects.filter(recipientNumber=recipientNumber)
         except Recipient.DoesNotExist:
-            return Response({"Failure":True, "Message": "This number is not saved", "Data":[], 'status':status.HTTP_400_BAD_REQUEST})
+            return Response({"Failure": True, "Message": "This number is not saved", "Data": [], 'status': status.HTTP_400_BAD_REQUEST})
     """
     This Updates the information of the added recipient
     """
@@ -107,7 +108,7 @@ class RecipientDetail(views.APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
     """
     This Deletes the information of the added recipient
     """
@@ -115,7 +116,7 @@ class RecipientDetail(views.APIView):
     def delete(self, request, recipientNumber, format=None):
         recipient = self.get_object(recipientNumber)
         recipient.delete()
-        return Response({"Item":"Successfully Deleted"},status=status.HTTP_200_OK)
+        return Response({"Item": "Successfully Deleted"}, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -159,7 +160,8 @@ def sms_list(request):
     """
     if request.method == 'GET':
         # Connect to Twilio and Authenticate
-        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+        client = Client(settings.TWILIO_ACCOUNT_SID,
+                        settings.TWILIO_AUTH_TOKEN)
         try:
             # Pull information from Twilio
             messages = client.messages.list(limit=10)
@@ -175,22 +177,23 @@ def sms_list(request):
                 }
                 # append to the sms list.
                 sms.append(message)
-            return JsonResponse({"Success":status.HTTP_200_OK, "Message":"Message Sent", "Data":sms })
+            return JsonResponse({"Success": status.HTTP_200_OK, "Message": "Message Sent", "Data": sms})
             # return JsonResponse(sms, status=200, safe=False)
         except TwilioRestException as e:
             return JsonResponse({"e": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+
 class SmsHistoryList(generics.ListAPIView):
     """
     This is used to pull sms history on database
-    The senderID should be added at endpoint 
+    The senderID should be added at endpoint
     /v1/sms/sms_history/<senderID>
     """
     serializer_class = MessageSerializer
+
     def get_queryset(self):
         senderID = self.kwargs["senderID"]
         return Message.objects.filter(senderID=senderID)
-
 
 
 class SmsHistoryDetail(generics.RetrieveAPIView):
@@ -198,9 +201,10 @@ class SmsHistoryDetail(generics.RetrieveAPIView):
     Call a particular History of user with users senderID
     """
     serializer = MessageSerializer
+
     def get_queryset(self):
         pk = self.kwargs["pk"]
-        return  Message.objects.get(pk=pk)
+        return Message.objects.get(pk=pk)
 
     # def retrieve(self, request, *args, **kwargs):
     #     instance = self.get_object()
@@ -212,8 +216,8 @@ def translateMessages(request):
     if request.method == 'GET':
         """
         Translates multiple messages in a single go to the specified language
-        Need to send message and language(the language you want to translate) 
-        Set of languages supported are 
+        Need to send message and language(the language you want to translate)
+        Set of languages supported are
         The destination here must be a key of the below dictionary(eg:af)
         {
     'af': 'afrikaans',
@@ -357,6 +361,7 @@ def get_numbers_from_group(request, pk):
     print(group_numbers)
     return group_numbers
 
+
 @api_view(["POST"])
 def send_group_twilio(request):
     """
@@ -368,17 +373,17 @@ def send_group_twilio(request):
     senderID = request.data["senderID"]
     numbers = get_numbers_from_group(request, groupPK)
 
-
     client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
     for number in numbers:
-        payload = {'content':content, "receiver":number, "senderID":senderID, "service_type":"TW"}
+        payload = {'content': content, "receiver": number,
+                   "senderID": senderID, "service_type": "TW"}
         serializer = MessageSerializer(data=payload)
         if serializer.is_valid():
             try:
                 client.messages.create(
-                    from_ = settings.TWILIO_NUMBER,
-                    to = number,
-                    body = content
+                    from_=settings.TWILIO_NUMBER,
+                    to=number,
+                    body=content
                 )
                 msgstatus.append(f"sent to {number}")
                 value = serializer.save()
@@ -391,10 +396,10 @@ def send_group_twilio(request):
                 value.save()
         else:
             msgstatus.append(f"something went wrong while sending to {number}")
-    return Response({"details":msgstatus, "service_type":"TWILIO", "senderID":senderID }, status=status.HTTP_200_OK)
+    return Response({"details": msgstatus, "service_type": "TWILIO", "senderID": senderID}, status=status.HTTP_200_OK)
 
 
-#This is the function for Listing and creating A GroupList
+# This is the function for Listing and creating A GroupList
 
 class GroupBySenderList(generics.ListAPIView):
     """
@@ -407,8 +412,9 @@ class GroupBySenderList(generics.ListAPIView):
         senderID = self.kwargs["senderID"]
         queryset = Group.objects.filter(userID=senderID)
         serializer = GroupSerializer(queryset, many=True)
-        return Response({"Success":status.HTTP_200_OK, "Message":f"Groups Created by {senderID}", "Group-Info":serializer.data })
+        return Response({"Success": status.HTTP_200_OK, "Message": f"Groups Created by {senderID}", "Group-Info": serializer.data})
         # return Response(serializer.data)
+
 
 class GroupList(generics.ListAPIView):
     """
@@ -420,8 +426,7 @@ class GroupList(generics.ListAPIView):
     def list(self, request):
         queryset = self.get_queryset()
         serializer = GroupSerializer(queryset, many=True)
-        return Response({"Success":status.HTTP_200_OK, "Message":"Groups Available", "Group-Info":serializer.data })
-
+        return Response({"Success": status.HTTP_200_OK, "Message": "Groups Available", "Group-Info": serializer.data})
 
 
 class GroupCreate(generics.CreateAPIView):
@@ -431,35 +436,38 @@ class GroupCreate(generics.CreateAPIView):
 
     """
     queryset = Group.objects.all()
-    serializer_class= GroupSerializer
-    
+    serializer_class = GroupSerializer
+
     def post(self, request, *args, **kwargs):
         groupName = request.data.get("groupName")
         senderID = request.data.get("userID")
         queryset = Group.objects.filter(userID=senderID, groupName=groupName)
-        
+
         if senderID == "string" or senderID == None:
-            return Response({"Failure":status.HTTP_400_BAD_REQUEST, "Message":"String is empty", "Data":{"userID":"string is empty"} })          
+            return Response({"Failure": status.HTTP_400_BAD_REQUEST, "Message": "String is empty", "Data": {"userID": "string is empty"}})
         if groupName == "string" or groupName == None:
-            return Response({"Failure":status.HTTP_400_BAD_REQUEST, "Message":"String is empty", "Data":{"groupName":"empty"} })
-        if queryset.exists() :
-            return Response({"This group exists and it has same user, please specify another group with or change the senderID"},status=status.HTTP_400_BAD_REQUEST)
+            return Response({"Failure": status.HTTP_400_BAD_REQUEST, "Message": "String is empty", "Data": {"groupName": "empty"}})
+        if queryset.exists():
+            return Response({"This group exists and it has same user, please specify another group with or change the senderID"}, status=status.HTTP_400_BAD_REQUEST)
         else:
             self.create(request, *args, **kwargs)
-            return Response({"Success":"True", "status":status.HTTP_201_CREATED, "Message":"Group Created", "Data":request.data })
+            return Response({"Success": "True", "status": status.HTTP_201_CREATED, "Message": "Group Created", "Data": request.data})
 
-#This is the function for updating and deleting each recipient in a list
+# This is the function for updating and deleting each recipient in a list
+
+
 class GroupDetail(views.APIView):
     """
     The groupName is required to delete the group and userID is required alongside the groupName to update.\n
     To update simply use: /v1/sms/group_update/nameOfGroup...then in body enter {"groupName":"updatedgroupName", "userID":""}.\n
     To delete simply use: /v1/sms/group_update/groupName
     """
+
     def get_object(self, pk):
         try:
             return Group.objects.get(groupName=pk)
         except Group.DoesNotExist:
-            return Response({"Item":"Not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"Item": "Not found"}, status=status.HTTP_404_NOT_FOUND)
     """
     This Updates the information of the added recipient
     """
@@ -469,13 +477,15 @@ class GroupDetail(views.APIView):
         serializer = GroupSerializer(group, data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response({"Success":"True", "status":status.HTTP_200_OK, "Message":"GroupName Updated", "Data":serializer.data })
-        return Response({"Error":status.HTTP_400_BAD_REQUEST, "Message":"GroupDetails Not Found", "Numbers":serializer.errors })
+            return Response({"Success": "True", "status": status.HTTP_200_OK, "Message": "GroupName Updated", "Data": serializer.data})
+        return Response({"Error": status.HTTP_400_BAD_REQUEST, "Message": "GroupDetails Not Found", "Numbers": serializer.errors})
+
 
 class GroupDelete(generics.DestroyAPIView):
     """
     To delete simply use: /v1/sms/group_update/groupName
     """
+
     def get_object(self, groupname):
         number = get_object_or_404(Group, groupName=groupname)
         return number
@@ -483,25 +493,30 @@ class GroupDelete(generics.DestroyAPIView):
     def delete(self, request, groupname, format=None):
         group = self.get_object(groupname)
         group.delete()
-        return Response({"Item":"Successfully Deleted"},status=status.HTTP_200_OK)
+        return Response({"Item": "Successfully Deleted"}, status=status.HTTP_200_OK)
+
 
 class GroupNumbersList(APIView):
     """
     The user can List all numbers in a group, or create a new group.
     """
+
     def get(self, request, format=None):
         groupNumber = GroupNumbers.objects.all()
         serializer = GroupNumbersSerializer(groupNumber, many=True)
-        return Response({"Success":"True", "status":status.HTTP_200_OK, "Message":"PhoneNumbers Available", "Numbers":serializer.data })
+        return Response({"Success": "True", "status": status.HTTP_200_OK, "Message": "PhoneNumbers Available", "Numbers": serializer.data})
+
 
 class GroupNumbersBySenderList(APIView):
     """
     The user can List all numbers in a specific group. This requires  {"userID":""}
     """
+
     def get(self, request, senderID, format=None):
         groupNumber = GroupNumbers.objects.filter(group__userID=senderID)
         serializer = GroupNumbersSerializer(groupNumber, many=True)
-        return Response({"Success":"True", "status":status.HTTP_200_OK, "Message":f"PhoneNumbers Available to {senderID}", "Numbers":serializer.data })
+        return Response({"Success": "True", "status": status.HTTP_200_OK, "Message": f"PhoneNumbers Available to {senderID}", "Numbers": serializer.data})
+
 
 class GroupNumbersCreate(generics.CreateAPIView):
     """
@@ -510,20 +525,21 @@ class GroupNumbersCreate(generics.CreateAPIView):
     It requires the ID of the already created group.
     Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.
     Format is as follows:
-    {"group":"<unique primarykey given upon creating a group>", "phoneNumbers":"<a phone number>"}
+    {"group":"<unique primarykey given upon creating a group>",
+        "phoneNumbers":"<a phone number>"}
     """
     queryset = GroupNumbers.objects.all()
-    serializer_class= GroupNumbersPrimarySerializer
-
-    groupID = request.data.get("group")
-    phoneNumbers = request.data.get("phoneNumbers")
-    queryset = GroupNumbers.objects.filter(group=groupID, phoneNumbers=phoneNumbers)
-        
-        if queryset.exists() :
-            return Response({"This number already exists in this group"},status=status.HTTP_400_BAD_REQUEST)
+    serializer_class = GroupNumbersPrimarySerializer
+    def post(self, request, *args, **kwargs):
+        groupID = request.data.get("group")
+        phoneNumbers = request.data.get("phoneNumbers")
+        queryset = GroupNumbers.objects.filter(
+            group=groupID, phoneNumbers=phoneNumbers)
+        if queryset.exists():
+            return Response({"This number already exists in this group"}, status=status.HTTP_400_BAD_REQUEST)
         else:
             self.create(request, *args, **kwargs)
-            return Response({"Success":"True", "status":status.HTTP_201_CREATED, "Message":f"PhoneNumber added to  group with Instance of {groupID}", "Number":request.data })
+            return Response({"Success": "True", "status": status.HTTP_201_CREATED, "Message": f"PhoneNumber added to  group with Instance of {groupID}", "Number": request.data})
 
 
 class GroupNumbersDetail(APIView):
@@ -531,11 +547,12 @@ class GroupNumbersDetail(APIView):
     """
     The user can delete a phoneNumber instance.
     """
-        # def get_object(self, pk):
-        # try:
-        #     return Group.objects.get(groupName=pk)
-        # except Group.DoesNotExist:
-        #     raise Http404
+    # def get_object(self, pk):
+    # try:
+    #     return Group.objects.get(groupName=pk)
+    # except Group.DoesNotExist:
+    #     raise Http404
+
     def get_object(self, pk):
         number = get_object_or_404(GroupNumbers, pk=pk)
         return number
@@ -543,11 +560,10 @@ class GroupNumbersDetail(APIView):
     def delete(self, request, pk, format=None):
         groupNumber = self.get_object(pk=pk)
         groupNumber.delete()
-        return Response({"Item":"Successfully Deleted"}, status=status.HTTP_204_NO_CONTENT)
+        return Response({"Item": "Successfully Deleted"}, status=status.HTTP_204_NO_CONTENT)
 
 
-
-@api_view(["PUT"])    
+@api_view(["PUT"])
 def update_group_number(request, pk):
     """
     The user can Retrieve, update or delete a phoneNumber instance.\n\n
@@ -557,17 +573,17 @@ def update_group_number(request, pk):
     try:
         groupnumber = GroupNumbers.objects.get(pk=pk)
     except GroupNumbers.DoesNotExist:
-        return Response({"Item":"Not found"}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"Item": "Not found"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return JsonResponse({"Error": f"{str(e)}"})
-    
+
     if request.method == 'PUT':
         data = request.data
         serializer = GroupNumbersPrimarySerializer(groupnumber, data=data)
         if serializer.is_valid():
             serializer.save()
-            return Response({"Success":status.HTTP_202_ACCEPTED, "Message":"PhoneNumber updated", "Number":serializer.data })
-        return Response({"Error":status.HTTP_400_BAD_REQUEST, "Message":"Bad Request", "Number":serializer.errors })
+            return Response({"Success": status.HTTP_202_ACCEPTED, "Message": "PhoneNumber updated", "Number": serializer.data})
+        return Response({"Error": status.HTTP_400_BAD_REQUEST, "Message": "Bad Request", "Number": serializer.errors})
         # return JsonResponse(serializer.errors, status=400)
 
 # @api_view(['POST'])
@@ -597,8 +613,8 @@ class InfobipSendMessage(generics.CreateAPIView):
     and the receiver is the number to be sent to in the format '2348038888888'
     """
     queryset = Message.objects.all()
-    serializer_class= MessageSerializer
-    
+    serializer_class = MessageSerializer
+
     def post(self, request, *args, **kwargs):
         receiver = request.data["receiver"]
         text = request.data["content"]
@@ -607,17 +623,19 @@ class InfobipSendMessage(generics.CreateAPIView):
         if serializer.is_valid():
             value = serializer.save()
             data = {
-            "from": sender,
-            "to": receiver,
-            "text": text
+                "from": sender,
+                "to": receiver,
+                "text": text
             }
-            headers = {'Authorization': '32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b'}
-            r = requests.post("https://jdd8zk.api.infobip.com", data=data,headers=headers)
+            headers = {
+                'Authorization': '32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b'}
+            r = requests.post("https://jdd8zk.api.infobip.com",
+                              data=data, headers=headers)
             response = r.status_code
             value.service_type = 'IF'
             if response == 200:
                 value.save()
-        return JsonResponse(response,safe=False)
+        return JsonResponse(response, safe=False)
 
 
 class InfobipSendMessage2(generics.CreateAPIView):
@@ -633,38 +651,41 @@ class InfobipSendMessage2(generics.CreateAPIView):
     where senderID is the userID, content is the message 
     and the receiver is the number to be sent to in the format '254741628438'
     """
-    serializer_class= MessageSerializer
+    serializer_class = MessageSerializer
+
     def post(self, request):
         receiver = request.data["receiver"]
         text = request.data["content"]
         sender = request.data["senderID"]
         conn = http.client.HTTPSConnection("jdd8zk.api.infobip.com")
 
-        #here i tried to break the payload into bits to try dynamic variables 
-        dest1 = {'to':receiver}
+        # here i tried to break the payload into bits to try dynamic variables
+        dest1 = {'to': receiver}
         destination = {'destinations': dest1}
-        flash = {'flash':'true'}
-        text = {'text':text}
+        flash = {'flash': 'true'}
+        text = {'text': text}
         sender = {'from': sender}
         array = [sender, destination, text, flash]
         # print(array)
 
-        #this is the sample payload as it from the documentation
-        payload = "'messages':[{'from':'%s','destinations':[{'to':'%s'}],'text':'%s','flash':'true'}]" % (sender, receiver, text)
+        # this is the sample payload as it from the documentation
+        payload = "'messages':[{'from':'%s','destinations':[{'to':'%s'}],'text':'%s','flash':'true'}]" % (
+            sender, receiver, text)
         print(payload)
         print('Hello')
 
-        payload3 = {'messages':[]}
-        this = "{'from':'%s', 'destinations':[{'to':'%s'}], 'text':'%s', 'flash':'true'}"%(sender, receiver, text)
+        payload3 = {'messages': []}
+        this = "{'from':'%s', 'destinations':[{'to':'%s'}], 'text':'%s', 'flash':'true'}" % (
+            sender, receiver, text)
         payload3['messages'].append(this)
         print(str(payload3))
         print('hi')
         print(payload3)
 
-        #this is 'appended' payload that was broken into bits
-        payload2 = {"messages":array}
+        # this is 'appended' payload that was broken into bits
+        payload2 = {"messages": array}
 
-        #the rest of the connection codes
+        # the rest of the connection codes
         headers = {
             'Authorization': 'App 32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b'
         }
@@ -674,14 +695,13 @@ class InfobipSendMessage2(generics.CreateAPIView):
         data = res.read().decode('utf-8')
         data = data.replace('/', '')
         # print(data)
-        return JsonResponse({"Status":res.status, "Message":"", "Data":data})
+        return JsonResponse({"Status": res.status, "Message": "", "Data": data})
 
         # if res.status == 200:
         #     # resp = JsonResponse({"Success":res.status, "Message":"Message Sent", "Data":data.decode("utf-8")})
         #     return JsonResponse({"Success":res.status, "Message":"Message Sent", "Data":data.decode("utf-8")})
         # else:
         #     return JsonResponse({"Failure":res.status, "Message":"Message Not Sent", "Data":data.decode("utf-8")})
-
 
 
 @api_view(["POST"])
@@ -695,17 +715,17 @@ def InfobipGroupMessage(request):
     senderID = request.data["senderID"]
     numbers = get_numbers_from_group(request, groupPK)
 
-
     # client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
     for number in numbers:
-        payload = {'content':content, "receiver":number, "senderID":senderID, "service_type":"TW"}
+        payload = {'content': content, "receiver": number,
+                   "senderID": senderID, "service_type": "TW"}
         serializer = MessageSerializer(data=payload)
         if serializer.is_valid():
             conn = http.client.HTTPSConnection("jdd8zk.api.infobip.com")
             payload = '{\"messages\":[{\"from\":\"Phli\",\"destinations\":[{\"to\":\"2347069501730\"}],\"text\":\"Text.\",\"flash\":true}]}'
             headers = {
-                        'Authorization': 'App 32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b'
-                    }
+                'Authorization': 'App 32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b'
+            }
             conn.request("POST", "/sms/2/text/advanced", payload, headers)
             res = conn.getresponse()
             # print(res.msg)
@@ -718,19 +738,19 @@ def InfobipGroupMessage(request):
 
         else:
             msgstatus.append(f"something went wrong while sending to {number}")
-    return Response({"details":msgstatus, "service_type":"TWILIO", "senderID":senderID }, status=status.HTTP_200_OK)
+    return Response({"details": msgstatus, "service_type": "TWILIO", "senderID": senderID}, status=status.HTTP_200_OK)
 
 
 # class InfobipGroupMessage(generics.CreateAPIView):
 #     """
 #     This is to send a single SMS to a user using Infobip. Format is to be in
 #     {"senderID":"", "content":"", "receiver":""}
-#     where senderID is the userID, content is the message 
+#     where senderID is the userID, content is the message
 #     and the receiver is the groupid'
 #     """
 #     # queryset = Message.objects.all()
 #     serializer_class= MessageSerializer
-    
+
 #     def post(self, request, *args, **kwargs):
 #         msgstatus = []
 #         groupPK = request.data["groupPK"]
@@ -765,7 +785,6 @@ def InfobipGroupMessage(request):
 #         return JsonResponse(response,safe=False)
 
 
-
 class InfobipSingleMessage(generics.RetrieveAPIView):
     """
     This enpoint will retreive a all sms sent through twillo by a distinct sender. Format is to be in
@@ -779,12 +798,13 @@ class InfobipSingleMessage(generics.RetrieveAPIView):
     #         raise Http404
 
     def get(self, request, senderID, format=None):
-        message = Message.objects.filter(service_type='IF').filter(senderID=senderID)
+        message = Message.objects.filter(
+            service_type='IF').filter(senderID=senderID)
         serializer = MessageSerializer(message, many=True)
         if message:
-            return JsonResponse({"Success":status.HTTP_200_OK, "Message":"Messages retrieved", "Data":serializer.data })
+            return JsonResponse({"Success": status.HTTP_200_OK, "Message": "Messages retrieved", "Data": serializer.data})
         else:
-            return JsonResponse({"Success":status.HTTP_204_NO_CONTENT, "Message":"NO Message from this sender", "Data":serializer.data })
+            return JsonResponse({"Success": status.HTTP_204_NO_CONTENT, "Message": "NO Message from this sender", "Data": serializer.data})
 
 
 class InfobipMessageList(APIView):
@@ -792,36 +812,38 @@ class InfobipMessageList(APIView):
     This allows view the list of the Infobip Messages Sent by all users.
     """
     # queryset = Message.objects.filter(service_type='IF')
-    serializer_class= MessageSerializer
+    serializer_class = MessageSerializer
 
     def get(self, request, format=None):
         messages = Message.objects.filter(service_type='IF')
         serializer = MessageSerializer(messages, many=True)
-        return JsonResponse({"Success":status.HTTP_200_OK, "Message":"Messages retrieved", "Data":serializer.data })
+        return JsonResponse({"Success": status.HTTP_200_OK, "Message": "Messages retrieved", "Data": serializer.data})
 
-        
+
 class TwilioSendSms(views.APIView):
     """
     This is to send a single SMS to a user. Format is to be in
     {"receiver":"", 'senderID':"", "content":""}
     where content is the message, senderID is the userID 
     and the phone is the number to be sent to
-    """    
+    """
+
     def post(self, request):
         receiver = request.data["receiver"]
         content = request.data["content"]
         request.data["service_type"] = "TW"
         serializer_message = MessageSerializer(data=request.data)
-        
-        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+
+        client = Client(settings.TWILIO_ACCOUNT_SID,
+                        settings.TWILIO_AUTH_TOKEN)
         if serializer_message.is_valid():
             try:
                 value = serializer_message.save()
                 message = client.messages.create(
-                    from_ = settings.TWILIO_NUMBER,
-                    to = receiver,
-                    body = content
-                    )
+                    from_=settings.TWILIO_NUMBER,
+                    to=receiver,
+                    body=content
+                )
                 value.messageStatus = "S"
                 value.save()
                 return Response({
@@ -829,39 +851,38 @@ class TwilioSendSms(views.APIView):
                     'message': 'Message sent',
                     'data': {
                         'receiver': f"{receiver}",
-                        #'userID': f"{senderID}",
-                        'service_type':'TWILIO',
+                        # 'userID': f"{senderID}",
+                        'service_type': 'TWILIO',
                     }
                 }, 200)
 
             except TwilioRestException as e:
                 value.messageStatus = "F"
                 value.save()
-                #return Response({f"{receiver} can't be sent to, review number": str(e)},status=status.HTTP_400_BAD_REQUEST)
+                # return Response({f"{receiver} can't be sent to, review number": str(e)},status=status.HTTP_400_BAD_REQUEST)
                 return Response({
                     'success': 'false',
                     'message': 'Message not sent',
                     'error': {
-                        #'userID': f"{senderID}",
-                        'recipient':f"{receiver}",
-                        'service_type':'TWILIO',
-                        'statusCode':'400',
-                        'details':'Wrong details entered'
+                        # 'userID': f"{senderID}",
+                        'recipient': f"{receiver}",
+                        'service_type': 'TWILIO',
+                        'statusCode': '400',
+                        'details': 'Wrong details entered'
                     }
                 }, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({
-                    'success': 'false',
-                    'message': 'Message not sent',
-                    'error': {
-                        #'userID': f"{senderID}",
-                        'recipient':f"{receiver}",
-                        'service_type':'TWILIO',
-                        'statusCode':'400',
-                        'details':'Wrong details entered'
-                    }
-                }, status=status.HTTP_400_BAD_REQUEST)
-
+                'success': 'false',
+                'message': 'Message not sent',
+                'error': {
+                    # 'userID': f"{senderID}",
+                    'recipient': f"{receiver}",
+                    'service_type': 'TWILIO',
+                    'statusCode': '400',
+                    'details': 'Wrong details entered'
+                }
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 
 class TeleSignSingleSms(generics.CreateAPIView):
@@ -873,10 +894,10 @@ class TeleSignSingleSms(generics.CreateAPIView):
     {"receiver":"", 'senderID':"", "content":""}
     where content is the message, senderID is the userID 
     and the receiver is the phone number to be sent to
-    
+
     But since we are working with a trial account, sms will only be delivered to the registered account, and the sender will be the default account holder
     """
-    serializer_class= MessageSerializer
+    serializer_class = MessageSerializer
 
     def post(self, request):
         receiver = request.data["receiver"]
@@ -892,13 +913,16 @@ class TeleSignSingleSms(generics.CreateAPIView):
         # customer_id = 'ACECBD93-21C7-4B8B-9300-33FDEBC27881'
         url = 'https://rest-api.telesign.com/v1/messaging'
 
-        headers = {'Accept' : 'application/json', 'Content-Type' : 'application/x-www-form-urlencoded'}
-        data = {'phone_number': receiver, 'message': text, 'message_type': 'ARN'}
+        headers = {'Accept': 'application/json',
+                   'Content-Type': 'application/x-www-form-urlencoded'}
+        data = {'phone_number': receiver,
+                'message': text, 'message_type': 'ARN'}
 
         if serializer.is_valid():
             # print(value)
             # print("break----")
-            r = requests.post(url, auth=HTTPBasicAuth(customer_id, api_key), data=data, headers=headers)
+            r = requests.post(url, auth=HTTPBasicAuth(
+                customer_id, api_key), data=data, headers=headers)
             value = serializer.save()
             response = r.json()
             print(response)
@@ -909,9 +933,9 @@ class TeleSignSingleSms(generics.CreateAPIView):
                 value.transactionID = response['reference_id']
                 value.save()
                 print(value)
-                return Response({"Success":True, "Message":"Message Sending", "Data":response })
+                return Response({"Success": True, "Message": "Message Sending", "Data": response})
         else:
-            return Response({"details":"Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"details": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class TeleSignMessageList(APIView):
@@ -919,12 +943,12 @@ class TeleSignMessageList(APIView):
     This view will list the Telesign Messages Sent by all users.
     """
     # queryset = Message.objects.filter(service_type='IF')
-    serializer_class= MessageSerializer
+    serializer_class = MessageSerializer
 
     def get(self, request, format=None):
         messages = Message.objects.filter(service_type='TS')
         serializer = MessageSerializer(messages, many=True)
-        return JsonResponse({"Success":status.HTTP_200_OK, "Message":"Messages retrieved", "Data":serializer.data })
+        return JsonResponse({"Success": status.HTTP_200_OK, "Message": "Messages retrieved", "Data": serializer.data})
 
 
 class TeleSignTransactionID2(generics.ListAPIView):
@@ -934,11 +958,12 @@ class TeleSignTransactionID2(generics.ListAPIView):
     {'transactionID':'<a valid transaction id>'}
     """
     serializer_class = MessageSerializer
+
     def get_queryset(self, request, *args, **kwargs):
         transactionID = self.kwargs["transactionID"]
         message = Message.objects.filter(transactionID=transactionID)
         if message:
-            return Response({"Success":True, "Message": "Transaction Retrieved", "Data":[request.data], 'status':status.HTTP_302_FOUND})
+            return Response({"Success": True, "Message": "Transaction Retrieved", "Data": [request.data], 'status': status.HTTP_302_FOUND})
 
 
 class TeleSignTransactionID(APIView):
@@ -948,14 +973,12 @@ class TeleSignTransactionID(APIView):
     {'transactionID':'<a valid transaction id>'}
     """
     # queryset = Message.objects.filter(service_type='IF')
-    serializer_class= MessageSerializer
+    serializer_class = MessageSerializer
 
     def get(self, request, transactionID, format=None):
         transaction = Message.objects.filter(transactionID=transactionID)
-        serializer_message =MessageSerializer(transaction, many=True)
+        serializer_message = MessageSerializer(transaction, many=True)
         return Response(serializer_message.data)
-
-
 
 
 class TeleSignGroupSms(generics.CreateAPIView):
@@ -967,10 +990,10 @@ class TeleSignGroupSms(generics.CreateAPIView):
     {"receiver":"<groupid you want t send messages to>", 'senderID':"UserID", "content":"Message to send"}
     where content is the message, senderID is the userID 
     and the receiver is the GROUPID you want to send a message to
-    
+
     But since we are working with a trial account, sms will only be delivered to the registered account, and the sender will be the default account holder
     """
-    serializer_class= MessageSerializer
+    serializer_class = MessageSerializer
 
     def post(self, request):
         receiver = request.data["receiver"]
@@ -979,7 +1002,7 @@ class TeleSignGroupSms(generics.CreateAPIView):
         request.data["service_type"] = "TS"
         # serializer = MessageSerializer(data=request.data)
         # print(serializer)
-        msgstat =[]
+        msgstat = []
 
         number = get_numbers_from_group(request, receiver)
         # number = ['+2347069501731', '+2347069501732', '2347069501733']
@@ -989,13 +1012,16 @@ class TeleSignGroupSms(generics.CreateAPIView):
             # api_key = 'HXwu/7gWs9KMHWilug9NPccJe+nZtUaG6TtfmxikOgQeCP5ErX7uGxIqpufdF2b93Qed9B/WcudRiveDXfaf2Q=='
             # customer_id = 'ACECBD93-21C7-4B8B-9300-33FDEBC27881'
             url = 'https://rest-api.telesign.com/v1/messaging'
-            headers = {'Accept' : 'application/json', 'Content-Type' : 'application/x-www-form-urlencoded'}
-            data = {'phone_number': reciever, 'message': text, 'message_type': 'ARN'}
+            headers = {'Accept': 'application/json',
+                       'Content-Type': 'application/x-www-form-urlencoded'}
+            data = {'phone_number': reciever,
+                    'message': text, 'message_type': 'ARN'}
             serializer = MessageSerializer(data=request.data)
             if serializer.is_valid():
                 # print(value)
                 # print("break----")
-                r = requests.post(url, auth=HTTPBasicAuth(customer_id, api_key), data=data, headers=headers)
+                r = requests.post(url, auth=HTTPBasicAuth(
+                    customer_id, api_key), data=data, headers=headers)
                 response = r.json()
                 if response['status']['code'] == 290:
                     print(response['status']['code'])
@@ -1003,7 +1029,7 @@ class TeleSignGroupSms(generics.CreateAPIView):
                     value = serializer.save()
                     value.service_type = 'TS'
                     value.messageStatus = 'S'
-                    value.receiver= reciever
+                    value.receiver = reciever
                     value.transactionID = response['reference_id']
                     value.save()
                 else:
@@ -1012,9 +1038,9 @@ class TeleSignGroupSms(generics.CreateAPIView):
                     value = serializer.save()
                     value.service_type = 'TS'
                     value.messageStatus = 'F'
-                    value.receiver= reciever
+                    value.receiver = reciever
                     # value.transactionID = response['reference_id']
                     value.save()
             else:
-                return Response({"details":"Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
-        return Response({"Success":True, "Message":"Message Sending", "Data":msgstat })
+                return Response({"details": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"Success": True, "Message": "Message Sending", "Data": msgstat})
