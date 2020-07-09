@@ -29,6 +29,10 @@ INFOBIP_USERNAME = os.getenv("INFOBIP_USERNAME")
 INFOBIP_PASSWORD = os.getenv("INFOBIP_PASSWORD")
 INFOBIP_APIKEY = os.getenv("INFOBIP_APIKEY")
 
+# add Telesign credentials
+TELESIGN_API = os.getenv("TELESIGN_API")
+TELESIGN_CUST = os.getenv("TELESIGN_CUST")
+
 # Application definition
 
 
