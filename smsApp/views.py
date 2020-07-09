@@ -16,6 +16,7 @@ from django.conf import settings
 from django.http import HttpResponse, Http404, JsonResponse
 from django.http import JsonResponse
 from twilio.base.exceptions import TwilioRestException
+import re
 import json
 import base64
 import http.client
@@ -192,6 +193,8 @@ class SmsHistoryList(generics.ListAPIView):
     serializer_class = MessageSerializer
 
     def get_queryset(self):
+        if ValueError:
+            return  Response({"Success":False, "Message": "Failed Query", "Data":"String senderID needed", 'status':status.HTTP_400_BAD_REQUEST})
         senderID = self.kwargs["senderID"]
         return Message.objects.filter(senderID=senderID)
 
@@ -367,12 +370,12 @@ def send_group_twilio(request):
     """
     Send to an already created group. Format should be {"content":"", "groupID":"", "senderID":"" }
     """
-    msgstatus = []
     content = request.data["content"]
     groupPK = request.data["groupPK"]
     senderID = request.data["senderID"]
     numbers = get_numbers_from_group(request, groupPK)
 
+    data ={"message":content, "service_type":"TWILIO", "senderID":senderID, 'details':[]}
     client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
     for number in numbers:
         payload = {'content': content, "receiver": number,
@@ -381,25 +384,35 @@ def send_group_twilio(request):
         if serializer.is_valid():
             try:
                 client.messages.create(
-                    from_=settings.TWILIO_NUMBER,
-                    to=number,
-                    body=content
-                )
-                msgstatus.append(f"sent to {number}")
+                    from_ = settings.TWILIO_NUMBER,
+                    to = number,
+                    body = content 
+                )   
+                data["details"].append({"to":number, "status":"200", "Success": True})
                 value = serializer.save()
                 value.messageStatus = "S"
                 value.save()
+
             except Exception as e:
-                msgstatus.append(f"{number} can't be sent to, invalid details")
+                data["details"].append({"to":number, "status":"400", "success": False, "error":"Number isn't valid and/or can't be sent to"})
                 value = serializer.save()
                 value.messageStatus = "F"
                 value.save()
         else:
             msgstatus.append(f"something went wrong while sending to {number}")
-    return Response({"details": msgstatus, "service_type": "TWILIO", "senderID": senderID}, status=status.HTTP_200_OK)
+        
+    return Response(data, status=status.HTTP_200_OK)
 
 
-# This is the function for Listing and creating A GroupList
+
+
+
+
+
+
+
+#GROUP VIEWS
+#This is the function for Listing and creating A GroupList
 
 class GroupBySenderList(generics.ListAPIView):
     """
@@ -513,6 +526,8 @@ class GroupNumbersBySenderList(APIView):
     """
 
     def get(self, request, senderID, format=None):
+        if ValueError:
+            return  Response({"Success":False, "Message": "Failed Request", "Data":"String UserID needed", 'status':status.HTTP_400_BAD_REQUEST})
         groupNumber = GroupNumbers.objects.filter(group__userID=senderID)
         serializer = GroupNumbersSerializer(groupNumber, many=True)
         return Response({"Success": "True", "status": status.HTTP_200_OK, "Message": f"PhoneNumbers Available to {senderID}", "Numbers": serializer.data})
@@ -529,14 +544,13 @@ class GroupNumbersCreate(generics.CreateAPIView):
         "phoneNumbers":"<a phone number>"}
     """
     queryset = GroupNumbers.objects.all()
-    serializer_class = GroupNumbersPrimarySerializer
+    serializer_class= GroupNumbersPrimarySerializer
     def post(self, request, *args, **kwargs):
         groupID = request.data.get("group")
         phoneNumbers = request.data.get("phoneNumbers")
-        queryset = GroupNumbers.objects.filter(
-            group=groupID, phoneNumbers=phoneNumbers)
-        if queryset.exists():
-            return Response({"This number already exists in this group"}, status=status.HTTP_400_BAD_REQUEST)
+        queryset = GroupNumbers.objects.filter(group=groupID, phoneNumbers=phoneNumbers)  
+        if queryset.exists() :
+            return Response({"This number already exists in this group"},status=status.HTTP_400_BAD_REQUEST)
         else:
             self.create(request, *args, **kwargs)
             return Response({"Success": "True", "status": status.HTTP_201_CREATED, "Message": f"PhoneNumber added to  group with Instance of {groupID}", "Number": request.data})
@@ -604,6 +618,20 @@ def update_group_number(request, pk):
 #     response = r.status_code
 #     return JsonResponse(response,safe=False)
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+# INFOBIP MESSAGING VIEWS
 
 class InfobipSendMessage(generics.CreateAPIView):
     """
@@ -738,7 +766,7 @@ def InfobipGroupMessage(request):
 
         else:
             msgstatus.append(f"something went wrong while sending to {number}")
-    return Response({"details": msgstatus, "service_type": "TWILIO", "senderID": senderID}, status=status.HTTP_200_OK)
+    return Response({"details":msgstatus, "service_type":"InfoBip", "senderID":senderID }, status=status.HTTP_200_OK)
 
 
 # class InfobipGroupMessage(generics.CreateAPIView):
@@ -864,25 +892,26 @@ class TwilioSendSms(views.APIView):
                     'success': 'false',
                     'message': 'Message not sent',
                     'error': {
-                        # 'userID': f"{senderID}",
-                        'recipient': f"{receiver}",
-                        'service_type': 'TWILIO',
-                        'statusCode': '400',
-                        'details': 'Wrong details entered'
+                        #'userID': f"{senderID}",
+                        'recipient':f"{receiver}",
+                        'service_type':'TWILIO',
+                        'statusCode':'400',
+                        'details':'Receiver does not exist or Invalid userID'
                     }
                 }, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({
-                'success': 'false',
-                'message': 'Message not sent',
-                'error': {
-                    # 'userID': f"{senderID}",
-                    'recipient': f"{receiver}",
-                    'service_type': 'TWILIO',
-                    'statusCode': '400',
-                    'details': 'Wrong details entered'
-                }
-            }, status=status.HTTP_400_BAD_REQUEST)
+                    'success': 'false',
+                    'message': 'Message cannot be sent',
+                    'error': {
+                        #'userID': f"{senderID}",
+                        'recipient':f"{receiver}",
+                        'service_type':'TWILIO',
+                        'statusCode':'400',
+                        'details':'All fields are required, a field is ommitted'
+                    }
+                }, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class TeleSignSingleSms(generics.CreateAPIView):
@@ -961,24 +990,48 @@ class TeleSignTransactionID2(generics.ListAPIView):
 
     def get_queryset(self, request, *args, **kwargs):
         transactionID = self.kwargs["transactionID"]
-        message = Message.objects.filter(transactionID=transactionID)
-        if message:
-            return Response({"Success": True, "Message": "Transaction Retrieved", "Data": [request.data], 'status': status.HTTP_302_FOUND})
+        uuid_regex = re.complie('[0-9a-f]{8}\-[0-9a-f]{4}\-4[0-9a-f]{3}\-[89ab][0-9a-f]{3}\-[0-9a-f]{12}')
+        if uuid_regex.match(transactionID):
+            message = get_object_or_404(Message, transactionID=transactionID)
+            if message:
+                return Response({"Success":True, "Message": "Transaction Retrieved", "Data":[request.data], 'status':status.HTTP_302_FOUND})
+            else:
+                return Response({"Success":False, "Message": "Transaction Failed", "Data":[request.data], 'status':status.HTTP_400_BAD_REQUEST})
+        else: 
+            raise ValidationError('Please enter a proper uuid field, with 32 charcters')
+        
 
+# class TeleSignTransactionID(APIView):
+#     """
+#     This allows view the list of the Infobip Messages Sent by all users.
+#     Format is to be in
+#     {'transactionID':'<a valid transaction id>'}
+#     """
+#     # queryset = Message.objects.filter(service_type='IF')
+#     serializer_class= MessageSerializer
 
-class TeleSignTransactionID(APIView):
+#     def get(self, request, transactionID, format=None):
+#         uuid_regex = re.compile('[0-9a-f]{8}\-[0-9a-f]{4}\-4[0-9a-f]{3}\-[89ab][0-9a-f]{3}\-[0-9a-f]{12}')
+#         if uuid_regex.match(transactionID) is False:
+#             return  Response({"Success":False, "Message": "Transaction Failed", "Data":"UUID needed", 'status':status.HTTP_400_BAD_REQUEST})
+#         else:
+#             transaction = get_object_or_404(Message, transactionID=transactionID)
+#             serializer_message = MessageSerializer(transaction, many=True, raise_exception=True)
+#             return Response({"Success":True, "Message": "Transaction Retrieved", "Data":serializer_message.data, 'status':status.HTTP_302_FOUND})
+
+class TeleSignTransactionID(generics.ListAPIView):
     """
-    This allows view the list of the Infobip Messages Sent by all users.
-    Format is to be in
-    {'transactionID':'<a valid transaction id>'}
+    This allows view the list of the groups available on DB.
     """
-    # queryset = Message.objects.filter(service_type='IF')
+
     serializer_class = MessageSerializer
 
-    def get(self, request, transactionID, format=None):
-        transaction = Message.objects.filter(transactionID=transactionID)
-        serializer_message = MessageSerializer(transaction, many=True)
-        return Response(serializer_message.data)
+    def list(self, request, transactionID):
+        if ValueError:
+            return  Response({"Success":False, "Message": "Transaction Failed", "Data":"UUID needed", 'status':status.HTTP_400_BAD_REQUEST})
+        queryset = get_object_or_404(Message, transactionID=transactionID)
+        serializer = MessageSerializer(queryset, many=True)
+        return Response({"Success":True, "Message": "Transaction Retrieved", "Data":serializer.data, 'status':status.HTTP_302_FOUND})
 
 
 class TeleSignGroupSms(generics.CreateAPIView):
