@@ -520,11 +520,9 @@ class GroupNumbersCreate(generics.CreateAPIView):
     queryset = GroupNumbers.objects.all()
     serializer_class= GroupNumbersPrimarySerializer
 
-
-    def post(self, request, *args, **kwargs):
-        groupID = request.data.get("group")
-        phoneNumbers = request.data.get("phoneNumbers")
-        queryset = GroupNumbers.objects.filter(group=groupID, phoneNumbers=phoneNumbers)
+    groupID = request.data.get("group")
+    phoneNumbers = request.data.get("phoneNumbers")
+    queryset = GroupNumbers.objects.filter(group=groupID, phoneNumbers=phoneNumbers)
         
         if queryset.exists() :
             return Response({"This number already exists in this group"},status=status.HTTP_400_BAD_REQUEST)
@@ -813,8 +811,7 @@ class TwilioSendSms(views.APIView):
     {"receiver":"", 'senderID':"", "content":""}
     where content is the message, senderID is the userID 
     and the phone is the number to be sent to
-    """
-
+    """    
     def post(self, request):
         receiver = request.data["receiver"]
         content = request.data["content"]
@@ -832,14 +829,43 @@ class TwilioSendSms(views.APIView):
                     )
                 value.messageStatus = "S"
                 value.save()
-                return Response({"Success":status.HTTP_200_OK, "Message":"Message Sent", "Data":value })
-                # return Response({"details":"Message sent!", "service_type":"TWILIO"}, 200)
+                return Response({
+                    'success': 'true',
+                    'message': 'Message sent',
+                    'data': {
+                        'receiver': f"{receiver}",
+                        #'userID': f"{senderID}",
+                        'service_type':'TWILIO',
+                    }
+                }, 200)
+
             except TwilioRestException as e:
                 value.messageStatus = "F"
                 value.save()
-                return Response({f"{receiver} can't be sent to, review number": str(e)},status=status.HTTP_400_BAD_REQUEST)
+                #return Response({f"{receiver} can't be sent to, review number": str(e)},status=status.HTTP_400_BAD_REQUEST)
+                return Response({
+                    'success': 'false',
+                    'message': 'Message not sent',
+                    'error': {
+                        #'userID': f"{senderID}",
+                        'recipient':f"{receiver}",
+                        'service_type':'TWILIO',
+                        'statusCode':'400',
+                        'details':'Wrong details entered'
+                    }
+                }, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response({"details":"Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                    'success': 'false',
+                    'message': 'Message not sent',
+                    'error': {
+                        #'userID': f"{senderID}",
+                        'recipient':f"{receiver}",
+                        'service_type':'TWILIO',
+                        'statusCode':'400',
+                        'details':'Wrong details entered'
+                    }
+                }, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -865,8 +891,10 @@ class TeleSignSingleSms(generics.CreateAPIView):
         serializer = MessageSerializer(data=request.data)
         # print(serializer)
 
-        api_key = 'HXwu/7gWs9KMHWilug9NPccJe+nZtUaG6TtfmxikOgQeCP5ErX7uGxIqpufdF2b93Qed9B/WcudRiveDXfaf2Q=='
-        customer_id = 'ACECBD93-21C7-4B8B-9300-33FDEBC27881'
+        api_key = settings.TELESIGN_API
+        customer_id = settings.TELESIGN_CUST
+        # api_key = 'HXwu/7gWs9KMHWilug9NPccJe+nZtUaG6TtfmxikOgQeCP5ErX7uGxIqpufdF2b93Qed9B/WcudRiveDXfaf2Q=='
+        # customer_id = 'ACECBD93-21C7-4B8B-9300-33FDEBC27881'
         url = 'https://rest-api.telesign.com/v1/messaging'
 
         headers = {'Accept' : 'application/json', 'Content-Type' : 'application/x-www-form-urlencoded'}
@@ -983,8 +1011,10 @@ class TeleSignGroupSms(generics.CreateAPIView):
         number = get_numbers_from_group(request, receiver)
         # number = ['+2347069501731', '+2347069501732', '2347069501733']
         for reciever in number:
-            api_key = 'HXwu/7gWs9KMHWilug9NPccJe+nZtUaG6TtfmxikOgQeCP5ErX7uGxIqpufdF2b93Qed9B/WcudRiveDXfaf2Q=='
-            customer_id = 'ACECBD93-21C7-4B8B-9300-33FDEBC27881'
+            api_key = settings.TELESIGN_API
+            customer_id = settings.TELESIGN_CUST
+            # api_key = 'HXwu/7gWs9KMHWilug9NPccJe+nZtUaG6TtfmxikOgQeCP5ErX7uGxIqpufdF2b93Qed9B/WcudRiveDXfaf2Q=='
+            # customer_id = 'ACECBD93-21C7-4B8B-9300-33FDEBC27881'
             url = 'https://rest-api.telesign.com/v1/messaging'
             headers = {'Accept' : 'application/json', 'Content-Type' : 'application/x-www-form-urlencoded'}
             data = {'phone_number': reciever, 'message': text, 'message_type': 'ARN'}
