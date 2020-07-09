@@ -30,13 +30,24 @@ class GroupSerializer(serializers.ModelSerializer):
     groupName = serializers.CharField(required=True)
     groupID = serializers.UUIDField(format='hex_verbose', initial=uuid.uuid4, read_only=True)
     userID = serializers.CharField(required=True)
+    numbers = serializers.StringRelatedField(many=True, read_only=True)
     class Meta:
         model = Group
-        fields = "__all__"
+        fields = ["groupName", "userID", "groupID", "dateCreated", "numbers"]
+        depth = 1
 
 class GroupNumbersSerializer(serializers.ModelSerializer):
     dateCreated = serializers.DateTimeField(read_only=True)
-    group = serializers.PrimaryKeyRelatedField(queryset=Group.objects.all())
+    group = serializers.SlugRelatedField(slug_field='groupName', queryset=Group.objects.all())
+    phoneNumbers = serializers.CharField(required=True)
+    class Meta:
+        model = GroupNumbers
+        fields = "__all__"
+
+
+class GroupNumbersPrimarySerializer(serializers.ModelSerializer):
+    dateCreated = serializers.DateTimeField(read_only=True)
+    group = serializers.PrimaryKeyRelatedField(queryset=Group.objects.all(), required=True)
     phoneNumbers = serializers.CharField(required=True)
     class Meta:
         model = GroupNumbers
