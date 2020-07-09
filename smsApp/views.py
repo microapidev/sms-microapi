@@ -365,13 +365,12 @@ def send_group_twilio(request):
     """
     Send to an already created group. Format should be {"content":"", "groupID":"", "senderID":"" }
     """
-    msgstatus = []
     content = request.data["content"]
     groupPK = request.data["groupPK"]
     senderID = request.data["senderID"]
     numbers = get_numbers_from_group(request, groupPK)
 
-
+    data ={"message":content, "service_type":"TWILIO", "senderID":senderID, 'details':[]}
     client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
     for number in numbers:
         payload = {'content':content, "receiver":number, "senderID":senderID, "service_type":"TW"}
@@ -381,22 +380,32 @@ def send_group_twilio(request):
                 client.messages.create(
                     from_ = settings.TWILIO_NUMBER,
                     to = number,
-                    body = content
-                )
-                msgstatus.append(f"sent to {number}")
+                    body = content 
+                )   
+                data["details"].append({"to":number, "status":"200", "Success": True})
                 value = serializer.save()
                 value.messageStatus = "S"
                 value.save()
+
             except Exception as e:
-                msgstatus.append(f"{number} can't be sent to, invalid details")
+                data["details"].append({"to":number, "status":"400", "success": False, "error":"Number isn't valid and/or can't be sent to"})
                 value = serializer.save()
                 value.messageStatus = "F"
                 value.save()
         else:
             msgstatus.append(f"something went wrong while sending to {number}")
-    return Response({"details":msgstatus, "service_type":"TWILIO", "senderID":senderID }, status=status.HTTP_200_OK)
+        
+    return Response(data, status=status.HTTP_200_OK)
 
 
+
+
+
+
+
+
+
+#GROUP VIEWS
 #This is the function for Listing and creating A GroupList
 
 class GroupBySenderList(generics.ListAPIView):
@@ -593,6 +602,20 @@ def update_group_number(request, pk):
 #     return JsonResponse(response,safe=False)
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+# INFOBIP MESSAGING VIEWS
+
 class InfobipSendMessage(generics.CreateAPIView):
     """
     This is to send a single SMS to a user using Infobip. Format is to be in
@@ -722,7 +745,7 @@ def InfobipGroupMessage(request):
 
         else:
             msgstatus.append(f"something went wrong while sending to {number}")
-    return Response({"details":msgstatus, "service_type":"TWILIO", "senderID":senderID }, status=status.HTTP_200_OK)
+    return Response({"details":msgstatus, "service_type":"InfoBip", "senderID":senderID }, status=status.HTTP_200_OK)
 
 
 # class InfobipGroupMessage(generics.CreateAPIView):
