@@ -854,7 +854,6 @@ class TwilioSendSms(views.APIView):
                         'details':'Wrong details entered'
                     }
                 }, status=status.HTTP_400_BAD_REQUEST)
-            return Response({"details":"Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 
