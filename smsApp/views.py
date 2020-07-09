@@ -503,7 +503,7 @@ class GroupNumbersBySenderList(APIView):
     """
     def get(self, request, senderID, format=None):
         if ValueError:
-            return  Response({"Success":False, "Message": "Transaction Failed", "Data":"String UserID needed", 'status':status.HTTP_400_BAD_REQUEST})
+            return  Response({"Success":False, "Message": "Failed Request", "Data":"String UserID needed", 'status':status.HTTP_400_BAD_REQUEST})
         groupNumber = GroupNumbers.objects.filter(group__userID=senderID)
         serializer = GroupNumbersSerializer(groupNumber, many=True)
         return Response({"Success":"True", "status":status.HTTP_200_OK, "Message":f"PhoneNumbers Available to {senderID}", "Numbers":serializer.data })
@@ -519,11 +519,10 @@ class GroupNumbersCreate(generics.CreateAPIView):
     """
     queryset = GroupNumbers.objects.all()
     serializer_class= GroupNumbersPrimarySerializer
-
-    groupID = request.data.get("group")
-    phoneNumbers = request.data.get("phoneNumbers")
-    queryset = GroupNumbers.objects.filter(group=groupID, phoneNumbers=phoneNumbers)
-        
+    def post(self, request, *args, **kwargs):
+        groupID = request.data.get("group")
+        phoneNumbers = request.data.get("phoneNumbers")
+        queryset = GroupNumbers.objects.filter(group=groupID, phoneNumbers=phoneNumbers)  
         if queryset.exists() :
             return Response({"This number already exists in this group"},status=status.HTTP_400_BAD_REQUEST)
         else:
