@@ -54,7 +54,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('phoneNumbers', models.CharField(blank=True, max_length=200, validators=[django.core.validators.RegexValidator(message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.", regex='^\\+?1?\\d{9,15}$')])),
                 ('dateCreated', models.DateTimeField(default=django.utils.timezone.now)),
-                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='group', to='smsApp.Group')),
+                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='smsApp.Group')),
             ],
         ),
     ]
