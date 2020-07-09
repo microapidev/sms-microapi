@@ -21,7 +21,7 @@ import mimetypes
 import urllib.parse
 from urllib.parse import urlencode
 from .models import Receipent, Message, Group, GroupNumbers
-from .serializers import RecepientSerializer, MessageSerializer, GroupSerializer, GroupNumbersSerializer 
+from .serializers import RecepientSerializer, MessageSerializer, GroupSerializer, GroupNumbersSerializer, GroupNumbersPrimarySerializer
 from googletrans import Translator
 
 
@@ -369,10 +369,12 @@ class GroupBySenderList(generics.ListAPIView):
     """
     serializer_class = GroupSerializer
 
-    def get_queryset(self):
+    def list(self, request, **kwargs):
         senderID = self.kwargs["senderID"]
         queryset = Group.objects.filter(userID=senderID)
-        return queryset
+        serializer = GroupSerializer(queryset, many=True)
+        return Response({"Success":status.HTTP_200_OK, "Message":f"Groups Created by {senderID}", "Group-Info":serializer.data })
+        # return Response(serializer.data)
 
 class GroupList(generics.ListAPIView):
     """
@@ -384,7 +386,8 @@ class GroupList(generics.ListAPIView):
     def list(self, request):
         queryset = self.get_queryset()
         serializer = GroupSerializer(queryset, many=True)
-        return Response(serializer.data)
+        return Response({"Success":status.HTTP_200_OK, "Message":"Groups Available", "Group-Info":serializer.data })
+
 
 
 class GroupCreate(generics.CreateAPIView):
@@ -402,29 +405,27 @@ class GroupCreate(generics.CreateAPIView):
         queryset = Group.objects.filter(userID=senderID, groupName=groupName)
         
         if senderID == "string" or senderID == None:
-            return Response({"Failure":status.HTTP_400_BAD_REQUEST, "Message":"String is empty", "Data":{"userID":"string is empty"} })
-            # return Response({"userID":"string is empty"},status=status.HTTP_400_BAD_REQUEST)            
+            return Response({"Failure":status.HTTP_400_BAD_REQUEST, "Message":"String is empty", "Data":{"userID":"string is empty"} })          
         if groupName == "string" or groupName == None:
             return Response({"Failure":status.HTTP_400_BAD_REQUEST, "Message":"String is empty", "Data":{"groupName":"empty"} })
-            # return Response({"groupName":"empty"},status=status.HTTP_400_BAD_REQUEST)
         if queryset.exists() :
             return Response({"This group exists and it has same user, please specify another group with or change the senderID"},status=status.HTTP_400_BAD_REQUEST)
         else:
             self.create(request, *args, **kwargs)
-            return Response({"Success":status.HTTP_201_CREATED, "Message":"Group Created", "Data":request.data })
+            return Response({"Success":"True", "status":status.HTTP_201_CREATED, "Message":"Group Created", "Data":request.data })
 
 #This is the function for updating and deleting each recipient in a list
 class GroupDetail(views.APIView):
     """
     The groupName is required to delete the group and userID is required alongside the groupName to update.\n
-    To update simply use: /v1/sms/group_update/nameOfGroup...then in body enter {"groupName":"", "userID":""}.\n
+    To update simply use: /v1/sms/group_update/nameOfGroup...then in body enter {"groupName":"updatedgroupName", "userID":""}.\n
     To delete simply use: /v1/sms/group_update/groupName
     """
     def get_object(self, pk):
         try:
             return Group.objects.get(groupName=pk)
         except Group.DoesNotExist:
-            raise Http404
+            return Response({"Item":"Not found"}, status=status.HTTP_404_NOT_FOUND)
     """
     This Updates the information of the added recipient
     """
@@ -434,8 +435,8 @@ class GroupDetail(views.APIView):
         serializer = GroupSerializer(group, data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"Success":"True", "status":status.HTTP_200_OK, "Message":"GroupName Updated", "Data":serializer.data })
+        return Response({"Error":status.HTTP_400_BAD_REQUEST, "Message":"GroupDetails Not Found", "Numbers":serializer.errors })
     
     """
     This Deletes the information of the added recipient
@@ -453,7 +454,7 @@ class GroupNumbersList(APIView):
     def get(self, request, format=None):
         groupNumber = GroupNumbers.objects.all()
         serializer = GroupNumbersSerializer(groupNumber, many=True)
-        return Response(serializer.data)
+        return Response({"Success":"True", "status":status.HTTP_200_OK, "Message":"PhoneNumbers Available", "Numbers":serializer.data })
 
 class GroupNumbersBySenderList(APIView):
     """
@@ -462,7 +463,7 @@ class GroupNumbersBySenderList(APIView):
     def get(self, request, senderID, format=None):
         groupNumber = GroupNumbers.objects.filter(group__userID=senderID)
         serializer = GroupNumbersSerializer(groupNumber, many=True)
-        return Response(serializer.data)
+        return Response({"Success":"True", "status":status.HTTP_200_OK, "Message":f"PhoneNumbers Available to {senderID}", "Numbers":serializer.data })
 
 class GroupNumbersCreate(generics.CreateAPIView):
     """
@@ -474,7 +475,7 @@ class GroupNumbersCreate(generics.CreateAPIView):
     {"group":"<unique primarykey given upon creating a group>", "phoneNumbers":"<a phone number>"}
     """
     queryset = GroupNumbers.objects.all()
-    serializer_class= GroupNumbersSerializer
+    serializer_class= GroupNumbersPrimarySerializer
 
 
     def post(self, request, *args, **kwargs):
@@ -485,43 +486,50 @@ class GroupNumbersCreate(generics.CreateAPIView):
         if queryset.exists() :
             return Response({"This number already exists in this group"},status=status.HTTP_400_BAD_REQUEST)
         else:
-            return self.create(request, *args, **kwargs)
+            self.create(request, *args, **kwargs)
+            return Response({"Success":"True", "status":status.HTTP_201_CREATED, "Message":f"PhoneNumber added to  group with Instance of {groupID}", "Number":request.data })
 
 
 class GroupNumbersDetail(APIView):
+
     """
     The user can delete a phoneNumber instance.
     """
+        # def get_object(self, pk):
+        # try:
+        #     return Group.objects.get(groupName=pk)
+        # except Group.DoesNotExist:
+        #     raise Http404
     def get_object(self, pk):
-        try:
-            return GroupNumbers.objects.get(pk=pk)
-        except GroupNumbers.DoesNotExist:
-            return HttpResponse(status=404)
+        number = get_object_or_404(GroupNumbers, pk=pk)
+        return number
 
     def delete(self, request, pk, format=None):
         groupNumber = self.get_object(pk=pk)
         groupNumber.delete()
         return Response({"Item":"Successfully Deleted"}, status=status.HTTP_204_NO_CONTENT)
 
+
+
 @api_view(["PUT"])    
 def update_group_number(request, pk):
     """
     The user can Retrieve, update or delete a phoneNumber instance.\n\n
     In Postman: v1/sms/group_recipient_update/phoneNumber(pk)
-    This takes in this format: {"phone": "instance of Phone", "phoneNumber": ""}
+    This takes in this format: {"group": "instance of group", "phoneNumber": ""}
     """
     try:
         groupnumber = GroupNumbers.objects.get(pk=pk)
     except GroupNumbers.DoesNotExist:
-        return HttpResponse(status=404)
+        return Response({"Item":"Not found"}, status=status.HTTP_404_NOT_FOUND)
     if request.method == 'PUT':
         data = request.data
-        serializer = GroupNumbersSerializer(groupnumber, data=data)
+        serializer = GroupNumbersPrimarySerializer(groupnumber, data=data)
         if serializer.is_valid():
             serializer.save()
-            return JsonResponse(serializer.data)
-        return JsonResponse(serializer.errors, status=400)
-
+            return Response({"Success":status.HTTP_202_ACCEPTED, "Message":"PhoneNumber updated", "Number":serializer.data })
+        return Response({"Error":status.HTTP_400_BAD_REQUEST, "Message":"Bad Request", "Number":serializer.errors })
+        # return JsonResponse(serializer.errors, status=400)
 
 # @api_view(['POST'])
 # def send_with_infobip(request):
