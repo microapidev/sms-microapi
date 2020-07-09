@@ -395,6 +395,14 @@ def send_group_twilio(request):
     return Response(data, status=status.HTTP_200_OK)
 
 
+
+
+
+
+
+
+
+#GROUP VIEWS
 #This is the function for Listing and creating A GroupList
 
 class GroupBySenderList(generics.ListAPIView):
@@ -590,6 +598,20 @@ def update_group_number(request, pk):
 #     return JsonResponse(response,safe=False)
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+# INFOBIP MESSAGING VIEWS
+
 class InfobipSendMessage(generics.CreateAPIView):
     """
     This is to send a single SMS to a user using Infobip. Format is to be in
@@ -719,7 +741,7 @@ def InfobipGroupMessage(request):
 
         else:
             msgstatus.append(f"something went wrong while sending to {number}")
-    return Response({"details":msgstatus, "service_type":"TWILIO", "senderID":senderID }, status=status.HTTP_200_OK)
+    return Response({"details":msgstatus, "service_type":"InfoBip", "senderID":senderID }, status=status.HTTP_200_OK)
 
 
 # class InfobipGroupMessage(generics.CreateAPIView):
