@@ -189,6 +189,8 @@ class SmsHistoryList(generics.ListAPIView):
     """
     serializer_class = MessageSerializer
     def get_queryset(self):
+        if ValueError:
+            return  Response({"Success":False, "Message": "Failed Query", "Data":"String senderID needed", 'status':status.HTTP_400_BAD_REQUEST})
         senderID = self.kwargs["senderID"]
         return Message.objects.filter(senderID=senderID)
 
@@ -500,6 +502,8 @@ class GroupNumbersBySenderList(APIView):
     The user can List all numbers in a specific group. This requires  {"userID":""}
     """
     def get(self, request, senderID, format=None):
+        if ValueError:
+            return  Response({"Success":False, "Message": "Transaction Failed", "Data":"String UserID needed", 'status':status.HTTP_400_BAD_REQUEST})
         groupNumber = GroupNumbers.objects.filter(group__userID=senderID)
         serializer = GroupNumbersSerializer(groupNumber, many=True)
         return Response({"Success":"True", "status":status.HTTP_200_OK, "Message":f"PhoneNumbers Available to {senderID}", "Numbers":serializer.data })
@@ -946,7 +950,6 @@ class TeleSignTransactionID(generics.ListAPIView):
     serializer_class = MessageSerializer
 
     def list(self, request, transactionID):
-        uuid_regex = re.compile('[0-9a-f]{8}\-[0-9a-f]{4}\-4[0-9a-f]{3}\-[89ab][0-9a-f]{3}\-[0-9a-f]{12}')
         if ValueError:
             return  Response({"Success":False, "Message": "Transaction Failed", "Data":"UUID needed", 'status':status.HTTP_400_BAD_REQUEST})
         queryset = get_object_or_404(Message, transactionID=transactionID)
