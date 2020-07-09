@@ -1,4 +1,5 @@
 import requests
+from requests.auth import HTTPBasicAuth
 from django.shortcuts import render, get_object_or_404
 from rest_framework.parsers import JSONParser
 # from smsApp.models import user
@@ -16,6 +17,7 @@ from django.http import HttpResponse, Http404
 from django.http import JsonResponse
 from twilio.base.exceptions import TwilioRestException
 import json
+import base64
 import http.client
 import mimetypes
 import urllib.parse
@@ -320,7 +322,8 @@ def translateMessages(request):
 
 def get_numbers_from_group(request, pk):
     group = get_object_or_404(Group, pk=pk)
-    group_numbers = [val.phoneNumbers for val in group.group.all()]
+    group_numbers = [val.phoneNumbers for val in group.numbers.all()]
+    print(group_numbers)
     return group_numbers
 
 @api_view(["POST"])
@@ -611,7 +614,16 @@ class InfobipSendMessage2(generics.CreateAPIView):
         # print(array)
 
         #this is the sample payload as it from the documentation
-        payload = "{\"messages\":[{\"from\":\"Phli\",\"destinations\":[{\"to\":\"2347069501730\"}],\"text\":\"Text.\",\"flash\":true}]}"
+        payload = "'messages':[{'from':'%s','destinations':[{'to':'%s'}],'text':'%s','flash':'true'}]" % (sender, receiver, text)
+        print(payload)
+        print('Hello')
+
+        payload3 = {'messages':[]}
+        this = "{'from':'%s', 'destinations':[{'to':'%s'}], 'text':'%s', 'flash':'true'}"%(sender, receiver, text)
+        payload3['messages'].append(this)
+        print(str(payload3))
+        print('hi')
+        print(payload3)
 
         #this is 'appended' payload that was broken into bits
         payload2 = {"messages":array}
@@ -620,7 +632,7 @@ class InfobipSendMessage2(generics.CreateAPIView):
         headers = {
             'Authorization': 'App 32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b'
         }
-        conn.request("POST", "/sms/2/text/advanced", payload, headers)
+        conn.request("POST", "/sms/2/text/advanced", str(payload3), headers)
         res = conn.getresponse()
         # print(res.msg)
         data = res.read().decode('utf-8')
@@ -636,50 +648,85 @@ class InfobipSendMessage2(generics.CreateAPIView):
 
 
 
+@api_view(["POST"])
+def InfobipGroupMessage(request):
+    """
+    Send to an already created group. Format should be {"content":"", "groupID":"", "senderID":"" }
+    """
+    msgstatus = []
+    content = request.data["content"]
+    groupPK = request.data["groupPK"]
+    senderID = request.data["senderID"]
+    numbers = get_numbers_from_group(request, groupPK)
 
 
-class InfobipGroupMessage(generics.CreateAPIView):
-    """
-    This is to send a single SMS to a user using Infobip. Format is to be in
-    {"senderID":"", "content":"", "receiver":""}
-    where senderID is the userID, content is the message 
-    and the receiver is the groupid'
-    """
-    # queryset = Message.objects.all()
-    serializer_class= MessageSerializer
+    # client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+    for number in numbers:
+        payload = {'content':content, "receiver":number, "senderID":senderID, "service_type":"TW"}
+        serializer = MessageSerializer(data=payload)
+        if serializer.is_valid():
+            conn = http.client.HTTPSConnection("jdd8zk.api.infobip.com")
+            payload = '{\"messages\":[{\"from\":\"Phli\",\"destinations\":[{\"to\":\"2347069501730\"}],\"text\":\"Text.\",\"flash\":true}]}'
+            headers = {
+                        'Authorization': 'App 32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b'
+                    }
+            conn.request("POST", "/sms/2/text/advanced", payload, headers)
+            res = conn.getresponse()
+            # print(res.msg)
+            data = res.read().decode('utf-8')
+            data = data.replace('/', '')
+            msgstatus.append(f"sent to {number}")
+            value = serializer.save()
+            value.messageStatus = "S"
+            value.save()
+
+        else:
+            msgstatus.append(f"something went wrong while sending to {number}")
+    return Response({"details":msgstatus, "service_type":"TWILIO", "senderID":senderID }, status=status.HTTP_200_OK)
+
+
+# class InfobipGroupMessage(generics.CreateAPIView):
+#     """
+#     This is to send a single SMS to a user using Infobip. Format is to be in
+#     {"senderID":"", "content":"", "receiver":""}
+#     where senderID is the userID, content is the message 
+#     and the receiver is the groupid'
+#     """
+#     # queryset = Message.objects.all()
+#     serializer_class= MessageSerializer
     
-    def post(self, request, *args, **kwargs):
-        msgstatus = []
-        groupPK = request.data["groupPK"]
-        text = request.data["content"]
-        sender = request.data["senderID"]
-        numbers = get_numbers_from_group(request, groupPK)
-        serializer = MessageSerializer(data=request.data)
-        for number in numbers:
-            if serializer.is_valid():
-                value = serializer.save()
-                data = {
-                "from": sender,
-                "to": number,
-                "text": text
-                }
-                headers = {'Authorization': '32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b'}
-                try:
-                    r = requests.post("https://jdd8zk.api.infobip.com", data=data,headers=headers)
-                    msgstatus.append(f'succesfully sent to {number}')
-                    value.messageStatus = "S"
-                    value.save()
-                except Exception as e:
-                    msgstatus.append(f'cant send to the {number}, error: {e}, status: {r}')
-                    value.messageStatus = "F"
-                    value.save()
-                response = r.status_code
-                value.service_type = 'IF'
-                if response == 200:
-                    value.save()
-            else:
-                msgstatus.append(f"something went wrong while sending to {number}")
-        return JsonResponse(response,safe=False)
+#     def post(self, request, *args, **kwargs):
+#         msgstatus = []
+#         groupPK = request.data["groupPK"]
+#         text = request.data["content"]
+#         sender = request.data["senderID"]
+#         numbers = get_numbers_from_group(request, groupPK)
+#         serializer = MessageSerializer(data=request.data)
+#         for number in numbers:
+#             if serializer.is_valid():
+#                 value = serializer.save()
+#                 data = {
+#                 "from": sender,
+#                 "to": number,
+#                 "text": text
+#                 }
+#                 headers = {'Authorization': '32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b'}
+#                 try:
+#                     r = requests.post("https://jdd8zk.api.infobip.com", data=data,headers=headers)
+#                     msgstatus.append(f'succesfully sent to {number}')
+#                     value.messageStatus = "S"
+#                     value.save()
+#                 except Exception as e:
+#                     msgstatus.append(f'cant send to the {number}, error: {e}, status: {r}')
+#                     value.messageStatus = "F"
+#                     value.save()
+#                 response = r.status_code
+#                 value.service_type = 'IF'
+#                 if response == 200:
+#                     value.save()
+#             else:
+#                 msgstatus.append(f"something went wrong while sending to {number}")
+#         return JsonResponse(response,safe=False)
 
 
 
@@ -750,4 +797,135 @@ class TwilioSendSms(views.APIView):
                 return Response({f"{receiver} can't be sent to, review number": str(e)},status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({"details":"Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
-  
+
+
+
+class TeleSignSingleSms(generics.CreateAPIView):
+    """
+    This is endpoint will send a single SMS to a user.
+    It was tested with the redoc swagger or openapi.
+    Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.
+    Format is to be in
+    {"receiver":"", 'senderID':"", "content":""}
+    where content is the message, senderID is the userID 
+    and the receiver is the phone number to be sent to
+    
+    But since we are working with a trial account, sms will only be delivered to the registered account, and the sender will be the default account holder
+    """
+    serializer_class= MessageSerializer
+
+    def post(self, request):
+        receiver = request.data["receiver"]
+        text = request.data["content"]
+        sender = request.data["senderID"]
+        request.data["service_type"] = "TS"
+        serializer = MessageSerializer(data=request.data)
+        # print(serializer)
+
+        api_key = 'HXwu/7gWs9KMHWilug9NPccJe+nZtUaG6TtfmxikOgQeCP5ErX7uGxIqpufdF2b93Qed9B/WcudRiveDXfaf2Q=='
+        customer_id = 'ACECBD93-21C7-4B8B-9300-33FDEBC27881'
+        url = 'https://rest-api.telesign.com/v1/messaging'
+
+        headers = {'Accept' : 'application/json', 'Content-Type' : 'application/x-www-form-urlencoded'}
+        data = {'phone_number': receiver, 'message': text, 'message_type': 'ARN'}
+
+        if serializer.is_valid():
+            # print(value)
+            # print("break----")
+            r = requests.post(url, auth=HTTPBasicAuth(customer_id, api_key), data=data, headers=headers)
+            value = serializer.save()
+            response = r.json()
+            print(response)
+            print("break----")
+            if response['status']['code'] == 290 or 200 or 203 or 291 or 292:
+                value.service_type = 'TS'
+                value.messageStatus = 'SC'
+                value.transactionID = response['reference_id']
+                value.save()
+                print(value)
+                return Response({"Success":True, "Message":"Message Sending", "Data":response })
+        else:
+            return Response({"details":"Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class TeleSignMessageList(APIView):
+    """
+    This view will list the Telesign Messages Sent by all users.
+    """
+    # queryset = Message.objects.filter(service_type='IF')
+    serializer_class= MessageSerializer
+
+    def get(self, request, format=None):
+        messages = Message.objects.filter(service_type='TS')
+        serializer = MessageSerializer(messages, many=True)
+        return JsonResponse({"Success":status.HTTP_200_OK, "Message":"Messages retrieved", "Data":serializer.data })
+
+
+class TeleSignTransactionID(generics.ListAPIView):
+    """
+    This allows view the list of the Infobip Messages Sent by all users.
+    """
+    serializer_class = MessageSerializer
+    def get_queryset(self):
+        transactionID = self.kwargs["transactionID"]
+        return Message.objects.filter(transactionID=transactionID)
+
+
+class TeleSignGroupSms(generics.CreateAPIView):
+    """
+    This is endpoint will send a single SMS to a user.
+    It was tested with the redoc swagger or openapi.
+    Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.
+    Format is to be in
+    {"receiver":"<groupid you want t send messages to>", 'senderID':"UserID", "content":"Message to send"}
+    where content is the message, senderID is the userID 
+    and the receiver is the GROUPID you want to send a message to
+    
+    But since we are working with a trial account, sms will only be delivered to the registered account, and the sender will be the default account holder
+    """
+    serializer_class= MessageSerializer
+
+    def post(self, request):
+        receiver = request.data["receiver"]
+        text = request.data["content"]
+        sender = request.data["senderID"]
+        request.data["service_type"] = "TS"
+        # serializer = MessageSerializer(data=request.data)
+        # print(serializer)
+        msgstat =[]
+
+        number = get_numbers_from_group(request, receiver)
+        # number = ['+2347069501731', '+2347069501732', '2347069501733']
+        for reciever in number:
+            api_key = 'HXwu/7gWs9KMHWilug9NPccJe+nZtUaG6TtfmxikOgQeCP5ErX7uGxIqpufdF2b93Qed9B/WcudRiveDXfaf2Q=='
+            customer_id = 'ACECBD93-21C7-4B8B-9300-33FDEBC27881'
+            url = 'https://rest-api.telesign.com/v1/messaging'
+            headers = {'Accept' : 'application/json', 'Content-Type' : 'application/x-www-form-urlencoded'}
+            data = {'phone_number': reciever, 'message': text, 'message_type': 'ARN'}
+            serializer = MessageSerializer(data=request.data)
+            if serializer.is_valid():
+                # print(value)
+                # print("break----")
+                r = requests.post(url, auth=HTTPBasicAuth(customer_id, api_key), data=data, headers=headers)
+                response = r.json()
+                if response['status']['code'] == 290:
+                    print(response['status']['code'])
+                    msgstat.append(response)
+                    value = serializer.save()
+                    value.service_type = 'TS'
+                    value.messageStatus = 'S'
+                    value.receiver= reciever
+                    value.transactionID = response['reference_id']
+                    value.save()
+                else:
+                    print(response['status']['code'])
+                    msgstat.append(response)
+                    value = serializer.save()
+                    value.service_type = 'TS'
+                    value.messageStatus = 'F'
+                    value.receiver= reciever
+                    # value.transactionID = response['reference_id']
+                    value.save()
+            else:
+                return Response({"details":"Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"Success":True, "Message":"Message Sending", "Data":msgstat })

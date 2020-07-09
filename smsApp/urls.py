@@ -2,6 +2,7 @@ from django.urls import path
 from .views import ReceipientCreate, ReceipientList, RecipientDetail
 from .views import InfobipSendMessage, InfobipSingleMessage, InfobipMessageList, InfobipGroupMessage, InfobipSendMessage2
 from .views import translateMessages
+from .views import TeleSignSingleSms, TeleSignMessageList, TeleSignTransactionID, TeleSignGroupSms
 from .views import send_group_twilio, TwilioSendSms, sms_list
 from .views import GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupNumbersList, GroupNumbersBySenderList, GroupNumbersCreate, update_group_number, GroupNumbersDetail
 from .views import SmsHistoryList, SmsHistoryDetail
@@ -43,10 +44,16 @@ urlpatterns = [
    #History Views, General Histories
    path('v1/sms/sms_history/<str:senderID>', SmsHistoryList.as_view(), name="history"),
 
+   #TeleSign Views
+   path("v1/sms/telesign/group_sms", TeleSignGroupSms.as_view(), name="telesign-group-message"),
+   path("v1/sms/telesign/send_sms", TeleSignSingleSms.as_view(), name="telesign-send-message"),
+   path("v1/sms/telesign/view_all_sms", TeleSignMessageList.as_view(), name="telesign-sent-messages"),
+   path("v1/sms/telesign/<transactionID>", TeleSignTransactionID.as_view(), name="telesign-sent-messages"),
+
    #Infobip Views
    path("v1/sms/infobip/send_sms", InfobipSendMessage.as_view(), name="infobip-send-message"),
    path("v1/sms/infobip/send_sms2", InfobipSendMessage2.as_view(), name="infobip-send-message2"),
-   path("v1/sms/infobip/send_group_sms", InfobipGroupMessage.as_view(), name="infobip-group-message"),
+   # path("v1/sms/infobip/send_group_sms", InfobipGroupMessage.as_view(), name="infobip-group-message"),
    path("v1/sms/infobip/view_all_sms", InfobipMessageList.as_view(), name="infobip-sent-messages"),
    path("v1/sms/infobip/view_all_sms/<str:senderID>", InfobipSingleMessage.as_view(), name="infobip-sent-messages"),
 
