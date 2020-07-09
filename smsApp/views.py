@@ -853,8 +853,10 @@ class TeleSignSingleSms(generics.CreateAPIView):
         serializer = MessageSerializer(data=request.data)
         # print(serializer)
 
-        api_key = 'HXwu/7gWs9KMHWilug9NPccJe+nZtUaG6TtfmxikOgQeCP5ErX7uGxIqpufdF2b93Qed9B/WcudRiveDXfaf2Q=='
-        customer_id = 'ACECBD93-21C7-4B8B-9300-33FDEBC27881'
+        api_key = settings.TELESIGN_API
+        customer_id = settings.TELESIGN_CUST
+        # api_key = 'HXwu/7gWs9KMHWilug9NPccJe+nZtUaG6TtfmxikOgQeCP5ErX7uGxIqpufdF2b93Qed9B/WcudRiveDXfaf2Q=='
+        # customer_id = 'ACECBD93-21C7-4B8B-9300-33FDEBC27881'
         url = 'https://rest-api.telesign.com/v1/messaging'
 
         headers = {'Accept' : 'application/json', 'Content-Type' : 'application/x-www-form-urlencoded'}
@@ -949,8 +951,10 @@ class TeleSignGroupSms(generics.CreateAPIView):
         number = get_numbers_from_group(request, receiver)
         # number = ['+2347069501731', '+2347069501732', '2347069501733']
         for reciever in number:
-            api_key = 'HXwu/7gWs9KMHWilug9NPccJe+nZtUaG6TtfmxikOgQeCP5ErX7uGxIqpufdF2b93Qed9B/WcudRiveDXfaf2Q=='
-            customer_id = 'ACECBD93-21C7-4B8B-9300-33FDEBC27881'
+            api_key = settings.TELESIGN_API
+            customer_id = settings.TELESIGN_CUST
+            # api_key = 'HXwu/7gWs9KMHWilug9NPccJe+nZtUaG6TtfmxikOgQeCP5ErX7uGxIqpufdF2b93Qed9B/WcudRiveDXfaf2Q=='
+            # customer_id = 'ACECBD93-21C7-4B8B-9300-33FDEBC27881'
             url = 'https://rest-api.telesign.com/v1/messaging'
             headers = {'Accept' : 'application/json', 'Content-Type' : 'application/x-www-form-urlencoded'}
             data = {'phone_number': reciever, 'message': text, 'message_type': 'ARN'}
