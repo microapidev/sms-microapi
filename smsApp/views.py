@@ -517,7 +517,7 @@ class GroupNumbersCreate(generics.CreateAPIView):
     Format is as follows:
     {"group":"<unique primarykey given upon creating a group>", "phoneNumbers":"<a phone number>"}
     """
-    '''I commented this queryset = GroupNumbers.objects.all()
+    queryset = GroupNumbers.objects.all()
     serializer_class= GroupNumbersPrimarySerializer
     def post(self, request, *args, **kwargs):
         groupID = request.data.get("group")
@@ -527,7 +527,7 @@ class GroupNumbersCreate(generics.CreateAPIView):
             return Response({"This number already exists in this group"},status=status.HTTP_400_BAD_REQUEST)
         else:
             self.create(request, *args, **kwargs)
-            return Response({"Success":"True", "status":status.HTTP_201_CREATED, "Message":f"PhoneNumber added to  group with Instance of {groupID}", "Number":request.data })'''
+            return Response({"Success":"True", "status":status.HTTP_201_CREATED, "Message":f"PhoneNumber added to  group with Instance of {groupID}", "Number":request.data })
 
 
 class GroupNumbersDetail(APIView):
