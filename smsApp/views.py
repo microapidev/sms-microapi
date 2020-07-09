@@ -13,7 +13,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from twilio.rest import Client
 from django.conf import settings
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse, Http404, JsonResponse
 from django.http import JsonResponse
 from twilio.base.exceptions import TwilioRestException
 import json
@@ -471,13 +471,17 @@ class GroupDetail(views.APIView):
             serializer.save()
             return Response({"Success":"True", "status":status.HTTP_200_OK, "Message":"GroupName Updated", "Data":serializer.data })
         return Response({"Error":status.HTTP_400_BAD_REQUEST, "Message":"GroupDetails Not Found", "Numbers":serializer.errors })
-    
-    """
-    This Deletes the information of the added recipient
-    """
 
-    def delete(self, request, pk, format=None):
-        group = self.get_object(pk)
+class GroupDelete(generics.DestroyAPIView):
+    """
+    To delete simply use: /v1/sms/group_update/groupName
+    """
+    def get_object(self, groupname):
+        number = get_object_or_404(Group, groupName=groupname)
+        return number
+
+    def delete(self, request, groupname, format=None):
+        group = self.get_object(groupname)
         group.delete()
         return Response({"Item":"Successfully Deleted"},status=status.HTTP_200_OK)
 
@@ -556,6 +560,9 @@ def update_group_number(request, pk):
         groupnumber = GroupNumbers.objects.get(pk=pk)
     except GroupNumbers.DoesNotExist:
         return Response({"Item":"Not found"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return JsonResponse({"Error": f"{str(e)}"})
+    
     if request.method == 'PUT':
         data = request.data
         serializer = GroupNumbersPrimarySerializer(groupnumber, data=data)
