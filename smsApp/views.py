@@ -22,37 +22,68 @@ import http.client
 import mimetypes
 import urllib.parse
 from urllib.parse import urlencode
-from .models import Receipent, Message, Group, GroupNumbers
-from .serializers import RecepientSerializer, MessageSerializer, GroupSerializer, GroupNumbersSerializer, GroupNumbersPrimarySerializer
+from .models import Recipient, Message, Group, GroupNumbers
+from .serializers import RecipientSerializer, MessageSerializer, GroupSerializer, GroupNumbersSerializer, GroupNumbersPrimarySerializer
 from googletrans import Translator
 
 
 # Create your views here.
-class ReceipientList(APIView):
+class RecipientList(APIView):
     """
-    This allows view the list of the Infobip Messages Sent by all users.
+    This allows view the list of the Recipients saved by all users.
     """
     # queryset = Message.objects.filter(service_type='IF')
-    serializer_class= RecepientSerializer
+    serializer_class= RecipientSerializer
 
     def get(self, request, format=None):
-        receipents = Receipent.objects.all()
-        serializer = RecepientSerializer(receipents, many=True)
+        recipient = Recipient.objects.all()
+        serializer = RecipientSerializer(recipient, many=True)
         return Response(serializer.data)
 
 
-class ReceipientCreate(generics.CreateAPIView):
-    queryset = Receipent.objects.all()
-    serializer_class= RecepientSerializer
+class RecipientsForUser(APIView):
+    """
+    This allows view the list of the Recipients saved by all users.
+    """
+    # queryset = Message.objects.filter(service_type='IF')
+    serializer_class= RecipientSerializer
+
+    def get(self, request, userID, format=None):
+        recipients = Recipient.objects.filter(userID=userID)
+        if recipients:
+            if request.data is None:
+                serializer = RecipientSerializer(recipients, many=True)
+                return Response({"Success":True, "Message": "No Recipients For User", "Data":[request.data], 'status':status.HTTP_204_NO_CONTENT})
+            else:
+                serializer = RecipientSerializer(recipients, many=True)
+                return Response({"Success":True, "Message": "Recipients Retrieved", "Data":[request.data], 'status':status.HTTP_200_OK})
+        else:
+            return Response({"Failure":True, "Message": "User Does not exist", "Data":[], 'status':status.HTTP_400_BAD_REQUEST})
+
+
+
+class RecipientCreate(generics.CreateAPIView):
+    '''
+    This Endpoints creates a new recipient just like one would add a contact on his phone.
+    The catch is have a PhoneBook system of sorts. Since the system will have multiple users,
+    Each user can save a number once but multiple numbers. A number can also be in multiple user PhoneBook
+
+    Format is to be in:
+    {'recipientName':<the contact name>, 'recipientNumber':<the contacts number>, 'userid':'The user who wants to save the contact'}
+    '''
+    queryset = Recipient.objects.all()
+    serializer_class= RecipientSerializer
     
     def post(self, request, *args, **kwargs):
         recipientNumber = request.data.get("recipientNumber")
-        queryset = Receipent.objects.filter(recipientNumber=recipientNumber)
+        userID = request.data.get("userID")
+        queryset = Recipient.objects.filter(userID=userID).filter(recipientNumber=recipientNumber)
         
         if queryset.exists():
-            raise ValidationError('This Id or Number already exists, please enter another number and ID')
+            return Response({"Failure":True, "Message": "This User Already Has This Phone number saved", "Data":[], 'status':status.HTTP_400_BAD_REQUEST})
         else:
-            return self.create(request, *args, **kwargs)
+            self.create(request, *args, **kwargs)
+            return Response({"Success":True, "Message": "Recipient created", "Data":[request.data], 'status':status.HTTP_201_CREATED})
 
 
 #This is the function for updating and deleting each recipient in a list
@@ -62,16 +93,16 @@ class RecipientDetail(views.APIView):
     """
     def get_object(self, recipientNumber):
         try:
-            return Recipient.objects.get(recipientNumber=recipientNumber)
+            return Recipient.objects.filter(recipientNumber=recipientNumber)
         except Recipient.DoesNotExist:
-            raise Http404
+            return Response({"Failure":True, "Message": "This number is not saved", "Data":[], 'status':status.HTTP_400_BAD_REQUEST})
     """
     This Updates the information of the added recipient
     """
 
     def put(self, request, recipientNumber, format=None):
         recipient = self.get_object(recipientNumber)
-        serializer = RecepientSerializer(recipient, data=request.data)
+        serializer = RecipientSerializer(recipient, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -92,7 +123,7 @@ def create_receipents_details(request):
     print(request.data)
     if request.method == 'POST':
         data = request.data
-        serializer = RecepientSerializer(data=request.data)
+        serializer = RecipientSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return JsonResponse(serializer.data, status=201)
@@ -110,7 +141,7 @@ def save_recipients_details(request):
             Receipent.objects.filter(name=request.data['name']).update(email=request.data['email'],
                                                                        phone_number=request.data['phone_number'])
             receipent = Receipent.objects.get(name=request.data['name'])
-            receipentData = RecepientSerializer(receipent, many=False).data
+            receipentData = RecipientSerializer(receipent, many=False).data
             data = {
                 'message': 'Updated successfully',
                 'data': receipentData,
@@ -545,7 +576,7 @@ def update_group_number(request, pk):
 # def send_with_infobip(request):
 #     # message = request.data['message']
 #     # recipients = Receipent.objects.filter()
-#     # serializer = RecepientSerializer(data=recipients,many=True)
+#     # serializer = RecipientSerializer(data=recipients,many=True)
 #     # serializer.is_valid()
 #     # info = serializer.data
 #     # response = json.dumps(info)
@@ -868,14 +899,35 @@ class TeleSignMessageList(APIView):
         return JsonResponse({"Success":status.HTTP_200_OK, "Message":"Messages retrieved", "Data":serializer.data })
 
 
-class TeleSignTransactionID(generics.ListAPIView):
+class TeleSignTransactionID2(generics.ListAPIView):
     """
     This allows view the list of the Infobip Messages Sent by all users.
+    Format is to be in
+    {'transactionID':'<a valid transaction id>'}
     """
     serializer_class = MessageSerializer
-    def get_queryset(self):
+    def get_queryset(self, request, *args, **kwargs):
         transactionID = self.kwargs["transactionID"]
-        return Message.objects.filter(transactionID=transactionID)
+        message = Message.objects.filter(transactionID=transactionID)
+        if message:
+            return Response({"Success":True, "Message": "Transaction Retrieved", "Data":[request.data], 'status':status.HTTP_302_FOUND})
+
+
+class TeleSignTransactionID(APIView):
+    """
+    This allows view the list of the Infobip Messages Sent by all users.
+    Format is to be in
+    {'transactionID':'<a valid transaction id>'}
+    """
+    # queryset = Message.objects.filter(service_type='IF')
+    serializer_class= MessageSerializer
+
+    def get(self, request, transactionID, format=None):
+        transaction = Message.objects.filter(transactionID=transactionID)
+        serializer_message =MessageSerializer(transaction, many=True)
+        return Response(serializer_message.data)
+
+
 
 
 class TeleSignGroupSms(generics.CreateAPIView):

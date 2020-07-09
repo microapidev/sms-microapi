@@ -44,11 +44,14 @@ class GroupNumbers(models.Model):
     def __str__(self):
         return self.phoneNumbers
 
-class Receipent(models.Model):
+class Recipient(models.Model):
     userID = models.CharField(primary_key=True, max_length=30) #user who added the recipient
     recipientName = models.CharField(max_length=80)
     recipientNumber = models.CharField(max_length=80)
     dateCreated = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f'id {self.userID}, number {self.recipientNumber}'
 
 class Message(models.Model):
     transactionID = models.UUIDField(default=uuid.uuid4)

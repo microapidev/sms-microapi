@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import ReceipientCreate, ReceipientList, RecipientDetail
+from .views import RecipientCreate, RecipientList, RecipientDetail, RecipientsForUser
 from .views import InfobipSendMessage, InfobipSingleMessage, InfobipMessageList, InfobipGroupMessage, InfobipSendMessage2
 from .views import translateMessages
 from .views import TeleSignSingleSms, TeleSignMessageList, TeleSignTransactionID, TeleSignGroupSms
@@ -37,9 +37,10 @@ schema_view = get_schema_view(
 urlpatterns = [
 
    #Recipient Views
-   path('v1/sms/recipient/create', ReceipientCreate.as_view(), name="create-new-recipient"),
-   path('v1/sms/recipient/all', ReceipientList.as_view(), name="get-all-recipients"),
-   path("v1/sms/recipient/<str:pk>", RecipientDetail.as_view(), name="update-recipient"),
+   path('v1/sms/recipients/create', RecipientCreate.as_view(), name="create-new-recipient"),
+   path('v1/sms/recipients/all', RecipientList.as_view(), name="get-all-recipients"),
+   path('v1/sms/recipients/<str:userID>', RecipientsForUser.as_view(), name="get-user-recipients"),
+   path("v1/sms/recipients/<str:recipientNumber>", RecipientDetail.as_view(), name="update-recipient"),
    
    #History Views, General Histories
    path('v1/sms/sms_history/<str:senderID>', SmsHistoryList.as_view(), name="history"),

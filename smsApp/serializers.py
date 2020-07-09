@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Receipent, Message, Group, GroupNumbers
+from .models import Recipient, Message, Group, GroupNumbers
 import uuid
 
 
@@ -10,16 +10,17 @@ import uuid
 #         fields =  "__all__"
 
 
-class RecepientSerializer(serializers.ModelSerializer):
+class RecipientSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Receipent
-        fields = "__all__"
+        model = Recipient
+        fields = ["recipientName", "recipientNumber", "userID"]
 
 
 class MessageSerializer(serializers.ModelSerializer):
     service_type = serializers.CharField(read_only=True)
     messageStatus = serializers.ChoiceField(choices=['D', 'S','F','R','SC'], read_only=True)
     transactionID = serializers.UUIDField(format='hex_verbose', initial=uuid.uuid4, read_only=True)
+
     class Meta:
         model = Message
         fields = ["senderID", "content", "receiver", "service_type", "messageStatus", "transactionID"]
