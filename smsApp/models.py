@@ -59,12 +59,12 @@ class Message(models.Model):
     content = models.TextField(default="test")
     INFOBIP = 'IF'
     TWILLO = 'TW'
-    NUOBJECT = 'NU'
+    TELESIGN = 'TS'
     MSG91 = 'MS'
     SERVICE_CHOICES = [
         (INFOBIP, 'IF'),
         (TWILLO, 'TW'),
-        (NUOBJECT, 'NU'),       
+        (TELESIGN, 'TS'),       
 		(MSG91, 'MS'),
     ]
     service_type = models.CharField(
@@ -89,6 +89,9 @@ class Message(models.Model):
         default=DRAFT,
     )
     dateScheduled = models.DateTimeField(null=True)
+
+    def __str__(self):
+        return f'service {self.service_type}, reciever {self.receiver}'
 
 
 # class Media(models.Model):
