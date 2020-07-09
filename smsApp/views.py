@@ -322,7 +322,7 @@ def translateMessages(request):
 
 def get_numbers_from_group(request, pk):
     group = get_object_or_404(Group, pk=pk)
-    group_numbers = [val.phoneNumbers for val in group.group.all()]
+    group_numbers = [val.phoneNumbers for val in group.numbers.all()]
     print(group_numbers)
     return group_numbers
 
@@ -800,8 +800,18 @@ class TwilioSendSms(views.APIView):
 
 
 
-class TeleSignSendSms(generics.CreateAPIView):
-
+class TeleSignSingleSms(generics.CreateAPIView):
+    """
+    This is endpoint will send a single SMS to a user.
+    It was tested with the redoc swagger or openapi.
+    Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.
+    Format is to be in
+    {"receiver":"", 'senderID':"", "content":""}
+    where content is the message, senderID is the userID 
+    and the receiver is the phone number to be sent to
+    
+    But since we are working with a trial account, sms will only be delivered to the registered account, and the sender will be the default account holder
+    """
     serializer_class= MessageSerializer
 
     def post(self, request):
@@ -851,24 +861,28 @@ class TeleSignMessageList(APIView):
         return JsonResponse({"Success":status.HTTP_200_OK, "Message":"Messages retrieved", "Data":serializer.data })
 
 
-class TeleSignTransactionID(APIView):
+class TeleSignTransactionID(generics.ListAPIView):
     """
     This allows view the list of the Infobip Messages Sent by all users.
     """
-    # queryset = Message.objects.filter(service_type='IF')
-    # serializer_class= MessageSerializer
-
-    def get(self, request, transactionID, format=None):
-        messages = Message.objects.filter(transactionID=transactionID)
-        if messages:
-            # serializer = MessageSerializer(messages)
-            return messages
-        else:
-            return JsonResponse({"Success":status.HTTP_204_NO_CONTENT, "Message":"Invalid transaction ID", "Data":serializer.data })
+    serializer_class = MessageSerializer
+    def get_queryset(self):
+        transactionID = self.kwargs["transactionID"]
+        return Message.objects.filter(transactionID=transactionID)
 
 
 class TeleSignGroupSms(generics.CreateAPIView):
-
+    """
+    This is endpoint will send a single SMS to a user.
+    It was tested with the redoc swagger or openapi.
+    Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.
+    Format is to be in
+    {"receiver":"<groupid you want t send messages to>", 'senderID':"UserID", "content":"Message to send"}
+    where content is the message, senderID is the userID 
+    and the receiver is the GROUPID you want to send a message to
+    
+    But since we are working with a trial account, sms will only be delivered to the registered account, and the sender will be the default account holder
+    """
     serializer_class= MessageSerializer
 
     def post(self, request):
@@ -880,8 +894,8 @@ class TeleSignGroupSms(generics.CreateAPIView):
         # print(serializer)
         msgstat =[]
 
-        get_numbers_from_group(request, receiver)
-        number = ['+2347069501731', '+2347069501732', '2347069501733']
+        number = get_numbers_from_group(request, receiver)
+        # number = ['+2347069501731', '+2347069501732', '2347069501733']
         for reciever in number:
             api_key = 'HXwu/7gWs9KMHWilug9NPccJe+nZtUaG6TtfmxikOgQeCP5ErX7uGxIqpufdF2b93Qed9B/WcudRiveDXfaf2Q=='
             customer_id = 'ACECBD93-21C7-4B8B-9300-33FDEBC27881'
@@ -899,7 +913,7 @@ class TeleSignGroupSms(generics.CreateAPIView):
                     msgstat.append(response)
                     value = serializer.save()
                     value.service_type = 'TS'
-                    value.messageStatus = 'SC'
+                    value.messageStatus = 'S'
                     value.receiver= reciever
                     value.transactionID = response['reference_id']
                     value.save()
