@@ -873,19 +873,19 @@ class TwilioSendSms(views.APIView):
                         'recipient':f"{receiver}",
                         'service_type':'TWILIO',
                         'statusCode':'400',
-                        'details':'Wrong details entered'
+                        'details':'Receiver does not exist or Invalid userID'
                     }
                 }, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({
                     'success': 'false',
-                    'message': 'Message not sent',
+                    'message': 'Message cannot be sent',
                     'error': {
                         #'userID': f"{senderID}",
                         'recipient':f"{receiver}",
                         'service_type':'TWILIO',
                         'statusCode':'400',
-                        'details':'Wrong details entered'
+                        'details':'All fields are required, a field is ommitted'
                     }
                 }, status=status.HTTP_400_BAD_REQUEST)
 
