@@ -37,7 +37,7 @@ schema_view = get_schema_view(
 urlpatterns = [
    #messageDelete
    path("v1/sms/message/delete/<transactionID>", MessageDelete.as_view(), name="delete-message"),
-   path("v1/sms/message/count/<userID>", MessageCounter.as_view(), name="count-message"),
+   path("v1/sms/message/<userID>", MessageCounter.as_view(), name="count-message"),
 
    #Recipient Views
    path('v1/sms/recipients/create', RecipientCreate.as_view(), name="create-new-recipient"),
