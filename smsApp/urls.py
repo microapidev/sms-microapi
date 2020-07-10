@@ -59,9 +59,8 @@ urlpatterns = [
    # path("v1/sms/infobip/send_group_sms", InfobipGroupMessage.as_view(), name="infobip-group-message"),
    path("v1/sms/infobip/view_all_sms", InfobipMessageList.as_view(), name="infobip-sent-messages"),
    path("v1/sms/infobip/view_all_sms/<str:senderID>", InfobipSingleMessage.as_view(), name="infobip-sent-messages"),
-
-
-   #Twillo Views
+   
+   #Twillo Views path
    path('v1/sms/Twillo_sms_history', sms_list),
    path('v1/sms/twilio_send_single', TwilioSendSms.as_view(), name="sendsms"),
    path('v1/sms/twilio_send_group', send_group_twilio),
