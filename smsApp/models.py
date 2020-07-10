@@ -55,6 +55,7 @@ class Recipient(models.Model):
 
 class Message(models.Model):
     transactionID = models.UUIDField(default=uuid.uuid4)
+    grouptoken = models.UUIDField(null=True)
     receiver = models.CharField(max_length=80)
     senderID = models.CharField(max_length=30) 
     # account_sid = models.CharField(max_length=80, blank=True, null=True)
@@ -94,7 +95,7 @@ class Message(models.Model):
     dateScheduled = models.DateTimeField(null=True)
 
     def __str__(self):
-        return f'service {self.service_type}, reciever {self.receiver}'
+        return f'service {self.service_type}, receiver {self.receiver}'
 
 
 # class Media(models.Model):
