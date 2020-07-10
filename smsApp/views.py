@@ -231,8 +231,6 @@ class SmsHistoryList(generics.ListAPIView):
     serializer_class = MessageSerializer
 
     def get_queryset(self):
-        if ValueError:
-            return Response({"Success": False, "Message": "Failed Query", "Data": "String senderID needed", 'status': status.HTTP_400_BAD_REQUEST})
         senderID = self.kwargs["senderID"]
         return Message.objects.filter(senderID=senderID)
 
