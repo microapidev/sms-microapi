@@ -1,44 +1,80 @@
 from django.db import models
 import uuid
 from django.utils import timezone
-from django.contrib.auth.models import AbstractUser, User
+# from django.contrib.auth.models import AbstractUser
 from django.core.files.storage import FileSystemStorage
+from django.core.validators import RegexValidator
+from django.utils.translation import ugettext_lazy as _
+# from .managers import CustomUserManager
 
 # Create your models here.
-uploads = FileSystemStorage(location='/media/uploads')
+# uploads = FileSystemStorage(location='/media/uploads')
 
-class user(AbstractUser):
-    email = models.EmailField(unique=True)
-    name = models.CharField(max_length=30)
-    phoneNumber = models.CharField(max_length=100, unique=True)
+# class User(AbstractUser):
+#     username = None
+#     email = models.EmailField(unique=True) 
+#     name = models.CharField(max_length=30)
+#     phoneNumber = models.CharField(max_length=100, unique=True)
+#     otp = models.CharField(max_length=6)
+#     is_active = models.BooleanField(default=False)
+#     service = models.CharField(max_length=50, default="twillo")
 
-    USERNAME_FIELD = 'phoneNumber'
-    REQUIRED_FIELDS = [name, phoneNumber, email]
+#     USERNAME_FIELD = 'email'
+#     REQUIRED_FIELDS = ["name", "phoneNumber"]
 
-    def __str__(self):
-        return self.phoneNumber
+#     objects = CustomUserManager()
 
 
 class Group(models.Model):
-    groupID = models.UUIDField()
-    sender = models.ForeignKey(user, on_delete=models.CASCADE)
-    groupName = models.CharField(max_length=80)
+    # groupID = models.ForeignKey(GroupUnique, related_name='grp_id', on_delete=models.SET_NULL)
+    groupName = models.CharField(max_length=90)
+    senderID = models.CharField(max_length=30, default="user") #creator of the group123e4567-e89b-12d3-a456-426652340000
+    groupID = models.UUIDField(default=uuid.uuid4, editable=False)
     dateCreated = models.DateTimeField(default=timezone.now)
 
+    def __str__(self):
+        return self.groupName
 
-class Receipent(models.Model):
-   user = models.OneToOneField(user, on_delete=models.CASCADE)
-   groupID = models.ForeignKey(Group, on_delete=models.CASCADE)
+class GroupNumbers(models.Model):
+    group = models.ForeignKey(Group, related_name="numbers", on_delete=models.CASCADE)
+    phone_regex = RegexValidator(regex=r'^\+?1?\d{9,15}$', message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.")
+    phoneNumbers = models.CharField(max_length=20000, blank=False) 
+    dateCreated = models.DateTimeField(default=timezone.now)
 
+    def __str__(self):
+        return self.phoneNumbers
+
+class Recipient(models.Model):
+    userID = models.CharField(primary_key=True, max_length=30) #user who added the recipient
+    recipientName = models.CharField(max_length=80)
+    recipientNumber = models.CharField(max_length=80)
+    dateCreated = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f'id {self.userID}, number {self.recipientNumber}'
 
 class Message(models.Model):
+    transactionID = models.UUIDField(default=uuid.uuid4)
+    grouptoken = models.UUIDField(null=True)
     receiver = models.CharField(max_length=80)
-    # author = models.ForeignKey(user, on_delete=models.CASCADE, default=1)
-    account_sid = models.CharField(max_length=80, blank=True, null=True)
+    senderID = models.CharField(max_length=30) 
+    # account_sid = models.CharField(max_length=80, blank=True, null=True)
     date_created = models.DateTimeField(auto_now_add=True)
-    content = models.TextField()
-    price = models.FloatField(blank=True, null=True)
-    status = models.CharField(max_length=100, default="Sent", blank=True, null=True)
+    content = models.TextField(default="test")
+    INFOBIP = 'IF'
+    TWILLO = 'TW'
+    TELESIGN = 'TS'
+    MSG91 = 'MS'
+    SERVICE_CHOICES = [
+        (INFOBIP, 'IF'),
+        (TWILLO, 'TW'),
+        (TELESIGN, 'TS'),       
+		(MSG91, 'MS'),
+    ]
+    service_type = models.CharField(
+        max_length=2,
+        choices=SERVICE_CHOICES
+    )
     DRAFT = 'D'
     SENT = 'S'
     FAILED = 'F'
@@ -58,13 +94,14 @@ class Message(models.Model):
     )
     dateScheduled = models.DateTimeField(null=True)
 
-class Media(models.Model):
-    author = models.ForeignKey(user,on_delete=models.CASCADE)
-    messageID = models.ForeignKey(Message,on_delete=models.CASCADE)
-    media = models.ImageField(storage=uploads) ##catering for only images at the moment
-
-
-
     def __str__(self):
-        return self.id
+        return f'service {self.service_type}, receiver {self.receiver}'
 
+
+# class Media(models.Model):
+#     senderID = models.CharField(max_length=30) 
+#     messageID = models.ForeignKey(Message,on_delete=models.CASCADE)
+#     media = models.ImageField(storage=uploads) ##catering for only images at the moment
+
+#     def __str__(self):
+#         return self.id
