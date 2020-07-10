@@ -26,9 +26,47 @@ from urllib.parse import urlencode
 from .models import Recipient, Message, Group, GroupNumbers
 from .serializers import RecipientSerializer, MessageSerializer, GroupSerializer, GroupNumbersSerializer, GroupNumbersPrimarySerializer
 from googletrans import Translator
+import uuid
 
 
 # Create your views here.
+
+class MessageDelete(generics.DestroyAPIView):
+    """
+    To delete simply use: /v1/sms/group_update/groupName
+    """
+    def get_object(self, transactionID):
+        message = Message.objects.filter(transactionID=transactionID)
+        return message
+
+    def delete(self, request, transactionID, format=None):
+        message = self.get_object(transactionID)
+        message.delete()
+        return Response({"Item":"Successfully Deleted"},status=status.HTTP_200_OK)
+
+
+class MessageCounter(generics.DestroyAPIView):
+    """
+    To delete simply use: /v1/sms/group_update/groupName
+    """
+    def get_object(self, senderID):
+        messages = Message.objects.filter(senderID=senderID)
+        return messages.count()
+
+    def get(self, request, userID, format=None):
+        count = self.get_object(userID)
+        return Response({
+                    'Success': True,
+                    'Message': 'Message sent',
+                    'Data': {
+                        'userID': f"{userID}",
+                        'service_type':'All',
+                        'Total Messages': f'{count}'
+                    }
+                }, 200)
+
+
+
 class RecipientList(APIView):
     """
     This allows view the list of the Recipients saved by all users.
@@ -1041,14 +1079,14 @@ class TeleSignGroupSms(generics.CreateAPIView):
 
         number = get_numbers_from_group(request, receiver)
         print(number)
-        for reciever in number:
+        for receiver in number:
             api_key = settings.TELESIGN_API
             customer_id = settings.TELESIGN_CUST
             # api_key = 'HXwu/7gWs9KMHWilug9NPccJe+nZtUaG6TtfmxikOgQeCP5ErX7uGxIqpufdF2b93Qed9B/WcudRiveDXfaf2Q=='
             # customer_id = 'ACECBD93-21C7-4B8B-9300-33FDEBC27881'
             url = 'https://rest-api.telesign.com/v1/messaging'
             headers = {'Accept' : 'application/json', 'Content-Type' : 'application/x-www-form-urlencoded'}
-            data = {'phone_number': reciever, 'message': text, 'message_type': 'ARN'}
+            data = {'phone_number': receiver, 'message': text, 'message_type': 'ARN'}
             serializer = MessageSerializer(data=request.data)
             if serializer.is_valid():
                 r = requests.post(url, auth=HTTPBasicAuth(customer_id, api_key), data=data, headers=headers)
@@ -1059,7 +1097,7 @@ class TeleSignGroupSms(generics.CreateAPIView):
                     value = serializer.save()
                     value.service_type = 'TS'
                     value.messageStatus = 'S'
-                    value.receiver= reciever
+                    value.receiver= receiver
                     value.transactionID = response['reference_id']
                     value.save()
                 else:
@@ -1068,7 +1106,81 @@ class TeleSignGroupSms(generics.CreateAPIView):
                     value = serializer.save()
                     value.service_type = 'TS'
                     value.messageStatus = 'F'
-                    value.receiver= reciever
+                    value.receiver= receiver
+                    # value.transactionID = response['reference_id']
+                    value.save()
+            else:
+                return Response({"details":"Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({
+            "Success":True, 
+            "Message":"Message Sending", 
+            "Data":msgstat,
+            "Service_Type":"TELESIGN" })
+
+
+def getNumbersFromList(stringOfNumbers):
+    stringOfNumbers = stringOfNumbers.split(',')
+    number = []
+    for num in stringOfNumbers:
+        num = num.strip()
+        number.append(num)
+    number = list(dict.fromkeys(number))
+    return number
+
+
+class TeleSignCollectionSms(generics.CreateAPIView):
+    """
+    This is endpoint will send a single SMS to a user.
+    It was tested with the redoc swagger or openapi.
+    Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.
+    Format is to be in
+    {"receiver":"<different numbers seperated by comma>", 'senderID':"UserID", "content":"Message to send"}
+    where content is the message, senderID is the userID 
+    and the receiver is the GROUPID you want to send a message to
+    
+    But since we are working with a trial account, sms will only be delivered to the registered account, and the sender will be the default account holder
+    """
+    serializer_class= MessageSerializer
+
+    def post(self, request):
+        receiver = request.data["receiver"]
+        text = request.data["content"]
+        sender = request.data["senderID"]
+        request.data["service_type"] = "TS"
+        msgstat =[]
+
+        number = getNumbersFromList(receiver)
+        print(number)
+        for receiver in number:
+            api_key = settings.TELESIGN_API
+            customer_id = settings.TELESIGN_CUST
+            # api_key = 'HXwu/7gWs9KMHWilug9NPccJe+nZtUaG6TtfmxikOgQeCP5ErX7uGxIqpufdF2b93Qed9B/WcudRiveDXfaf2Q=='
+            # customer_id = 'ACECBD93-21C7-4B8B-9300-33FDEBC27881'
+            url = 'https://rest-api.telesign.com/v1/messaging'
+            headers = {'Accept' : 'application/json', 'Content-Type' : 'application/x-www-form-urlencoded'}
+            data = {'phone_number': receiver, 'message': text, 'message_type': 'ARN'}
+            serializer = MessageSerializer(data=request.data)
+            token = uuid.uuid4()
+            if serializer.is_valid():
+                r = requests.post(url, auth=HTTPBasicAuth(customer_id, api_key), data=data, headers=headers)
+                response = r.json()
+                if response['status']['code'] == 290:
+                    print(response['status']['code'])
+                    msgstat.append(response)
+                    value = serializer.save()
+                    value.service_type = 'TS'
+                    value.messageStatus = 'S'
+                    value.receiver= receiver
+                    value.grouptoken= token
+                    value.transactionID = response['reference_id']
+                    value.save()
+                else:
+                    print(response['status']['code'])
+                    msgstat.append(response)
+                    value = serializer.save()
+                    value.service_type = 'TS'
+                    value.messageStatus = 'F'
+                    value.receiver= receiver
                     # value.transactionID = response['reference_id']
                     value.save()
             else:

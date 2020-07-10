@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import RecipientCreate, RecipientList, RecipientDetail, RecipientsForUser
 from .views import InfobipSendMessage, InfobipSingleMessage, InfobipMessageList, InfobipGroupMessage, InfobipSendMessage2
-from .views import translateMessages
+from .views import translateMessages, MessageDelete, MessageCounter
 from .views import TeleSignSingleSms, TeleSignMessageList, TeleSignGroupSms
 from .views import send_group_twilio, TwilioSendSms, sms_list
 from .views import GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupDelete, GroupNumbersList, GroupNumbersBySenderList, GroupNumbersCreate, update_group_number, GroupNumbersDetail
@@ -35,6 +35,9 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
+   #messageDelete
+   path("v1/sms/message/delete/<transactionID>", MessageDelete.as_view(), name="delete-message"),
+   path("v1/sms/message/count/<userID>", MessageCounter.as_view(), name="count-message"),
 
    #Recipient Views
    path('v1/sms/recipients/create', RecipientCreate.as_view(), name="create-new-recipient"),
