@@ -600,20 +600,6 @@ def update_group_number(request, pk):
 #     r = requests.post("https://jdd8zk.api.infobip.com", data=data,headers=headers)
 #     response = r.status_code
 #     return JsonResponse(response,safe=False)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # INFOBIP MESSAGING VIEWS
 
 class InfobipSendMessage(generics.CreateAPIView):
@@ -913,14 +899,20 @@ class TeleSignSingleSms(generics.CreateAPIView):
         serializer = MessageSerializer(data=request.data)
         # print(serializer)
 
-        api_key = settings.TELESIGN_API
-        customer_id = settings.TELESIGN_CUST
-        # api_key = 'HXwu/7gWs9KMHWilug9NPccJe+nZtUaG6TtfmxikOgQeCP5ErX7uGxIqpufdF2b93Qed9B/WcudRiveDXfaf2Q=='
-        # customer_id = 'ACECBD93-21C7-4B8B-9300-33FDEBC27881'
+        # api_key = settings.TELESIGN_API
+        # customer_id = settings.TELESIGN_CUST
+        api_key = 'HXwu/7gWs9KMHWilug9NPccJe+nZtUaG6TtfmxikOgQeCP5ErX7uGxIqpufdF2b93Qed9B/WcudRiveDXfaf2Q=='
+        customer_id = 'ACECBD93-21C7-4B8B-9300-33FDEBC27881'
         url = 'https://rest-api.telesign.com/v1/messaging'
 
-        headers = {'Accept' : 'application/json', 'Content-Type' : 'application/x-www-form-urlencoded'}
-        data = {'phone_number': receiver, 'message': text, 'message_type': 'ARN'}
+        headers = {
+            'Accept' : 'application/json',
+            'Content-Type' : 'application/x-www-form-urlencoded'}
+
+        data = {
+            'phone_number': receiver, 
+            'message': text,
+            'message_type': 'ARN'}
 
         if serializer.is_valid():
             # print(value)
@@ -928,17 +920,32 @@ class TeleSignSingleSms(generics.CreateAPIView):
             r = requests.post(url, auth=HTTPBasicAuth(customer_id, api_key), data=data, headers=headers)
             value = serializer.save()
             response = r.json()
-            print(response)
-            print("break----")
-            if response['status']['code'] == 290 or 200 or 203 or 291 or 292:
+            if response['status']['code'] == 290:
                 value.service_type = 'TS'
                 value.messageStatus = 'SC'
                 value.transactionID = response['reference_id']
                 value.save()
                 print(value)
-                return Response({"Success":True, "Message":"Message Sending", "Data":response })
+            else:
+                print(response['status']['code'])
+                value = serializer.save()
+                value.service_type = 'TS'
+                value.messageStatus = 'F'
+                value.receiver= receiver
+                # value.transactionID = response['reference_id']
+                value.save()
+                return Response({
+                    "Success":False,
+                    "Message":"Message Couldnt be sent",
+                    "Data":response,
+                    "Service_Type":"TELESIGN"  })
         else:
             return Response({"details":"Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({
+            "Success":True,
+            "Message":"Message Sending",
+            "Data":response,
+            "Service_Type":"TELESIGN"  })
 
 
 class TeleSignMessageList(APIView):
@@ -951,10 +958,14 @@ class TeleSignMessageList(APIView):
     def get(self, request, format=None):
         messages = Message.objects.filter(service_type='TS')
         serializer = MessageSerializer(messages, many=True)
-        return JsonResponse({"Success":status.HTTP_200_OK, "Message":"Messages retrieved", "Data":serializer.data })
+        return JsonResponse({
+            "Success":status.HTTP_200_OK,
+            "Message":"Messages retrieved",
+            "Data":serializer.data,
+            "Service_Type":"TELESIGN" })
 
 
-class TeleSignTransactionID2(generics.ListAPIView):
+class TeleSignTransactionID1(generics.ListAPIView):
     """
     This allows view the list of the Infobip Messages Sent by all users.
     Format is to be in
@@ -974,25 +985,25 @@ class TeleSignTransactionID2(generics.ListAPIView):
             raise ValidationError('Please enter a proper uuid field, with 32 charcters')
         
 
-# class TeleSignTransactionID(APIView):
-#     """
-#     This allows view the list of the Infobip Messages Sent by all users.
-#     Format is to be in
-#     {'transactionID':'<a valid transaction id>'}
-#     """
-#     # queryset = Message.objects.filter(service_type='IF')
-#     serializer_class= MessageSerializer
+class TeleSignTransactionID2(APIView):
+    """
+    This allows view the list of the Infobip Messages Sent by all users.
+    Format is to be in
+    {'transactionID':'<a valid transaction id>'}
+    """
+    # queryset = Message.objects.filter(service_type='IF')
+    serializer_class= MessageSerializer
 
-#     def get(self, request, transactionID, format=None):
-#         uuid_regex = re.compile('[0-9a-f]{8}\-[0-9a-f]{4}\-4[0-9a-f]{3}\-[89ab][0-9a-f]{3}\-[0-9a-f]{12}')
-#         if uuid_regex.match(transactionID) is False:
-#             return  Response({"Success":False, "Message": "Transaction Failed", "Data":"UUID needed", 'status':status.HTTP_400_BAD_REQUEST})
-#         else:
-#             transaction = get_object_or_404(Message, transactionID=transactionID)
-#             serializer_message = MessageSerializer(transaction, many=True, raise_exception=True)
-#             return Response({"Success":True, "Message": "Transaction Retrieved", "Data":serializer_message.data, 'status':status.HTTP_302_FOUND})
+    def get(self, request, transactionID, format=None):
+        uuid_regex = re.compile('[0-9a-f]{8}\-[0-9a-f]{4}\-4[0-9a-f]{3}\-[89ab][0-9a-f]{3}\-[0-9a-f]{12}')
+        if uuid_regex.match(transactionID) is False:
+            return  Response({"Success":False, "Message": "Transaction Failed", "Data":"UUID needed", 'status':status.HTTP_400_BAD_REQUEST})
+        else:
+            transaction = get_object_or_404(Message, transactionID=transactionID)
+            serializer_message = MessageSerializer(transaction, many=True, raise_exception=True)
+            return Response({"Success":True, "Message": "Transaction Retrieved", "Data":serializer_message.data, 'status':status.HTTP_302_FOUND})
 
-class TeleSignTransactionID(generics.ListAPIView):
+class TeleSignTransactionID3(generics.ListAPIView):
     """
     This allows view the list of the groups available on DB.
     """
@@ -1026,24 +1037,20 @@ class TeleSignGroupSms(generics.CreateAPIView):
         text = request.data["content"]
         sender = request.data["senderID"]
         request.data["service_type"] = "TS"
-        # serializer = MessageSerializer(data=request.data)
-        # print(serializer)
         msgstat =[]
 
         number = get_numbers_from_group(request, receiver)
-        # number = ['+2347069501731', '+2347069501732', '2347069501733']
+        print(number)
         for reciever in number:
-            api_key = settings.TELESIGN_API
-            customer_id = settings.TELESIGN_CUST
-            # api_key = 'HXwu/7gWs9KMHWilug9NPccJe+nZtUaG6TtfmxikOgQeCP5ErX7uGxIqpufdF2b93Qed9B/WcudRiveDXfaf2Q=='
-            # customer_id = 'ACECBD93-21C7-4B8B-9300-33FDEBC27881'
+            # api_key = settings.TELESIGN_API
+            # customer_id = settings.TELESIGN_CUST
+            api_key = 'HXwu/7gWs9KMHWilug9NPccJe+nZtUaG6TtfmxikOgQeCP5ErX7uGxIqpufdF2b93Qed9B/WcudRiveDXfaf2Q=='
+            customer_id = 'ACECBD93-21C7-4B8B-9300-33FDEBC27881'
             url = 'https://rest-api.telesign.com/v1/messaging'
             headers = {'Accept' : 'application/json', 'Content-Type' : 'application/x-www-form-urlencoded'}
             data = {'phone_number': reciever, 'message': text, 'message_type': 'ARN'}
             serializer = MessageSerializer(data=request.data)
             if serializer.is_valid():
-                # print(value)
-                # print("break----")
                 r = requests.post(url, auth=HTTPBasicAuth(customer_id, api_key), data=data, headers=headers)
                 response = r.json()
                 if response['status']['code'] == 290:
@@ -1066,4 +1073,8 @@ class TeleSignGroupSms(generics.CreateAPIView):
                     value.save()
             else:
                 return Response({"details":"Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
-        return Response({"Success":True, "Message":"Message Sending", "Data":msgstat })
+        return Response({
+            "Success":True, 
+            "Message":"Message Sending", 
+            "Data":msgstat,
+            "Service_Type":"TELESIGN" })
