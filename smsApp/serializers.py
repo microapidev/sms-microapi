@@ -30,11 +30,11 @@ class GroupSerializer(serializers.ModelSerializer):
     dateCreated = serializers.DateTimeField(read_only=True)
     groupName = serializers.CharField(required=True)
     groupID = serializers.UUIDField(format='hex_verbose', initial=uuid.uuid4, read_only=True)
-    userID = serializers.CharField(required=True)
+    senderID = serializers.CharField(required=True)
     numbers = serializers.StringRelatedField(many=True, read_only=True)
     class Meta:
         model = Group
-        fields = ["groupName", "userID", "groupID", "dateCreated", "numbers"]
+        fields = ["groupName", "senderID", "groupID", "dateCreated", "numbers"]
         depth = 1
 
 class GroupNumbersSerializer(serializers.ModelSerializer):
