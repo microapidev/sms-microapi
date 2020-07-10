@@ -660,6 +660,7 @@ class InfobipSendMessage(generics.CreateAPIView):
         text = request.data["content"]
         sender = request.data["senderID"]
         serializer = MessageSerializer(data=request.data)
+        payload = "{\"messages\":[{\"from\":\"%s\",\"destinations\":[{\"to\":\"%s\"}],\"text\":\"%s\",\"flash\":true}]}" % ("SMS API", receiver, text)
         if serializer.is_valid():
             value = serializer.save()
             data = {
@@ -668,9 +669,12 @@ class InfobipSendMessage(generics.CreateAPIView):
                 "text": text
             }
             headers = {
-                'Authorization': '32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b'}
+                'Authorization': '32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b',
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+                }
             r = requests.post("https://jdd8zk.api.infobip.com",
-                              data=data, headers=headers)
+                              data=payload, headers=headers)
             response = r.status_code
             value.service_type = 'IF'
             if response == 200:
