@@ -89,13 +89,12 @@ class RecipientsForUser(APIView):
 
     def get(self, request, userID, format=None):
         recipients = Recipient.objects.filter(userID=userID)
-        if recipients:
+        if recipients.exists():
             if request.data is None:
-                serializer = RecipientSerializer(recipients, many=True)
                 return Response({"Success": True, "Message": "No Recipients For User", "Data": [request.data], 'status': status.HTTP_204_NO_CONTENT})
             else:
                 serializer = RecipientSerializer(recipients, many=True)
-                return Response({"Success": True, "Message": "Recipients Retrieved", "Data": [request.data], 'status': status.HTTP_200_OK})
+                return Response({"Success": True, "Message": "Recipients Retrieved", "Data":serializer.data, 'status': status.HTTP_200_OK})
         else:
             return Response({"Failure": True, "Message": "User Does not exist", "Data": [], 'status': status.HTTP_400_BAD_REQUEST})
 
