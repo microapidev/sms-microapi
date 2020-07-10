@@ -1105,11 +1105,12 @@ class TeleSignTransactionID3(generics.ListAPIView):
     """
     This allows view the list of the groups available on DB.
     """
+    # queryset = Message.objects.filter(transactionID=transactionID)
+    # serializer_class = MessageSerializer
 
-    serializer_class = MessageSerializer
-
-    def list(self, request, transactionID):
-        queryset = get_object_or_404(Message, transactionID=transactionID)
+    def list(self, request, **kwargs):
+        transactionID = self.kwargs["transactionID"]
+        queryset = Message.objects.filter(transactionID=transactionID)        # message = Message.objects.filter(transactionID=transactionID)
         # if ValueError:
         # return Response({"Success": False, "Message": "Transaction Failed", "Data": "UUID needed", 'status': status.HTTP_400_BAD_REQUEST})
         serializer = MessageSerializer(queryset, many=True)
