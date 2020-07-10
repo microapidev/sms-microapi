@@ -425,7 +425,6 @@ class GroupBySenderList(generics.ListAPIView):
         senderID = self.kwargs["senderID"]
         queryset = Group.objects.filter(senderID=senderID)
         serializer = GroupSerializer(queryset, many=True)
-        print(serializer.data)
         return Response({"Success": status.HTTP_200_OK, "Message": f"Groups Created by {senderID}", "Group-Info": serializer.data})
         # return Response(serializer.data)
 
