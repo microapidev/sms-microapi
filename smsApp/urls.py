@@ -55,7 +55,7 @@ urlpatterns = [
 
    #Infobip Views
    path("v1/sms/infobip/send_sms", InfobipSendMessage.as_view(), name="infobip-send-message"),
-   path("v1/sms/infobip/send_sms2", InfobipSendMessage2.as_view(), name="infobip-send-message2"),
+   # path("v1/sms/infobip/send_sms2", InfobipSendMessage2.as_view(), name="infobip-send-message2"),
    # path("v1/sms/infobip/send_group_sms", InfobipGroupMessage.as_view(), name="infobip-group-message"),
    path("v1/sms/infobip/view_all_sms", InfobipMessageList.as_view(), name="infobip-sent-messages"),
    path("v1/sms/infobip/view_all_sms/<str:senderID>", InfobipSingleMessage.as_view(), name="infobip-sent-messages"),

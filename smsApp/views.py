@@ -360,7 +360,7 @@ def translateMessages(request):
 
 def get_numbers_from_group(request, groupID):
     group = get_object_or_404(Group, groupID=groupID)
-    group_numbers =[val.phoneNumbers for val in group.numbers.all()]
+    group_numbers = [val.phoneNumbers for val in group.numbers.all()]
     print(group_numbers)
     return group_numbers
 
@@ -556,7 +556,6 @@ class GroupNumbersCreate(generics.CreateAPIView):
         groupID = request.data.get("groupID")
         phoneNumbers = request.data.get("phoneNumbers")
 
-        
         group = get_object_or_404(Group, groupID=groupID)
         for number in phoneNumbers.split(","):
             queryset = GroupNumbers.objects.filter(
@@ -571,14 +570,14 @@ class GroupNumbersCreate(generics.CreateAPIView):
                 print(serializer)
                 if serializer.is_valid():
                     serializer.save()
-                    print("yeah")                 
+                    print("yeah")
         request.data["phoneNumbers"] = phoneNumbers
         return Response(
-                {
-                    "Success": "True", 
-                    "status": status.HTTP_201_CREATED, 
-                    "Message": f"PhoneNumbers added to  group with Instance of {groupID}", 
-                    "Number": request.data, "duplicates":duplicates})
+            {
+                "Success": "True",
+                "status": status.HTTP_201_CREATED,
+                "Message": f"PhoneNumbers added to  group with Instance of {groupID}",
+                "Number": request.data, "duplicates": duplicates})
 
 
 class GroupNumbersDetail(APIView):
@@ -659,8 +658,10 @@ class InfobipSendMessage(generics.CreateAPIView):
         receiver = request.data["receiver"]
         text = request.data["content"]
         sender = request.data["senderID"]
+        conn = http.client.HTTPSConnection("jdd8zk.api.infobip.com")
         serializer = MessageSerializer(data=request.data)
-        payload = "{\"messages\":[{\"from\":\"%s\",\"destinations\":[{\"to\":\"%s\"}],\"text\":\"%s\",\"flash\":true}]}" % ("SMS API", receiver, text)
+        payload = "{\"messages\":[{\"from\":\"%s\",\"destinations\":[{\"to\":\"%s\"}],\"text\":\"%s\",\"flash\":true}]}" % (
+            sender, receiver, text)
         if serializer.is_valid():
             value = serializer.save()
             data = {
@@ -669,17 +670,20 @@ class InfobipSendMessage(generics.CreateAPIView):
                 "text": text
             }
             headers = {
-                'Authorization': '32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b',
+                'Authorization': 'App 32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b',
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
-                }
-            r = requests.post("https://jdd8zk.api.infobip.com",
-                              data=payload, headers=headers)
-            response = r.status_code
+            }
             value.service_type = 'IF'
-            if response == 200:
-                value.save()
-        return JsonResponse(response, safe=False)
+            # if response == 200:
+            #     value.save()
+            conn.request("POST", "/sms/2/text/advanced", payload, headers)
+            res = conn.getresponse()
+            data = res.read().decode('utf-8')
+            data = json.loads(data)
+            # data = data.replace('\\', '')
+            # print(data)
+        return JsonResponse({"Status": res.status, "Message": text , "Data": data})
 
 
 class InfobipSendMessage2(generics.CreateAPIView):
@@ -711,29 +715,33 @@ class InfobipSendMessage2(generics.CreateAPIView):
         sender = {'from': sender}
         array = [sender, destination, text, flash]
         # print(array)
+        payload = "{\"messages\":[{\"from\":\"InfoSMS\",\"destinations\":[{\"to\":\"41793026727\"}],\"text\":\"%s\",\"flash\":true}]}" % (
+            text)
 
         # this is the sample payload as it from the documentation
-        payload = "'messages':[{'from':'%s','destinations':[{'to':'%s'}],'text':'%s','flash':'true'}]" % (
-            sender, receiver, text)
-        print(payload)
-        print('Hello')
+        # payload = "{'messages':[{'from':'%s','destinations':[{'to':%s}],'text':'%s','flash':'true'}]}" % (
+        #     sender, receiver, text)
+        # print(payload)
+        # print('Hello')
 
-        payload3 = {'messages': []}
-        this = "{'from':'%s', 'destinations':[{'to':'%s'}], 'text':'%s', 'flash':'true'}" % (
-            sender, receiver, text)
-        payload3['messages'].append(this)
-        print(str(payload3))
-        print('hi')
-        print(payload3)
+        # payload3 = {'messages': []}
+        # this = "{'from':'%s', 'destinations':[{'to':'%s'}], 'text':'%s', 'flash':'true'}" % (
+        #     sender, receiver, text)
+        # payload3['messages'].append(this)
+        # print(str(payload3))
+        # print('hi')
+        # print(payload3)
 
-        # this is 'appended' payload that was broken into bits
-        payload2 = {"messages": array}
+        # # this is 'appended' payload that was broken into bits
+        # payload2 = {"messages": array}
 
         # the rest of the connection codes
         headers = {
-            'Authorization': 'App 32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b'
+            'Authorization': 'App 32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
         }
-        conn.request("POST", "/sms/2/text/advanced", str(payload3), headers)
+        conn.request("POST", "/sms/2/text/advanced", payload, headers)
         res = conn.getresponse()
         # print(res.msg)
         data = res.read().decode('utf-8')
