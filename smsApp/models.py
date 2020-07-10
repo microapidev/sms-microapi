@@ -27,8 +27,8 @@ from django.utils.translation import ugettext_lazy as _
 
 class Group(models.Model):
     # groupID = models.ForeignKey(GroupUnique, related_name='grp_id', on_delete=models.SET_NULL)
-    groupName = models.CharField(max_length=80)
-    userID = models.CharField(max_length=30, default="user") #creator of the group123e4567-e89b-12d3-a456-426652340000
+    groupName = models.CharField(max_length=90)
+    senderID = models.CharField(max_length=30, default="user") #creator of the group123e4567-e89b-12d3-a456-426652340000
     groupID = models.UUIDField(default=uuid.uuid4, editable=False)
     dateCreated = models.DateTimeField(default=timezone.now)
 
@@ -36,19 +36,22 @@ class Group(models.Model):
         return self.groupName
 
 class GroupNumbers(models.Model):
-    group = models.ForeignKey(Group, related_name='group', on_delete=models.CASCADE)
+    group = models.ForeignKey(Group, related_name="numbers", on_delete=models.CASCADE)
     phone_regex = RegexValidator(regex=r'^\+?1?\d{9,15}$', message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.")
-    phoneNumbers = models.CharField(validators=[phone_regex], max_length=200, blank=True) # validators should be a list
+    phoneNumbers = models.CharField(max_length=20000, blank=False) 
     dateCreated = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return self.phoneNumbers
 
-class Receipent(models.Model):
+class Recipient(models.Model):
     userID = models.CharField(primary_key=True, max_length=30) #user who added the recipient
     recipientName = models.CharField(max_length=80)
     recipientNumber = models.CharField(max_length=80)
     dateCreated = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f'id {self.userID}, number {self.recipientNumber}'
 
 class Message(models.Model):
     transactionID = models.UUIDField(default=uuid.uuid4)
@@ -59,12 +62,12 @@ class Message(models.Model):
     content = models.TextField(default="test")
     INFOBIP = 'IF'
     TWILLO = 'TW'
-    NUOBJECT = 'NU'
+    TELESIGN = 'TS'
     MSG91 = 'MS'
     SERVICE_CHOICES = [
         (INFOBIP, 'IF'),
         (TWILLO, 'TW'),
-        (NUOBJECT, 'NU'),       
+        (TELESIGN, 'TS'),       
 		(MSG91, 'MS'),
     ]
     service_type = models.CharField(
@@ -89,6 +92,9 @@ class Message(models.Model):
         default=DRAFT,
     )
     dateScheduled = models.DateTimeField(null=True)
+
+    def __str__(self):
+        return f'service {self.service_type}, reciever {self.receiver}'
 
 
 # class Media(models.Model):

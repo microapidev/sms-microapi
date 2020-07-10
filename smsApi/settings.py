@@ -13,6 +13,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # SECURITY WARNING: keep the secret key used in production secret!
 
 SECRET_KEY = os.environ.get('SECRET_KEY')
+# SECRET_KEY = 'fjfskjfksdnfjfd'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -27,6 +28,10 @@ TWILIO_NUMBER = os.getenv("TWILIO_NUMBER")  # use the number you received when s
 INFOBIP_USERNAME = os.getenv("INFOBIP_USERNAME")
 INFOBIP_PASSWORD = os.getenv("INFOBIP_PASSWORD")
 INFOBIP_APIKEY = os.getenv("INFOBIP_APIKEY")
+
+# add Telesign credentials
+TELESIGN_API = os.getenv("TELESIGN_API")
+TELESIGN_CUST = os.getenv("TELESIGN_CUST")
 
 # Application definition
 
