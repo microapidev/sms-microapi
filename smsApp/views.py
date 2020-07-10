@@ -406,7 +406,7 @@ def get_numbers_from_group(request, groupID):
 @api_view(["POST"])
 def send_group_twilio(request):
     """
-    Send to an already created group. Format should be {"content":"", "groupPK":"", "senderID":"" }
+    Send to an already created group. Format should be {"content":"", "groupID":"", "senderID":"" }
     """
     content = request.data["content"]
     groupID = request.data["groupID"]
@@ -698,7 +698,8 @@ class InfobipSendMessage(generics.CreateAPIView):
         text = request.data["content"]
         sender = request.data["senderID"]
         serializer = MessageSerializer(data=request.data)
-        payload = "{\"messages\":[{\"from\":\"%s\",\"destinations\":[{\"to\":\"%s\"}],\"text\":\"%s\",\"flash\":true}]}" % ("SMS API", receiver, text)
+        conn = http.client.HTTPSConnection("jdd8zk.api.infobip.com")
+        payload = "{\"messages\":[{\"from\":\"%s\",\"destinations\":[{\"to\":\"%s\"}],\"text\":\"%s\",\"flash\":true}]}" % (sender, receiver, text)
         if serializer.is_valid():
             value = serializer.save()
             data = {
@@ -707,17 +708,23 @@ class InfobipSendMessage(generics.CreateAPIView):
                 "text": text
             }
             headers = {
-                'Authorization': '32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b',
+                'Authorization': 'App 32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b',
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
                 }
-            r = requests.post("https://jdd8zk.api.infobip.com",
-                              data=payload, headers=headers)
-            response = r.json()
+            # r = requests.post("https://jdd8zk.api.infobip.com",
+            #                   data=payload, headers=headers)
+            # response = r.json()
             value.service_type = 'IF'
-            if response == 200:
+            conn.request("POST", "/sms/2/text/advanced", payload, headers)
+            res = conn.getresponse()
+            data = res.read().decode('utf-8')
+            data = json.loads(data)
+            if res.status == 200:
                 value.save()
-        return JsonResponse(response, safe=False)
+            # print(data)
+        return JsonResponse({"Status": res.status, "Message": "", "Data": data})
+        
 
 
 class InfobipSendMessage2(generics.CreateAPIView):
@@ -950,7 +957,7 @@ class TwilioSendSms(views.APIView):
                         'recipient': f"{receiver}",
                         'service_type': 'TWILIO',
                         'statusCode': '400',
-                        'details': 'Receiver does not exist or Invalid userID'
+                        'details': 'Receiver does not exist or Invalid senderID'
                     }
                 }, status=status.HTTP_400_BAD_REQUEST)
         else:
