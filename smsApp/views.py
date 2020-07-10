@@ -545,7 +545,7 @@ class GroupNumbersCreate(generics.CreateAPIView):
     It requires the ID of the already created group.
     Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.
     Format is as follows:
-    {"group":"<unique primarykey given upon creating a group>", "phoneNumbers":"<a phone number>"}
+    {"groupID":"<UUID given upon creating a group>", "phoneNumbers":"<a phone number>"}
     Numbers must be seperated by only a comma, no spaces
     """
     queryset = GroupNumbers.objects.all()
