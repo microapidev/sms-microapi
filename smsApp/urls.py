@@ -4,7 +4,7 @@ from .views import InfobipSendMessage, InfobipSingleMessage, InfobipMessageList,
 from .views import translateMessages, MessageDelete, MessageCounter
 from .views import TeleSignSingleSms, TeleSignMessageList, TeleSignGroupSms, TeleSignTransactionID3
 from .views import send_group_twilio, TwilioSendSms, sms_list
-from .views import GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupDelete, GroupNumbersList, GroupNumbersBySenderList, GroupNumbersCreate, update_group_number, GroupNumbersDetail
+from .views import GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupDelete, GroupNumbersList, GroupNumbersBySenderList, GroupNumbersCreate, update_group_number, GroupNumbersDetail, TransactionID
 from .views import SmsHistoryList, SmsHistoryDetail
 from django.urls import path
 from .views import create_receipents_details, save_recipients_details  #get_recipient_details
@@ -15,7 +15,7 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from rest_framework.documentation import include_docs_urls
 
-#doc_view = get_swagger_view(title="SMS API documentation") #This generator is no longer used
+
 schema_view = get_schema_view(
    openapi.Info(
       title="SMS API",
@@ -35,6 +35,9 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
+   #MessageStatus
+   path("v1/sms/messagestatus/<str:transactionid>", TransactionID.as_view(), name="message-status"),
+
    #messageDelete
    path("v1/sms/message/delete/<transactionID>", MessageDelete.as_view(), name="delete-message"),
    path("v1/sms/message/<userID>", MessageCounter.as_view(), name="count-message"),
