@@ -31,6 +31,172 @@ import uuid
 
 # Create your views here.
 
+#Defining a new API that a user can send a single sms
+
+@api_view(['POST'])
+def send_single_message(request, serviceType, senderID, receiver, content):
+    
+    """
+    This endpoint allows a user to send a single message, while specifying which message provider is to be used.
+    To begin user must do the following: 127.0.0.1:8000/v1/sms/send_single_msg/senderID/IF/TW/TS/receiver/content
+    IF == Infobip
+    TS == Telesign
+    TW == Twilio
+    """
+    if (request.method == 'POST'):
+        
+
+        if (serviceType.upper() == 'TW') or  (serviceType.upper() == 'TWILIO'):
+            message_dict = {'senderID':senderID, 'service_type':serviceType.upper(), 'receiver':receiver, 'content':content}
+
+            print(serviceType)
+            serializer_message = MessageSerializer(data=message_dict)
+            client = Client(settings.TWILIO_ACCOUNT_SID,
+                            settings.TWILIO_AUTH_TOKEN)
+            if serializer_message.is_valid():
+                try:
+                    value = serializer_message.save()
+                    message = client.messages.create(
+                        from_=settings.TWILIO_NUMBER,
+                        to=receiver,
+                        body=content
+                    )
+                    value.messageStatus = "S"
+                    value.save()
+                    return Response({
+                        'success': 'true',
+                        'message': 'Message sent',
+                        'data': {
+                            'receiver': f"{receiver}",
+                            # 'userID': f"{senderID}",
+                            'message_sent': f"{content}",
+                            'service_type': 'TWILIO',
+                        }
+                    }, 200)
+
+                except TwilioRestException as e:
+                    value.messageStatus = "F"
+                    value.save()
+                    return Response({
+                        'success': 'false',
+                        'message': 'Message not sent',
+                        'error': {
+                            # 'userID': f"{senderID}",
+                            'Twilio Response': f'{str(e)}',
+                            'recipient': f"{receiver}",
+                            'service_type': 'TWILIO',
+                            'statusCode': '400',
+                            'details': 'Receiver does not exist or Invalid senderID'
+                        }
+                    }, status=status.HTTP_400_BAD_REQUEST)
+          
+            return Response({
+                'success': 'false',
+                'message': 'Message cannot be sent',
+                'error': {
+                    # 'userID': f"{senderID}",
+                    'recipient': f"{receiver}",
+                    'service_type': 'TWILIO',
+                    'statusCode': '400',
+                    'details': 'All fields are required, a field is ommitted'
+                }
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        #For Infobip
+        elif (serviceType.upper() == 'IF' or  serviceType.upper() == 'INFOBIP'):
+            message_dict = {'senderID':senderID, 'service_type':'IF', 'receiver':receiver, 'content':content}
+            serializer = MessageSerializer(data=message_dict)
+            conn = http.client.HTTPSConnection("jdd8zk.api.infobip.com")
+            payload = "{\"messages\":[{\"from\":\"%s\",\"destinations\":[{\"to\":\"%s\"}],\"text\":\"%s\",\"flash\":false}]}" % (senderID, receiver, content)
+            # payload =  "{\"messages\":\"[{\"from\":\"{%s}\",\"destinations\":[{\"to\":\"%s\",\"messageId\":\"Stage7-Company\"}],\"text\":\"%s\",\"flash\":false,\"notifyUrl\":\"https://www.example.com/sms/advanced\",\"notifyContentType\":\"application/json\",\"callbackData\":\"DLR callback data\",\"validityPeriod\":720}}" % (senderID, receiver, content)
+            # payload = {"from": f"{senderID}", "to":f"{receiver}", "text": f"{content}"}
+            if serializer.is_valid():
+                value = serializer.save()
+                data = {
+                    "from": senderID,
+                    "to": receiver,
+                    "text": content
+                }
+                headers = {
+                    'Authorization': 'App 32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                    }
+                # r = requests.post("https://jdd8zk.api.infobip.com",
+                #                   data=payload, headers=headers)
+                # response = r.json()
+                value.service_type = 'IF'
+                conn.request("POST", "/sms/2/text/advanced", payload, headers)
+                res = conn.getresponse()
+                data = res.read().decode('utf-8')
+                data = json.loads(data)
+                if res.status == 200:
+                    value.save()
+                # print(data)
+                return Response({"Status": res.status, "Message": "", "Data": data})
+            else:
+                return Response({"message": "Not Valid"})
+        
+        #For Telesign
+        elif (serviceType.upper() == 'TS' or  serviceType.upper() == 'TELESIGN') :
+            message_dict = {'senderID':senderID, 'service_type':'TS', 'receiver':receiver, 'content':content}
+            serializer_message = MessageSerializer(data=message_dict)
+
+            api_key = 'HXwu/7gWs9KMHWilug9NPccJe+nZtUaG6TtfmxikOgQeCP5ErX7uGxIqpufdF2b93Qed9B/WcudRiveDXfaf2Q=='
+            customer_id = 'ACECBD93-21C7-4B8B-9300-33FDEBC27881'
+            url = 'https://rest-api.telesign.com/v1/messaging'
+
+            headers = {
+                'Accept': 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded'}
+
+            data = {
+                'phone_number': receiver,
+                'message': content,
+                'message_type': 'ARN'
+                }
+
+            if serializer_message.is_valid():
+                # print(value)
+                # print("break----")
+                r = requests.post(url, 
+                                  auth=HTTPBasicAuth(customer_id, api_key), 
+                                  data=data, 
+                                  headers=headers)
+                value = serializer_message.save()
+                response = r.json()
+                if response['status']['code'] == 290:
+                    value.service_type = 'TS'
+                    value.messageStatus = 'SC'
+                    value.transactionID = response['reference_id']
+                    value.save()
+                    return Response({
+                        "Success": True,
+                        "Message": "Message Sending",
+                        "Data": response,
+                        "Service_Type": "TELESIGN"
+                        })
+                    print(value)
+                else:
+                    print(response['status']['code'])
+                    value = serializer_message.save()
+                    value.service_type = 'TS'
+                    value.messageStatus = 'F'
+                    value.receiver = receiver
+                    value.transactionID = uuid.uuid4()
+                    value.save()
+                    return Response({
+                        "Success": False,
+                        "Message": "Message Couldnt be sent",
+                        "Data": response,
+                        "Service_Type": "TELESIGN"})
+            else:
+                return Response({"details": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
+
+        else:
+            return Response({f"Service Type {serviceType}": "Not Supported"}, status=status.HTTP_400_BAD_REQUEST)
+
+
 class MessageDelete(generics.DestroyAPIView):
     """
     To delete simply use: /v1/sms/group_update/groupName
@@ -987,6 +1153,7 @@ class TeleSignSingleSms(generics.CreateAPIView):
 
     def post(self, request):
         receiver = request.data["receiver"]
+        print(receiver)
         text = request.data["content"]
         sender = request.data["senderID"]
         request.data["service_type"] = "TS"
