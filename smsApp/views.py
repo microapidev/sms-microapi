@@ -31,6 +31,18 @@ import uuid
 
 # Create your views here.
 
+def translateMsg(content, lang='en'):
+    #This will help translate message of customer.
+    
+    translator = Translator(service_urls=[
+        'translate.google.com',
+        'translate.google.co.kr',
+    ])
+
+    translated = translator.translate(text=content, dest=lang)
+    content = translated.text
+    return content
+
 #USING CBV TO POST SMS
 #Defining a new API that a user can send a single sms while specifying services
 class SendSingMsgCreate(generics.CreateAPIView):
@@ -56,28 +68,54 @@ class SendSingMsgCreate(generics.CreateAPIView):
         senderID = request.data.get("senderID")
         receiver = request.data.get("receiver")
         content = request.data.get("content")
+        language = request.data.get("language")
         regex = re.compile(r'^\+?1?\d{9,15}$')
+        original_txt = []
         
         if regex.match(receiver):
-            print('Regex Matched')
+            
             if (service_type == 'TW'):
                 
-                message_dict = {'senderID':senderID, 'service_type':service_type, 'receiver':receiver, 'content':content}
+                message_dict = {'senderID':senderID, 'service_type':service_type, 'receiver':receiver, 'content':content, 'language':language}
 
 
                 serializer_message = MessageSerializer(data=message_dict)
+
+
                 client = Client(settings.TWILIO_ACCOUNT_SID,
                                 settings.TWILIO_AUTH_TOKEN)
                 if serializer_message.is_valid():
                     try:
                         value = serializer_message.save()
-                        message = client.messages.create(
-                            from_=settings.TWILIO_NUMBER,
-                            to=receiver,
-                            body=content
-                        )
+                        original_txt.append(content)
+                        if language != 'en':
+                            content = translateMsg(content, language)
+                            
+                            message = client.messages.create(
+                                from_=settings.TWILIO_NUMBER,
+                                to=receiver,
+                                body=content
+                            )
+                        else:
+                            message = client.messages.create(
+                                from_=settings.TWILIO_NUMBER,
+                                to=receiver,
+                                body=content
+                            )
                         value.messageStatus = "S"
                         value.save()
+                        if len(original_txt) != 0:
+                            return Response({
+                                'success': 'true',
+                                'message': 'Message sent',
+                                'original message': f"{original_txt[0]}",
+                                'data': {
+                                    'receiver': f"{receiver}",
+                                    # 'userID': f"{senderID}",
+                                    'message_sent': f"{content}",
+                                    'service_type': 'TWILIO',
+                                }
+                            }, 200)
                         return Response({
                             'success': 'true',
                             'message': 'Message sent',
@@ -128,16 +166,30 @@ class SendSingMsgCreate(generics.CreateAPIView):
                 # payload = {"from": f"{senderID}", "to":f"{receiver}", "text": f"{content}"}
                 if serializer.is_valid():
                     value = serializer.save()
-                    data = {
-                        "from": senderID,
-                        "to": receiver,
-                        "text": content
-                    }
-                    headers = {
-                        'Authorization': 'App 32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b',
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
+                    original_txt.append(content)
+                    if language != 'en':
+                        content = translateMsg(content, language)
+                        data = {
+                            "from": senderID,
+                            "to": receiver,
+                            "text": content
                         }
+                        headers = {
+                            'Authorization': 'App 32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b',
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                            }
+                    else:
+                        data = {
+                            "from": senderID,
+                            "to": receiver,
+                            "text": content
+                        }
+                        headers = {
+                            'Authorization': 'App 32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b',
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                            }
                     # r = requests.post("https://jdd8zk.api.infobip.com",
                     #                   data=payload, headers=headers)
                     # response = r.json()
@@ -149,6 +201,8 @@ class SendSingMsgCreate(generics.CreateAPIView):
                     if res.status == 200:
                         value.save()
                     # print(data)
+                    if len(original_txt) != 0:
+                        return Response({"Status": res.status, "Original Message": f"{original_txt[0]}", "Data": data})
                     return Response({"Status": res.status, "Message": "", "Data": data})
                 else:
                     return Response({"message": "Not Valid"})
@@ -165,11 +219,19 @@ class SendSingMsgCreate(generics.CreateAPIView):
                 headers = {
                     'Accept': 'application/json',
                     'Content-Type': 'application/x-www-form-urlencoded'}
-
-                data = {
-                    'phone_number': receiver,
-                    'message': content,
-                    'message_type': 'ARN'
+                original_txt.append(content)
+                if language != 'en':
+                    content = translateMsg(content, language)
+                    data = {
+                        'phone_number': receiver,
+                        'message': content,
+                        'message_type': 'ARN'
+                    }
+                else:
+                    data = {
+                        'phone_number': receiver,
+                        'message': content,
+                        'message_type': 'ARN'
                     }
 
                 if serializer_message.is_valid():
@@ -186,13 +248,20 @@ class SendSingMsgCreate(generics.CreateAPIView):
                         value.messageStatus = 'SC'
                         value.transactionID = response['reference_id']
                         value.save()
+                        if len(original_txt) != 0:
+                            return Response({
+                                "Success": True,
+                                "Message": "Message Sending",
+                                "Original SMS": f"{original_txt[0]}",
+                                "Data": response,
+                                "Service_Type": "TELESIGN"
+                                })
                         return Response({
                             "Success": True,
                             "Message": "Message Sending",
                             "Data": response,
                             "Service_Type": "TELESIGN"
                             })
-                        print(value)
                     else:
                         print(response['status']['code'])
                         value = serializer_message.save()
@@ -576,6 +645,7 @@ def translateMessages(request):
                                 status=status.HTTP_200_OK)
         except Exception as error:
             return JsonResponse({"error": error}, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 def get_numbers_from_group(request, groupID):
@@ -1102,6 +1172,8 @@ class TwilioSendSms(views.APIView):
     def post(self, request):
         receiver = request.data["receiver"]
         content = request.data["content"]
+        translateMessages(content)
+        print
         request.data["service_type"] = "TW"
         serializer_message = MessageSerializer(data=request.data)
 
