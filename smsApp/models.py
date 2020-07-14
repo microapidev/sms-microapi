@@ -59,7 +59,7 @@ class Message(models.Model):
     receiver = models.CharField(max_length=80)
     senderID = models.CharField(max_length=30) 
     # account_sid = models.CharField(max_length=80, blank=True, null=True)
-    date_created = models.DateTimeField(auto_now_add=True)
+    date_created = models.DateTimeField(default=timezone.now)
     content = models.TextField(default="test")
     INFOBIP = 'IF'
     TWILLO = 'TW'

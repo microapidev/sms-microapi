@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import send_single_message
+from .views import SendSingMsgCreate
 from .views import RecipientCreate, RecipientList, RecipientDetail, RecipientsForUser
 from .views import InfobipSendMessage, InfobipSingleMessage, InfobipMessageList, InfobipGroupMessage, InfobipSendMessage2
 from .views import translateMessages, MessageDelete, MessageCounter
@@ -37,7 +37,7 @@ schema_view = get_schema_view(
 
 urlpatterns = [
    #sendsms
-   path("v2/sms/send_single_msg/<senderID>/<serviceType>/<receiver>/<content>", send_single_message, name="send-one-msg"),
+   path("v2/sms/send_single_msg", SendSingMsgCreate.as_view(), name="send-one-msg"),
    #messageDelete
    path("v1/sms/message/delete/<transactionID>", MessageDelete.as_view(), name="delete-message"),
    path("v1/sms/message/<userID>", MessageCounter.as_view(), name="count-message"),
