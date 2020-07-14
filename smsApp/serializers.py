@@ -27,11 +27,12 @@ class MessageSerializer(serializers.ModelSerializer):
     grouptoken = serializers.CharField(read_only=True)
     date_created = serializers.CharField(read_only=True)
     messageStatus = serializers.ChoiceField(choices=['D', 'S','F','R','SC'], read_only=True)
+    language = serializers.ChoiceField(choices=Message.LANG_CHOICES, required=False)
     transactionID = serializers.UUIDField(format='hex_verbose', initial=uuid.uuid4, read_only=True)
 
     class Meta:
         model = Message
-        fields = ["senderID", "content", "receiver", "service_type", "messageStatus", "transactionID", "date_created", "grouptoken"]
+        fields = ["senderID", "content", "receiver", "service_type", "messageStatus", "transactionID", "date_created", "grouptoken", "language"]
 
 
 class GroupSerializer(serializers.ModelSerializer):
