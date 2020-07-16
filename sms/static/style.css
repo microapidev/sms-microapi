@@ -179,7 +179,7 @@ button:hover{
 
 
 @media only screen and (max-width:670px){
-  input, select{
+  input, select, textarea {
     width: 100%;
   }
 
