@@ -828,7 +828,9 @@ class GroupNumbersCreate(generics.CreateAPIView):
             else:
                 # self.create(request, *args, **kwargs)
                 request.data["group"] = group.id
+                request.data._mutable = True
                 request.data["phoneNumbers"] = number
+                request.data._mutable = True
                 serializer = GroupNumbersPrimarySerializer(data=request.data)
                 print(serializer)
                 if serializer.is_valid():
