@@ -54,13 +54,13 @@ class Recipient(models.Model):
         return f'id {self.userID}, number {self.recipientNumber}'
 
 class Message(models.Model):
-    transactionID = models.UUIDField(default=uuid.uuid4)
+    transactionID = models.CharField(max_length=2000, blank=True, null=True)
+    messageID = models.UUIDField(default=uuid.uuid4)
     grouptoken = models.UUIDField(null=True)
     receiver = models.CharField(max_length=80)
     senderID = models.CharField(max_length=30) 
-    # account_sid = models.CharField(max_length=80, blank=True, null=True)
-    date_created = models.DateTimeField(auto_now_add=True)
-    content = models.TextField(default="test")
+    date_created = models.DateTimeField(default=timezone.now)
+    content = models.TextField(max_length=500)
     INFOBIP = 'IF'
     TWILLO = 'TW'
     TELESIGN = 'TS'
@@ -93,6 +93,119 @@ class Message(models.Model):
         default=DRAFT,
     )
     dateScheduled = models.DateTimeField(null=True)
+    
+    LANG_CHOICES = (
+
+
+        ('af', 'af'),
+        ('sq', 'sq'),
+        ('am', 'am'),
+        ('ar', 'ar'),
+        ('hy', 'hy'),
+        ('az', 'az'),
+        ('eu', 'eu'),
+        ('be', 'be'),
+        ('bn', 'bn'),
+        ('bs', 'bs'),
+        ('bg', 'bg'),
+        ('ca', 'ca'),
+        ('ceb', 'ceb'),
+        ('ny', 'ny'),
+        ('zh-cn', 'zh-cn'),
+        ('zh-tw', 'zh-tw'),
+        ('co', 'co'),
+        ('hr', 'hr'),
+        ('cs', 'cs'),
+        ('da', 'da'),
+        ('nl', 'nl'),
+        ('en', 'en'),
+        ('eo', 'eo'),
+        ('et', 'et'),
+        ('tl', 'tl'),
+        ('fi', 'fi'),
+        ('fr', 'fr'),
+        ('fy', 'fy'),
+        ('gl', 'gl'),
+        ('ka', 'ka'),
+        ('de', 'de'),
+        ('el', 'el'),
+        ('gu', 'gu'),
+        ('ht', 'ht'),
+        ('ha', 'ha'),
+        ('haw', 'haw'),
+        ('iw', 'iw'),
+        ('hi', 'hin'),
+        ('hmn', 'hmn'),
+        ('hu', 'hu'),
+        ('is', 'is'),
+        ('ig', 'ig'),
+        ('id', 'id'),
+        ('ga', 'ga'),
+        ('it', 'it'),
+        ('ja', 'ja'),
+        ('jw', 'jw'),
+        ('kn', 'kn'),
+        ('kk', 'kk'),
+        ('km', 'km'),
+        ('ko', 'ko'),
+        ('ku', 'ku'),
+        ('ky', 'ky'),
+        ('lo', 'la'),
+        ('la', 'la'),
+        ('lv', 'lv'),
+        ('lt', 'lt'),
+        ('lb', 'lb'),
+        ('mk', 'mk'),
+        ('mg', 'mg'),
+        ('ms', 'ms'),
+        ('ml', 'ml'),
+        ('mt', 'mt'),
+        ('mi', 'mi'),
+        ('mr', 'mr'),
+        ('mn', 'mn'),
+        ('my', 'my'),
+        ('ne', 'ne'),
+        ('no', 'no'),
+        ('ps', 'ps'),
+        ('fa', 'fa'),
+        ('pl', 'pl'),
+        ('pt', 'pt'),
+        ('pa', 'pa'),
+        ('ro', 'ro'),
+        ('ru', 'ru'),
+        ('sm', 'sm'),
+        ('gd', 'gd'),
+        ('sr', 'sr'),
+        ('st', 'st'),
+        ('sn', 'sn'),
+        ('sd', 'si'),
+        ('si', 'si'),
+        ('sk', 'sk'),
+        ('sl', 'sl'),
+        ('so', 'so'),
+        ('es', 'es'),
+        ('su', 'su'),
+        ('sw', 'sw'),
+        ('sv', 'sv'),
+        ('tg', 'tg'),
+        ('ta', 'ta'),
+        ('te', 'te'),
+        ('th', 'th'),
+        ('tr', 'tr'),
+        ('uk', 'uk'),
+        ('ur', 'ur'),
+        ('uz', 'uz'),
+        ('vi', 'vi'),
+        ('cy', 'cy'),
+        ('xh', 'xh'),
+        ('yi', 'yi'),
+        ('yo', 'yo'),
+        ('zu', 'zu'),
+        ('fil', 'Fil'),
+        ('he', 'He'),
+    
+    )
+    language = models.CharField(max_length=5, choices=LANG_CHOICES, default='en', blank=True, null=True)
 
     def __str__(self):
         return f'service {self.service_type}, receiver {self.receiver}'
