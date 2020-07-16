@@ -54,13 +54,13 @@ class Recipient(models.Model):
         return f'id {self.userID}, number {self.recipientNumber}'
 
 class Message(models.Model):
-    transactionID = models.UUIDField(default=uuid.uuid4)
+    transactionID = models.CharField(max_length=2000, blank=True, null=True)
+    messageID = models.UUIDField(default=uuid.uuid4)
     grouptoken = models.UUIDField(null=True)
     receiver = models.CharField(max_length=80)
     senderID = models.CharField(max_length=30) 
-    # account_sid = models.CharField(max_length=80, blank=True, null=True)
     date_created = models.DateTimeField(default=timezone.now)
-    content = models.TextField(default="test")
+    content = models.TextField(max_length=500)
     INFOBIP = 'IF'
     TWILLO = 'TW'
     TELESIGN = 'TS'
