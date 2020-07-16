@@ -6,7 +6,6 @@ from django.views.decorators.csrf import csrf_exempt
 @csrf_exempt
 def index(request):
     if request.method == 'POST':
-        pass
         return JsonResponse({"success":"We'd soon be ready"})
     return render(request, "index.html")
 
@@ -14,9 +13,11 @@ def index(request):
 @csrf_exempt
 def bulk(request):
     if request.method == 'POST':
-        pass
         return JsonResponse({"success":"We'd soon be ready"})
     return render(request, "bulk.html")
+
+def create_group(request):
+    return 0
 
 def check_status(request):
     return 0

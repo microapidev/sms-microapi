@@ -109,7 +109,7 @@ $(".send").click(function () {
   event.preventDefault()
   let form_url = $("#form").attr("form-data-url")
   formdata = {}
-  formdata["receiver"] = $('textarea[name=receiver]').val()
+  formdata["groupID"] = $('input[name=groupID]').val()
   formdata["message"] = $('textarea[name=message]').val()
   formdata["senderID"] = $('input[name=senderID]').val()
   formdata["provider"] = $('select[name=provider]').val()
