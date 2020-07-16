@@ -1,12 +1,12 @@
 from django.urls import path
 from .views import SendSingMsgCreate
 from .views import RecipientCreate, RecipientList, RecipientDetail, RecipientsForUser
-from .views import InfobipSendMessage, InfobipSingleMessage, InfobipMessageList, InfobipGroupMessage, InfobipSendMessage2
-from .views import translateMessages, MessageDelete, MessageCounter
-from .views import TeleSignSingleSms, TeleSignMessageList, TeleSignGroupSms, TeleSignTransactionID3
-from .views import send_group_twilio, TwilioSendSms, sms_list
+from .views import InfobipSendMessage, InfobipSingleMessage, InfobipMessageList, InfobipSendMessage2
+from .views import translateMessages, MessageDelete, MessageCounter, TwilioSendSms, sms_list
+from .views import TeleSignSingleSms, TeleSignMessageList, TeleSignTransactionID3
+from .views import  InfobipGroupMessage, TeleSignGroupSms #,send_group_twilio
 from .views import GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupDelete, GroupNumbersList, GroupNumbersBySenderList, GroupNumbersCreate, update_group_number, GroupNumbersDetail
-from .views import SmsHistoryList, SmsHistoryDetail
+from .views import SmsHistoryList, SmsHistoryDetail, SendGroupSms
 from django.urls import path
 from .views import create_receipents_details, save_recipients_details  #get_recipient_details
 from rest_framework.schemas.coreapi import AutoSchema
@@ -38,6 +38,7 @@ schema_view = get_schema_view(
 urlpatterns = [
    #sendsms
    path("v2/sms/send_single_msg", SendSingMsgCreate.as_view(), name="send-one-msg"),
+   path("v2/sms/send_group_sms", SendGroupSms.as_view(), name="send-group-sms"),
    #messageDelete
    path("v1/sms/message/delete/<transactionID>", MessageDelete.as_view(), name="delete-message"),
    path("v1/sms/message/<userID>", MessageCounter.as_view(), name="count-message"),
@@ -60,14 +61,14 @@ urlpatterns = [
    #Infobip Views
    path("v1/sms/infobip/send_sms", InfobipSendMessage.as_view(), name="infobip-send-message"),
    # path("v1/sms/infobip/send_sms2", InfobipSendMessage2.as_view(), name="infobip-send-message2"),
-   # path("v1/sms/infobip/send_group_sms", InfobipGroupMessage.as_view(), name="infobip-group-message"),
+   path("v1/sms/infobip/send_group_sms", InfobipGroupMessage.as_view(), name="infobip-group-message"),
    path("v1/sms/infobip/view_all_sms", InfobipMessageList.as_view(), name="infobip-sent-messages"),
    path("v1/sms/infobip/view_all_sms/<str:senderID>", InfobipSingleMessage.as_view(), name="infobip-sent-messages"),
    
    #Twillo Views path
    path('v1/sms/Twillo_sms_history', sms_list),
    path('v1/sms/twilio_send_single', TwilioSendSms.as_view(), name="sendsms"),
-   path('v1/sms/twilio_send_group', send_group_twilio),
+   #path('v1/sms/twilio_send_group', send_group_twilio),
 
 
    #swagger docs and etc
