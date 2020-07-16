@@ -32,7 +32,7 @@ class MessageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Message
-        fields = ["senderID", "content", "receiver", "service_type", "messageStatus", "transactionID", "date_created","grouptoken", "language", "messageID"]
+        fields = ["senderID", "content", "receiver", "service_type", "messageStatus", "date_created","grouptoken", "language", "messageID"]
 
 
 class GroupSerializer(serializers.ModelSerializer):
