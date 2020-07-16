@@ -4,7 +4,7 @@ from .views import RecipientCreate, RecipientList, RecipientDetail, RecipientsFo
 from .views import InfobipSendMessage, InfobipSingleMessage, InfobipMessageList, InfobipSendMessage2
 from .views import translateMessages, MessageDelete, MessageCounter, TwilioSendSms, sms_list
 from .views import TeleSignSingleSms, TeleSignMessageList, TeleSignTransactionID3
-from .views import send_group_twilio, InfobipGroupMessage, TeleSignGroupSms
+from .views import  InfobipGroupMessage, TeleSignGroupSms #,send_group_twilio
 from .views import GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupDelete, GroupNumbersList, GroupNumbersBySenderList, GroupNumbersCreate, update_group_number, GroupNumbersDetail
 from .views import SmsHistoryList, SmsHistoryDetail
 from django.urls import path
@@ -67,7 +67,7 @@ urlpatterns = [
    #Twillo Views path
    path('v1/sms/Twillo_sms_history', sms_list),
    path('v1/sms/twilio_send_single', TwilioSendSms.as_view(), name="sendsms"),
-   path('v1/sms/twilio_send_group', send_group_twilio),
+   #path('v1/sms/twilio_send_group', send_group_twilio),
 
 
    #swagger docs and etc
