@@ -827,16 +827,18 @@ class GroupNumbersCreate(generics.CreateAPIView):
                 duplicates.append(f"{number} already exists in this group")
             else:
                 # self.create(request, *args, **kwargs)
-                request.data._mutable = True
+                request.data._mutable = True 
                 request.data["group"] = group.id
                 request.data["phoneNumbers"] = number
                 serializer = GroupNumbersPrimarySerializer(data=request.data)
-                request.data._mutable = False
+                
                 print(serializer)
                 if serializer.is_valid():
                     serializer.save()
-                    print("yeah")                 
+                    print("yeah")            
+            
         request.data["phoneNumbers"] = phoneNumbers
+        request.data._mutable = False
         return Response(
                 {
                     "Success": "True", 
