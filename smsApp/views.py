@@ -39,9 +39,15 @@ def translateMsg(content, lang='en'):
         'translate.google.co.kr',
     ])
 
-    translated = translator.translate(text=content, dest=lang)
-    content = translated.text
-    return content
+    if lang is None:
+        lang = 'en'
+        translated = translator.translate(text=content, dest=lang)
+        content = translated.text
+        return content
+    else:
+        translated = translator.translate(text=content, dest=lang)
+        content = translated.text
+        return content
 
 #USING CBV TO POST SMS
 #Defining a new API that a user can send a single sms while specifying services
@@ -87,8 +93,8 @@ class SendSingMsgCreate(generics.CreateAPIView):
                 if serializer_message.is_valid():
                     try:
                         value = serializer_message.save()
-                        original_txt.append(content)
-                        if language != 'en':
+                        if (language != 'en' or language != None or language != " " ):
+                            original_txt.append(content)
                             content = translateMsg(content, language)
                             
                             message = client.messages.create(
@@ -103,6 +109,7 @@ class SendSingMsgCreate(generics.CreateAPIView):
                                 body=content
                             )
                         value.messageStatus = "S"
+                        value.transactionID= message.sid
                         value.save()
                         if len(original_txt) != 0:
                             return Response({
@@ -129,6 +136,7 @@ class SendSingMsgCreate(generics.CreateAPIView):
 
                     except TwilioRestException as e:
                         value.messageStatus = "F"
+                        value.transactionID = "500-F"
                         value.save()
                         return Response({
                             'success': 'false',
@@ -166,8 +174,8 @@ class SendSingMsgCreate(generics.CreateAPIView):
                 # payload = {"from": f"{senderID}", "to":f"{receiver}", "text": f"{content}"}
                 if serializer.is_valid():
                     value = serializer.save()
-                    original_txt.append(content)
-                    if language != 'en':
+                    if (language != 'en' or language != None or language != ""):
+                        original_txt.append(content)
                         content = translateMsg(content, language)
                         data = {
                             "from": senderID,
@@ -199,6 +207,7 @@ class SendSingMsgCreate(generics.CreateAPIView):
                     data = res.read().decode('utf-8')
                     data = json.loads(data)
                     if res.status == 200:
+                        value.transactionID = data["messages"][0]["messageId"]
                         value.save()
                     # print(data)
                     if len(original_txt) != 0:
@@ -219,8 +228,8 @@ class SendSingMsgCreate(generics.CreateAPIView):
                 headers = {
                     'Accept': 'application/json',
                     'Content-Type': 'application/x-www-form-urlencoded'}
-                original_txt.append(content)
-                if language != 'en':
+                if (language != 'en' or language != None or language != ""):
+                    original_txt.append(content)
                     content = translateMsg(content, language)
                     data = {
                         'phone_number': receiver,
@@ -268,7 +277,7 @@ class SendSingMsgCreate(generics.CreateAPIView):
                         value.service_type = 'TS'
                         value.messageStatus = 'F'
                         value.receiver = receiver
-                        value.transactionID = uuid.uuid4()
+                        value.transactionID = "500-F"
                         value.save()
                         return Response({
                             "Success": False,
