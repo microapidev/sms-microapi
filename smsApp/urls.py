@@ -1,10 +1,10 @@
 from django.urls import path
 from .views import SendSingMsgCreate
 from .views import RecipientCreate, RecipientList, RecipientDetail, RecipientsForUser
-from .views import InfobipSendMessage, InfobipSingleMessage, InfobipMessageList, InfobipGroupMessage, InfobipSendMessage2
+from .views import InfobipSendMessage, InfobipSingleMessage, InfobipMessageList,  InfobipSendMessage2 #InfobipGroupMessage,
 from .views import translateMessages, MessageDelete, MessageCounter
-from .views import TeleSignSingleSms, TeleSignMessageList, TeleSignGroupSms, TeleSignTransactionID3
-from .views import send_group_twilio, TwilioSendSms, sms_list
+from .views import TeleSignSingleSms, TeleSignMessageList, TeleSignTransactionID3 #TeleSignGroupSms, 
+from .views import TwilioSendSms, sms_list, SendGroupSms #send_group_twilio,  
 from .views import GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupDelete, GroupNumbersList, GroupNumbersBySenderList, GroupNumbersCreate, update_group_number, GroupNumbersDetail, TransactionID
 from .views import SmsHistoryList, SmsHistoryDetail
 from django.urls import path
@@ -41,6 +41,7 @@ urlpatterns = [
 
    #sendsms
    path("v2/sms/send_single_msg", SendSingMsgCreate.as_view(), name="send-one-msg"),
+   path("v2/sms/send_group_sms", SendGroupSms.as_view(), name="send-group-sms"),
    #messageDelete
    path("v1/sms/message/delete/<transactionID>", MessageDelete.as_view(), name="delete-message"),
    path("v1/sms/message/<userID>", MessageCounter.as_view(), name="count-message"),
@@ -55,7 +56,7 @@ urlpatterns = [
    path('v1/sms/sms_history/<str:senderID>', SmsHistoryList.as_view(), name="history"),
 
    #TeleSign Views
-   path("v1/sms/telesign/group_sms", TeleSignGroupSms.as_view(), name="telesign-group-message"),
+   # path("v1/sms/telesign/group_sms", TeleSignGroupSms.as_view(), name="telesign-group-message"),
    path("v1/sms/telesign/send_sms", TeleSignSingleSms.as_view(), name="telesign-send-message"),
    path("v1/sms/telesign/view_all_sms", TeleSignMessageList.as_view(), name="telesign-sent-messages"),
    path("v1/sms/telesign/<transactionID>", TeleSignTransactionID3.as_view(), name="telesign-sent-messages3"),
@@ -70,7 +71,7 @@ urlpatterns = [
    #Twillo Views path
    path('v1/sms/Twillo_sms_history', sms_list),
    path('v1/sms/twilio_send_single', TwilioSendSms.as_view(), name="sendsms"),
-   path('v1/sms/twilio_send_group', send_group_twilio),
+   #path('v1/sms/twilio_send_group', send_group_twilio),
 
 
    #swagger docs and etc
