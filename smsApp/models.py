@@ -80,9 +80,13 @@ class Message(models.Model):
     FAILED = 'F'
     RECEIVED = 'R'
     SCHEDULED = 'SC'
+    PENDING= 'P'
+    UNDELIVERED = 'U'
     MESSAGE_CHOICES = [
         (DRAFT, 'D'),
+        (PENDING, 'P'),
         (SENT, 'S'),
+        (UNDELIVERED, 'U'),
         (FAILED, 'F'),       
 		(RECEIVED, 'R'),    
 		(SCHEDULED, 'SC'),
