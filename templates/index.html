@@ -1,0 +1,63 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>HNG - Airtime Transfer</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'style.css'%}">
+    <link rel="shortcut icon" type="image/icon" href="{% static 'images/favicon.png'%}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+</head>
+
+<body >
+    <div style="background:url('{% static 'images/body.png'%}') no-repeat; background-position: 50% 50%; background-attachment: fixed; width:100%; min-height: 1000px;">
+        <div class="container">
+            <div class="img-container">
+                <a href="/"><img alt="piggy" src="{% static 'images/logo.png' %}" width="250px"></a>
+                <div style="float: right; margin-right:15px;">
+                    <button class="btn" style="padding:10px 20px;" onclick="location.href='{%url 'bulk'%}'">Bulk</button>
+                </div>
+            </div>
+            <div class="form-container">
+                <form form-data-url="{%url 'index'%}" method="POST">
+                    {%csrf_token%}
+                    <label for="fullname">SenderID</label>
+                    <label for="email">Service Provider</label>
+                    <label for="tel">Reciever</label>
+                    <label for="tel">Message</label>
+                    <br>
+                    <div class="del">
+                        <input id="phone" name="senderID" placeholder="Name" type="text" required>
+                        <select id="provider" name="provider" required>
+                            <option> Select a Service Provider </option>
+                            <option> TWILIO  </option>
+                            <option> TELESIGN </option>
+                            <option> INFOBIP </option>
+                        </select>
+                        <input id="phone" name="receiver" placeholder="+234 Phone" type="tel" required>
+                        <textarea id="amount" rows="10" name="message" placeholder="Enter Message"></textarea>
+                        <div class="clear"></div>
+                        
+                    </div>
+                    <div style="text-align: right; ">
+                        <button style="width:30%" class="btnss"> SEND </button>
+                    </div>
+                    
+                </form>
+
+                <div class="clear"></div>
+            </div>
+
+            <div class="alert-message-container">
+            </div>
+            <div id="alert-area" class="alert-area"></div>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+    <script src="{%static 'js/script.js'%}"></script>
+
+</body>
+
+</html>
