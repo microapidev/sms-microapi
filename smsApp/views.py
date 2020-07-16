@@ -108,7 +108,16 @@ class SendSingMsgCreate(generics.CreateAPIView):
                                 to=receiver,
                                 body=content
                             )
-                        value.messageStatus = "S"
+                        if (message.status == 'sent'):
+                            value.messageStatus = "S"
+                        elif (message.status == 'queued'):
+                            value.messageStatus = "P"
+                        elif (message.status == 'failed'):
+                            value.messageStatus = "F"
+                        elif (message.status == 'delivered'):
+                            value.messageStatus = "R"
+                        else:
+                            value.messageStatus = "U"
                         value.transactionID= message.sid
                         value.save()
                         if len(original_txt) != 0:
