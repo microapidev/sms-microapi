@@ -81,13 +81,8 @@ $(".btnss").click(function () {
     type: "POST",
     data: formdata,
     success: function (data) {
-      if (data.fail) {
-        for (i of data.fail)
-          alertbox.show(i);
-        $("form")[0].reset()
-      }
-      if (data.success) {
-        alertbox.show(data.success);
+      if (data.details) {
+        alertbox.show(data.details);
         $("form")[0].reset()
       }
     },

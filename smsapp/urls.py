@@ -20,5 +20,6 @@ from sms.views import *
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("", index, name="index"),
-    path("bulk", bulk, name="bulk")
+    path("bulk", bulk, name="bulk"),
+    path("create_group", create_group, name="group"),
 ]

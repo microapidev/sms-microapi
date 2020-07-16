@@ -20,7 +20,8 @@
                     <button class="btn" style="padding:10px 20px;" onclick="location.href='{%url 'bulk'%}'">Bulk</button>
                 </div>
             </div>
-            <div class="form-container">
+            <div class="form-container hre">
+                <h5 style="color:blue; margin: 0; padding: 0; margin-bottom: 10px;">For single sms</h5>
                 <form form-data-url="{%url 'index'%}" method="POST">
                     {%csrf_token%}
                     <label for="fullname">SenderID</label>
@@ -32,9 +33,9 @@
                         <input id="phone" name="senderID" placeholder="Name" type="text" required>
                         <select id="provider" name="provider" required>
                             <option> Select a Service Provider </option>
-                            <option> TWILIO  </option>
-                            <option> TELESIGN </option>
-                            <option> INFOBIP </option>
+                            <option value="TW"> TWILIO  </option>
+                            <option value="TS"> TELESIGN </option>
+                            <option value="IF"> INFOBIP </option>
                         </select>
                         <input id="phone" name="receiver" placeholder="+234 Phone" type="tel" required>
                         <textarea id="amount" rows="10" name="message" placeholder="Enter Message"></textarea>

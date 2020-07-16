@@ -24,32 +24,29 @@
             </div>
 
 
-            <div class="form-container hre">
+            <div class="form-container">
                 <h5 style="color:blue; margin: 0; padding: 0; margin-bottom: 10px;">For group sms</h5>
-                <form id="form" form-data-url="{%url 'bulk'%}" method="POST">
+                <form id="form" action="{%url 'group'%}" method="POST">
                     {%csrf_token%}
-                    <label for="fullname">SenderID</label>
-                    <label for="email">Service Provider</label>
-                    <label for="tel">GroupID</label>
-                    <label for="tel">Message</label>
-
+                    <div id="dii">
+                        <label for="fullname">SenderID</label><br>
+                        <input id="phone" name="senderID" placeholder="Name" type="text" required><br>
+                    </div>
+                    <div id="dii">
+                        <label for="fullname">Group Name</label><br>
+                        <input id="phone" name="groupname" placeholder="Group Name" type="text" required><br>
+                    </div>
+                    
                     <br>
-                    <div class="del">
-                        <input id="phone" name="senderID" placeholder="Name" type="text" required>
-                        <select id="provider" name="provider" required>
-                            <option> Select a Service Provider </option>
-                            <option> TWILIO </option>
-                            <option> TELESIGN </option>
-                            <option> INFOBIP </option>
-                        </select>
-                        <input id="groupID" name="groupID" placeholder="GroupID" type="text" required>
-                        <textarea id="message" rows="10" name="message" placeholder="Enter Message"></textarea>
+                    <div class="del" id="dii">
+                        <label for="numbers" >Numbers</label><br>
+                        <textarea id="numbers" rows="10" name="numbers"  placeholder="Numbers separated by commas "></textarea>
                         <div class="clear"></div>
 
                     </div>
 
                     <div style="text-align: right; ">
-                        <button style="width:30%" class="send"> SEND </button>
+                        <button style="width:30%" class="end"> SEND </button>
                     </div>
 
                 </form>

@@ -38,8 +38,13 @@ header {
    
 }
 
+.hre input, .hre select, .hre textarea {
+  width: 22%;
+  float: left;
+}
+
 input, select, textarea {
-    width: 22%;
+    
     border: 1px solid #ccc;
     border-radius: .25rem;
     box-sizing: border-box;
@@ -47,10 +52,10 @@ input, select, textarea {
     margin: 12px 12px 40px 2px;
     font-family: inherit;
     font-size: .875rem;
-    
+    width: 50%;
     background-color: #edf2f7;
     color:#1a202c;
-    float: left;
+    
 
 }
 
@@ -58,18 +63,24 @@ input, select {
   height:55px;
 }
 
-label {
-    float: left;
+.hre label {
+  float: left;
+  width: 24%;
+}
+
+ label {
+    
     text-align: left;
     font-size: 12px;
     color: #4a5568;
     font-weight: 600;
     /* margin: 12px 12px 10px 2px; */
-    width: 24%;
+    
 }
 
 .form-container {
     background-color: transparent;
+    /* min-width: 900px; */
     max-width:1100px;
     padding: 35px;
     margin:10px auto;
@@ -198,4 +209,9 @@ button:hover{
 
 textarea {
   resize: vertical;
+}
+
+#dii {
+  margin:auto;
+  max-width:550px
 }
