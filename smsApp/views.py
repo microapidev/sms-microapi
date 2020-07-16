@@ -4,7 +4,7 @@ from django.shortcuts import render, get_object_or_404
 from rest_framework.parsers import JSONParser
 # from smsApp.models import user
 # from smsApp.serializers import UserSerializer
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
 from rest_framework.views import APIView
@@ -1542,27 +1542,28 @@ class TransactionID(APIView):
         # if dbTransID.exists():
         try:
             dbTransID = Message.objects.get(messageID=transactionid)
+            transid = dbTransID.transactionID
             #check if status is not pending and display status
-            if dbTransID.messageStatus != "D":
+            if dbTransID.messageStatus != "SC":
                 return Response({"Success": True, "Message": "Transaction status retrieved", "Data": dbTransID.messageStatus, 'status': status.HTTP_200_OK})
             #check serviceType and connect to endpoint
             elif dbTransID.service_type == "TS":
                 api_key = settings.TELESIGN_API
                 customer_id = settings.TELESIGN_CUST
-                url = 'https://rest-api.telesign.com/v1/messaging' + 'transactionid'
+                url = 'https://rest-api.telesign.com/v1/messaging/' + 'transid'
                 headers = {'Accept' : 'application/json', 'Content-Type' : 'application/x-www-form-urlencoded'}
-                data = {'reference_id': transactionid}
-                query_infobip = requests.post(url, auth=HTTPBasicAuth(customer_id, api_key), data=data, headers=headers)
-                response = query_infobip.json()
-                if response['status']['code'] == 290:
-                    msgstat.append(response)
-                    value = serializer.save()
-                    value.service_type = 'TS'
-                    value.messageStatus = 'S'
-                    value.receiver= receiver
-                    value.grouptoken= token
-                    value.transactionID = response['reference_id']
-                    value.save()
+                payload = ""
+                headers = {'content-type': 'application/x-www-form-urlencoded'}
+                response = requests.request("GET", url, data=payload, headers=headers)
+                print(response.text)
+
+                # data = {'reference_id': transactionid}
+                # send = requests.request(url, 
+                #                     auth=HTTPBasicAuth(customer_id, api_key), 
+                #                     data=data, 
+                #                     headers=headers)
+                #     # value = serializer_message.save()
+                #     response = send.json()
             elif dbTransID.filter(service_type) == "IF":
                 api_key = settings.TELESIGN_API
                 customer_id = settings.TELESIGN_CUST
@@ -1594,5 +1595,3 @@ class TransactionID(APIView):
                 return Response({"Success": True, "Message": "No Recipients For User", "Data": [request.data], 'status': status.HTTP_204_NO_CONTENT})
         except ObjectDoesNotExist:
             return Response({"Failure": True, "Message": "TransactionID not found", "Data": [], 'status': status.HTTP_400_BAD_REQUEST})
-        # else:
-        #     return Response({"Failure": True, "Message": "TransactionID not found", "Data": [], 'status': status.HTTP_400_BAD_REQUEST})
