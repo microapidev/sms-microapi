@@ -1538,57 +1538,61 @@ class TransactionID(APIView):
     serializer = MessageSerializer
 
     def get(self, request, transactionid, format=None):
-        dbTransID = Message.objects.filter(transactionID=transactionid)
-        if dbTransID.exists():
+        # dbTransID = Message.objects.get(messageID=transactionid)
+        # if dbTransID.exists():
+        try:
+            dbTransID = Message.objects.get(messageID=transactionid)
             #check if status is not pending and display status
-            if dbTransID.filter(messageStatus != "P"):
-                return Response({"Success": True, "Message": "Transaction Retrieved", "Data": serializer.data, 'status': status.HTTP_200_OK})
+            if dbTransID.messageStatus != "D":
+                return Response({"Success": True, "Message": "Transaction status retrieved", "Data": dbTransID.messageStatus, 'status': status.HTTP_200_OK})
             #check serviceType and connect to endpoint
-            elif dbTransID.filter(service_type == "TS"):
-                api_key = settings.TELESIGN_API
-                customer_id = settings.TELESIGN_CUST
-                url = 'https://rest-api.telesign.com/v1/messaging' + 'transactionid'
-                headers = {'Accept' : 'application/json', 'Content-Type' : 'application/x-www-form-urlencoded'}
-                data = {'reference_id': transactionid}
-                query_infobip = requests.post(url, auth=HTTPBasicAuth(customer_id, api_key), data=data, headers=headers)
-                response = query_infobip.json()
-                if response['status']['code'] == 290:
-                    msgstat.append(response)
-                    value = serializer.save()
-                    value.service_type = 'TS'
-                    value.messageStatus = 'S'
-                    value.receiver= receiver
-                    value.grouptoken= token
-                    value.transactionID = response['reference_id']
-                    value.save()
-            elif dbTransID.filter(service_type) == "IF":
-                api_key = settings.TELESIGN_API
-                customer_id = settings.TELESIGN_CUST
-                url = 'https://rest-api.telesign.com/v1/messaging' + 'transactionid'
-                headers = {'Accept' : 'application/json', 'Content-Type' : 'application/x-www-form-urlencoded'}
-                data = {'reference_id': transactionid}
-                query_infobip = requests.post(url, auth=HTTPBasicAuth(customer_id, api_key), data=data, headers=headers)
-                response = query_infobip.json()
-                if response['status']['code'] == 290:
-                    msgstat.append(response)
-                    value = serializer.save()
-                    value.service_type = 'TS'
-                    value.messageStatus = 'S'
-                    value.receiver= receiver
-                    value.grouptoken= token
-                    value.transactionID = response['reference_id']
-                    value.save()
-                else:
-                    value = serializer.save()
-                    value.messageStatus = response['status']['code']
-                    value.save()
-                    msgstat.append(response)
-                    value = serializer.save()
-                    value.service_type = 'TS'
-                    value.messageStatus = 'F'
-                    value.receiver= receiver
-                    # value.transactionID = response['reference_id']
-                    value.save()
-                return Response({"Success": True, "Message": "No Recipients For User", "Data": [request.data], 'status': status.HTTP_204_NO_CONTENT})
-        else:
+            # elif dbTransID.filter(service_type == "TS"):
+            #     api_key = settings.TELESIGN_API
+            #     customer_id = settings.TELESIGN_CUST
+            #     url = 'https://rest-api.telesign.com/v1/messaging' + 'transactionid'
+            #     headers = {'Accept' : 'application/json', 'Content-Type' : 'application/x-www-form-urlencoded'}
+            #     data = {'reference_id': transactionid}
+            #     query_infobip = requests.post(url, auth=HTTPBasicAuth(customer_id, api_key), data=data, headers=headers)
+            #     response = query_infobip.json()
+            #     if response['status']['code'] == 290:
+            #         msgstat.append(response)
+            #         value = serializer.save()
+            #         value.service_type = 'TS'
+            #         value.messageStatus = 'S'
+            #         value.receiver= receiver
+            #         value.grouptoken= token
+            #         value.transactionID = response['reference_id']
+            #         value.save()
+            # elif dbTransID.filter(service_type) == "IF":
+            #     api_key = settings.TELESIGN_API
+            #     customer_id = settings.TELESIGN_CUST
+            #     url = 'https://rest-api.telesign.com/v1/messaging' + 'transactionid'
+            #     headers = {'Accept' : 'application/json', 'Content-Type' : 'application/x-www-form-urlencoded'}
+            #     data = {'reference_id': transactionid}
+            #     query_infobip = requests.post(url, auth=HTTPBasicAuth(customer_id, api_key), data=data, headers=headers)
+            #     response = query_infobip.json()
+            #     if response['status']['code'] == 290:
+            #         msgstat.append(response)
+            #         value = serializer.save()
+            #         value.service_type = 'TS'
+            #         value.messageStatus = 'S'
+            #         value.receiver= receiver
+            #         value.grouptoken= token
+            #         value.transactionID = response['reference_id']
+            #         value.save()
+            #     else:
+            #         value = serializer.save()
+            #         value.messageStatus = response['status']['code']
+            #         value.save()
+            #         msgstat.append(response)
+            #         value = serializer.save()
+            #         value.service_type = 'TS'
+            #         value.messageStatus = 'F'
+            #         value.receiver= receiver
+            #         # value.transactionID = response['reference_id']
+            #         value.save()
+            #     return Response({"Success": True, "Message": "No Recipients For User", "Data": [request.data], 'status': status.HTTP_204_NO_CONTENT})
+        except ObjectDoesNotExist:
             return Response({"Failure": True, "Message": "TransactionID not found", "Data": [], 'status': status.HTTP_400_BAD_REQUEST})
+        # else:
+        #     return Response({"Failure": True, "Message": "TransactionID not found", "Data": [], 'status': status.HTTP_400_BAD_REQUEST})

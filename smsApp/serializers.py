@@ -28,6 +28,7 @@ class MessageSerializer(serializers.ModelSerializer):
     date_created = serializers.CharField(read_only=True)
     messageStatus = serializers.ChoiceField(choices=['D', 'S','F','R','SC'], read_only=True)
     language = serializers.ChoiceField(choices=Message.LANG_CHOICES, default='en', required=False)
+    transactionID = serializers.CharField(read_only=True)
     messageID = serializers.UUIDField(format='hex_verbose', initial=uuid.uuid4, read_only=True)
 
     class Meta:
