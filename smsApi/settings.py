@@ -17,7 +17,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']  ##allows all hosts
 
-# add twillio sid , authentication token and your twilio number
+
+
+#add twillio sid , authentication token and your twilio number
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID") # obtained from twilio.com/console 
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN") # also obtained from twilio.com/console 
 TWILIO_NUMBER = os.getenv("TWILIO_NUMBER")  # use the number you received when signing up or buy a new number 
