@@ -6,7 +6,7 @@ from .views import translateMessages, MessageDelete, MessageCounter, TwilioSendS
 from .views import TeleSignSingleSms, TeleSignMessageList, TeleSignTransactionID3
 from .views import  InfobipGroupMessage, TeleSignGroupSms #,send_group_twilio
 from .views import GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupDelete, GroupNumbersList, GroupNumbersBySenderList, GroupNumbersCreate, update_group_number, GroupNumbersDetail
-from .views import SmsHistoryList, SmsHistoryDetail
+from .views import SmsHistoryList, SmsHistoryDetail, SendGroupSms
 from django.urls import path
 from .views import create_receipents_details, save_recipients_details  #get_recipient_details
 from rest_framework.schemas.coreapi import AutoSchema
