@@ -38,6 +38,7 @@ schema_view = get_schema_view(
 urlpatterns = [
    #sendsms
    path("v2/sms/send_single_msg", SendSingMsgCreate.as_view(), name="send-one-msg"),
+   path("v2/sms/send_group_sms", SendGroupSms.as_view(), name="send-group-sms"),
    #messageDelete
    path("v1/sms/message/delete/<transactionID>", MessageDelete.as_view(), name="delete-message"),
    path("v1/sms/message/<userID>", MessageCounter.as_view(), name="count-message"),
