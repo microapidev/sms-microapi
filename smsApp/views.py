@@ -82,7 +82,7 @@ class SendSingMsgCreate(generics.CreateAPIView):
             
             if (service_type == 'TW'):
                 
-                message_dict = {'senderID':senderID, 'service_type':service_type, 'receiver':receiver, 'content':content, 'language':language}
+                message_dict = {'senderID':senderID, 'service_type':service_type, 'receiver':receiver, 'content':content}
 
 
                 serializer_message = MessageSerializer(data=message_dict)
