@@ -37,7 +37,7 @@ schema_view = get_schema_view(
 
 urlpatterns = [
    #MessageStatus
-   path("v2/sms/messagestatus/<str:transactionid>", TransactionID.as_view(), name="message-status"),
+   path("v2/sms/messagestatus/<str:msgID>", TransactionID.as_view(), name="message-status"),
 
    #sendsms
    path("v2/sms/send_single_msg", SendSingMsgCreate.as_view(), name="send-one-msg"),
