@@ -3,7 +3,7 @@ from .views import SendSingMsgCreate, SendGroupSms
 from .views import RecipientCreate, RecipientList, RecipientDetail, RecipientsForUser
 
 from .views import InfobipSendMessage, InfobipSingleMessage, InfobipMessageList,  InfobipSendMessage2 #InfobipGroupMessage
-from .views import TwilioSendSms, sms_list, send_group_twilio
+from .views import TwilioSendSms, sms_list 
 from .views import GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupDelete, GroupNumbersList, GroupNumbersBySenderList, GroupNumbersCreate, update_group_number, GroupNumbersDetail, TransactionID
 
 from .views import InfobipSendMessage, InfobipSingleMessage, InfobipMessageList, InfobipSendMessage2
