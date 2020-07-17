@@ -4,7 +4,7 @@ from .views import RecipientCreate, RecipientList, RecipientDetail, RecipientsFo
 from .views import InfobipSendMessage, InfobipSingleMessage, InfobipMessageList, InfobipSendMessage2
 from .views import translateMessages, MessageDelete, MessageCounter, TwilioSendSms, sms_list
 from .views import TeleSignSingleSms, TeleSignMessageList, TeleSignTransactionID3
-from .views import  InfobipGroupMessage, TeleSignGroupSms #,send_group_twilio
+#from .views import  InfobipGroupMessage, TeleSignGroupSms,send_group_twilio
 from .views import GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupDelete, GroupNumbersList, GroupNumbersBySenderList, GroupNumbersCreate, update_group_number, GroupNumbersDetail
 from .views import SmsHistoryList, SmsHistoryDetail, SendGroupSms
 from django.urls import path
@@ -38,7 +38,7 @@ schema_view = get_schema_view(
 urlpatterns = [
    #sendsms
    path("v2/sms/send_single_msg", SendSingMsgCreate.as_view(), name="send-one-msg"),
-   path("v2/sms/send_group_sms", SendGroupSms.as_view(), name="send-group-sms"),
+#   path("v2/sms/send_group_sms", SendGroupSms.as_view(), name="send-group-sms"),
    #messageDelete
    path("v1/sms/message/delete/<transactionID>", MessageDelete.as_view(), name="delete-message"),
    path("v1/sms/message/<userID>", MessageCounter.as_view(), name="count-message"),
@@ -53,7 +53,7 @@ urlpatterns = [
    path('v1/sms/sms_history/<str:senderID>', SmsHistoryList.as_view(), name="history"),
 
    #TeleSign Views
-   path("v1/sms/telesign/group_sms", TeleSignGroupSms.as_view(), name="telesign-group-message"),
+#   path("v1/sms/telesign/group_sms", TeleSignGroupSms.as_view(), name="telesign-group-message"),
    path("v1/sms/telesign/send_sms", TeleSignSingleSms.as_view(), name="telesign-send-message"),
    path("v1/sms/telesign/view_all_sms", TeleSignMessageList.as_view(), name="telesign-sent-messages"),
    path("v1/sms/telesign/<transactionID>", TeleSignTransactionID3.as_view(), name="telesign-sent-messages3"),
@@ -61,7 +61,7 @@ urlpatterns = [
    #Infobip Views
    path("v1/sms/infobip/send_sms", InfobipSendMessage.as_view(), name="infobip-send-message"),
    # path("v1/sms/infobip/send_sms2", InfobipSendMessage2.as_view(), name="infobip-send-message2"),
-   path("v1/sms/infobip/send_group_sms", InfobipGroupMessage.as_view(), name="infobip-group-message"),
+#   path("v1/sms/infobip/send_group_sms", InfobipGroupMessage.as_view(), name="infobip-group-message"),
    path("v1/sms/infobip/view_all_sms", InfobipMessageList.as_view(), name="infobip-sent-messages"),
    path("v1/sms/infobip/view_all_sms/<str:senderID>", InfobipSingleMessage.as_view(), name="infobip-sent-messages"),
    
