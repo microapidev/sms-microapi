@@ -12,8 +12,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 
-SECRET_KEY = os.environ.get('SECRET_KEY')
-# SECRET_KEY = 'fjfskjfksdnfjfd'
+# SECRET_KEY = os.environ.get('SECRET_KEY')
+SECRET_KEY = 'fjfskjfksdnfjfd'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -28,6 +28,11 @@ TWILIO_NUMBER = os.getenv("TWILIO_NUMBER")  # use the number you received when s
 INFOBIP_USERNAME = os.getenv("INFOBIP_USERNAME")
 INFOBIP_PASSWORD = os.getenv("INFOBIP_PASSWORD")
 INFOBIP_APIKEY = os.getenv("INFOBIP_APIKEY")
+
+#celery config
+CELERY_BROKER_URL = 'amqp://rabbitmq'
+# CELERY_RESULT_BACKEND = 'django-db'
+CELERY_RESULT_BACKEND = 'db+sqlite:///db.sqlite3'
 
 # add Telesign credentials
 TELESIGN_API = os.getenv("TELESIGN_API")
@@ -52,6 +57,8 @@ INSTALLED_APPS = [
     'broadcast',
     'drf_yasg',
     'coreapi',
+    'django_celery_results',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [

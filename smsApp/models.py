@@ -57,18 +57,19 @@ class Message(models.Model):
     transactionID = models.UUIDField(default=uuid.uuid4)
     grouptoken = models.UUIDField(null=True)
     receiver = models.CharField(max_length=80)
-    senderID = models.CharField(max_length=30) 
+    senderID = models.CharField(max_length=30)
+    scheduled_task_id= models.CharField(null=True, max_length=30)
     # account_sid = models.CharField(max_length=80, blank=True, null=True)
     date_created = models.DateTimeField(auto_now_add=True)
     content = models.TextField(default="test")
-    INFOBIP = 'IF'
+    INFOBIP = 'IF' 
     TWILLO = 'TW'
     TELESIGN = 'TS'
     MSG91 = 'MS'
     SERVICE_CHOICES = [
         (INFOBIP, 'IF'),
         (TWILLO, 'TW'),
-        (TELESIGN, 'TS'),       
+        (TELESIGN, 'TS'),
 		(MSG91, 'MS'),
     ]
     service_type = models.CharField(
@@ -95,7 +96,18 @@ class Message(models.Model):
     dateScheduled = models.DateTimeField(null=True)
 
     def __str__(self):
-        return f'service {self.service_type}, receiver {self.receiver}'
+        return f'''service-{self.service_type}, 
+                    receiver-{self.receiver}, 
+                    transactionID-{self.transactionID}, 
+                    groutoken-{self.grouptoken}, 
+                    senderID-{self.senderID},
+                    scheduled_task_id-{self.scheduled_task_id},
+                    date_created-{self.date_created},
+                    content-{self.content},
+                    messageStatus{self.messageStatus},
+                    dateScheduled{self.dateScheduled}
+                    
+                     '''
 
 
 # class Media(models.Model):

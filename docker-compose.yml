@@ -11,5 +11,21 @@ services:
         depends_on:
             - rabbitmq
 
+    celery:
+        build: .
+        command: celery -A smsApi worker -l info
+        volumes: 
+            - .:/code
+        depends_on:
+            - rabbitmq
+
+    celery-beat:
+        build: .
+        command: celery -A smsApi beat -l info
+        volumes: 
+            - .:/code
+        depends_on:
+            - rabbitmq
+
     rabbitmq:
         image: rabbitmq:3.7

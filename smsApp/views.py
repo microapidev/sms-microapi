@@ -27,6 +27,8 @@ from .models import Recipient, Message, Group, GroupNumbers
 from .serializers import RecipientSerializer, MessageSerializer, GroupSerializer, GroupNumbersSerializer, GroupNumbersPrimarySerializer
 from googletrans import Translator
 import uuid
+from .tasks import send_group_sms
+from smsApi.celery import app as celeryTaskapp
 
 
 # Create your views here.
@@ -1060,51 +1062,6 @@ class TeleSignMessageList(APIView):
             "Service_Type": "TELESIGN"})
 
 
-# class TeleSignTransactionID1(generics.ListAPIView):
-#     """
-#     This allows view the list of the Infobip Messages Sent by all users.
-#     Format is to be in
-#     {'transactionID':'<a valid transaction id>'}
-#     """
-#     serializer_class = MessageSerializer
-
-#     def get_queryset(self, request, *args, **kwargs):
-#         transactionID = self.kwargs["transactionID"]
-#         uuid_regex = re.complie(
-#             '[0-9a-f]{8}\-[0-9a-f]{4}\-4[0-9a-f]{3}\-[89ab][0-9a-f]{3}\-[0-9a-f]{12}')
-#         if uuid_regex.match(transactionID):
-#             message = get_object_or_404(Message, transactionID=transactionID)
-#             if message:
-#                 return Response({"Success": True, "Message": "Transaction Retrieved", "Data": [request.data], 'status': status.HTTP_302_FOUND})
-#             else:
-#                 return Response({"Success": False, "Message": "Transaction Failed", "Data": [request.data], 'status': status.HTTP_400_BAD_REQUEST})
-#         else:
-#             raise ValidationError(
-#                 'Please enter a proper uuid field, with 32 charcters')
-
-
-# class TeleSignTransactionID2(APIView):
-#     """
-#     This allows view the list of the Infobip Messages Sent by all users.
-#     Format is to be in
-#     {'transactionID':'<a valid transaction id>'}
-#     """
-#     # queryset = Message.objects.filter(service_type='IF')
-#     serializer_class = MessageSerializer
-
-#     def get(self, request, transactionID, format=None):
-#         uuid_regex = re.compile(
-#             '[0-9a-f]{8}\-[0-9a-f]{4}\-4[0-9a-f]{3}\-[89ab][0-9a-f]{3}\-[0-9a-f]{12}')
-#         if uuid_regex.match(transactionID) is False:
-#             return Response({"Success": False, "Message": "Transaction Failed", "Data": "UUID needed", 'status': status.HTTP_400_BAD_REQUEST})
-#         else:
-#             transaction = get_object_or_404(
-#                 Message, transactionID=transactionID)
-#             serializer_message = MessageSerializer(
-#                 transaction, many=True, raise_exception=True)
-#             return Response({"Success": True, "Message": "Transaction Retrieved", "Data": serializer_message.data, 'status': status.HTTP_302_FOUND})
-
-
 class TeleSignTransactionID3(generics.ListAPIView):
     """
     This allows view the list of the groups available on DB.
@@ -1121,73 +1078,74 @@ class TeleSignTransactionID3(generics.ListAPIView):
         return Response({"Success": True, "Message": "Transaction Retrieved", "Data": serializer.data, 'status': status.HTTP_302_FOUND})
 
 
-class TeleSignGroupSms(generics.CreateAPIView):
-    """
-    This is endpoint will send a single SMS to a user.
-    It was tested with the redoc swagger or openapi.
-    Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.
-    Format is to be in
-    {"receiver":"<groupid you want t send messages to>", 'senderID':"UserID", "content":"Message to send"}
-    where content is the message, senderID is the userID 
-    and the receiver is the GROUPID you want to send a message to
+# class TeleSignGroupSms(generics.CreateAPIView):
+#     """
+#     This is endpoint will send a single SMS to a user.
+#     It was tested with the redoc swagger or openapi.
+#     Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.
+#     Format is to be in
+#     {"receiver":"<groupid you want t send messages to>", 'senderID':"UserID", "content":"Message to send"}
+#     where content is the message, senderID is the userID 
+#     and the receiver is the GROUPID you want to send a message to
 
-    But since we are working with a trial account, sms will only be delivered to the registered account, and the sender will be the default account holder
-    """
-    serializer_class = MessageSerializer
+#     But since we are working with a trial account, sms will only be delivered to the registered account, and the sender will be the default account holder
+#     """
+#     serializer_class = MessageSerializer
 
-    def post(self, request):
-        receiver = request.data["receiver"]
-        text = request.data["content"]
-        sender = request.data["senderID"]
-        request.data["service_type"] = "TS"
-        msgstat = []
+#     def post(self, request):
+#         receiver = request.data["receiver"]
+#         text = request.data["content"]
+#         sender = request.data["senderID"]
+#         request.data["service_type"] = "TS"
+#         msgstat = []
 
-        number = get_numbers_from_group(request, receiver)
-        print(number)
-        grouptoken = uuid.uuid4()
-        for receiver in number:
-            # api_key = settings.TELESIGN_API
-            # customer_id = settings.TELESIGN_CUST
-            api_key = 'HXwu/7gWs9KMHWilug9NPccJe+nZtUaG6TtfmxikOgQeCP5ErX7uGxIqpufdF2b93Qed9B/WcudRiveDXfaf2Q=='
-            customer_id = 'ACECBD93-21C7-4B8B-9300-33FDEBC27881'
-            url = 'https://rest-api.telesign.com/v1/messaging'
-            headers = {'Accept': 'application/json',
-                       'Content-Type': 'application/x-www-form-urlencoded'}
-            data = {'phone_number': receiver,
-                    'message': text, 'message_type': 'ARN'}
-            serializer = MessageSerializer(data=request.data)
-            if serializer.is_valid():
-                r = requests.post(url, auth=HTTPBasicAuth(
-                    customer_id, api_key), data=data, headers=headers)
-                response = r.json()
-                if response['status']['code'] == 290:
-                    print(response['status']['code'])
-                    msgstat.append(response)
-                    value = serializer.save()
-                    value.service_type = 'TS'
-                    value.messageStatus = 'S'
-                    value.receiver= receiver
-                    value.transactionID = response['reference_id']
-                    value.grouptoken = grouptoken
-                    value.save()
-                else:
-                    print(response['status']['code'])
-                    msgstat.append(response)
-                    value = serializer.save()
-                    value.service_type = 'TS'
-                    value.messageStatus = 'F'
-                    value.receiver = receiver
-                    value.grouptoken = grouptoken
+#         number = get_numbers_from_group(request, receiver)
+#         print(number)
+#         grouptoken = uuid.uuid4()
+#         # for receiver in number:
+#         # api_key = settings.TELESIGN_API
+#         # customer_id = settings.TELESIGN_CUST
+#         api_key = 'HXwu/7gWs9KMHWilug9NPccJe+nZtUaG6TtfmxikOgQeCP5ErX7uGxIqpufdF2b93Qed9B/WcudRiveDXfaf2Q=='
+#         customer_id = 'ACECBD93-21C7-4B8B-9300-33FDEBC27881'
+#         url = 'https://rest-api.telesign.com/v1/messaging'
+#         headers = {'Accept': 'application/json',
+#                     'Content-Type': 'application/x-www-form-urlencoded'}
+#         data = {'phone_number': receiver,
+#                 'message': text, 'message_type': 'ARN'}
+#         serializer = MessageSerializer(data=request.data)
+#         if serializer.is_valid():
+#             r = requests.post(url, auth=HTTPBasicAuth(
+#                 customer_id, api_key), data=data, headers=headers)
+#             response = r.json()
+#             if response['status']['code'] == 290:
+#                 print(response['status']['code'])
+#                 msgstat.append(response)
+#                 value = serializer.save()
+#                 value.service_type = 'TS'
+#                 value.messageStatus = 'S'
+#                 value.receiver= receiver
+#                 value.transactionID = response['reference_id']
+#                 value.grouptoken = grouptoken
+#                 value.save()
+#             else:
+#                 print(response['status']['code'])
+#                 msgstat.append(response)
+#                 value = serializer.save()
+#                 value.service_type = 'TS'
+#                 value.messageStatus = 'F'
+#                 value.receiver = receiver
+#                 value.grouptoken = grouptoken
 
-                    # value.transactionID = response['reference_id']
-                    value.save()
-            else:
-                return Response({"details": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
-        return Response({
-            "Success":True, 
-            "Message":"Message Sending", 
-            "Data":msgstat,
-            "Service_Type":"TELESIGN" })
+#                 # value.transactionID = response['reference_id']
+#                 value.save()
+#         else:
+#             return Response({"details": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
+#         return Response({
+#             "Success":True, 
+#             "Message":"Message Sending", 
+#             "Data":msgstat,
+#             "Service_Type":"TELESIGN" })
+
 
 
 def getNumbersFromList(stringOfNumbers):
@@ -1198,6 +1156,42 @@ def getNumbersFromList(stringOfNumbers):
         number.append(num)
     number = list(dict.fromkeys(number))
     return number
+
+
+
+class TeleSignGroupSms(generics.CreateAPIView):
+    """
+    We are trying to achieve message scheduling with this end point. For now we'll use hardcoded variables    """
+    serializer_class = MessageSerializer
+
+    def post(self, request):
+        receiver = request.data["receiver"]
+        text = request.data["content"]
+        sender = request.data["senderID"]
+
+        ListOFNumbers = getNumbersFromList(receiver)
+        grouptoken = uuid.uuid4()
+        serializer = MessageSerializer(data=request.data)
+        if serializer.is_valid():
+            setData = {
+                "text" : text,
+                "grouptoken" : grouptoken,
+                "ListOFNumbers" : ListOFNumbers,
+                "sender" : sender
+            }
+            # send_group_sms(grouptoken, ListOFNumbers)
+            # result = send_group_sms.apply_async(setData, countdown=60)
+            result = send_group_sms.apply_async((grouptoken,ListOFNumbers), countdown=5)
+            setData["taskID"] = result.id
+            # schedule_add.delay()
+        else:
+            return Response({"details": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({
+            "Success":True, 
+            "Message":"Message Sending", 
+            "grouptoken":grouptoken,
+            # "Task ID": setData["taskID"],
+            "Service_Type":"TELESIGN" })
 
 
 class TeleSignCollectionSms(generics.CreateAPIView):
@@ -1262,3 +1256,13 @@ class TeleSignCollectionSms(generics.CreateAPIView):
             "Message":"Message Sending", 
             "Data":msgstat,
             "Service_Type":"TELESIGN" })
+
+
+class TaskDelete(generics.DestroyAPIView):
+    """
+    Trying to terminate or recall a message
+    """
+
+    def delete(self, request, taskID, format=None):
+        celeryTaskapp.control.revoke(taskID)
+        return Response({"Item":"Task Successfully Deleted"},status=status.HTTP_200_OK)

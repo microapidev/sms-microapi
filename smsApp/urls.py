@@ -5,7 +5,7 @@ from .views import translateMessages, MessageDelete, MessageCounter
 from .views import TeleSignSingleSms, TeleSignMessageList, TeleSignGroupSms, TeleSignTransactionID3
 from .views import send_group_twilio, TwilioSendSms, sms_list
 from .views import GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupDelete, GroupNumbersList, GroupNumbersBySenderList, GroupNumbersCreate, update_group_number, GroupNumbersDetail
-from .views import SmsHistoryList, SmsHistoryDetail
+from .views import SmsHistoryList, SmsHistoryDetail, TaskDelete
 from django.urls import path
 from .views import create_receipents_details, save_recipients_details  #get_recipient_details
 from rest_framework.schemas.coreapi import AutoSchema
@@ -35,6 +35,10 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
+   #recalling a message
+   path("v1/sms/message/recall/<taskID>", TaskDelete.as_view(), name="recall-message"),
+
+
    #messageDelete
    path("v1/sms/message/delete/<transactionID>", MessageDelete.as_view(), name="delete-message"),
    path("v1/sms/message/<userID>", MessageCounter.as_view(), name="count-message"),
