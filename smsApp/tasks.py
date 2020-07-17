@@ -11,6 +11,56 @@ from celery import shared_task
 import uuid
 
 
+
+def async_group_sms(value, senderID,number, text, payload, conn):
+    data = {
+        "from": senderID,
+        "to": numbers,
+        "text": text
+    }
+    headers = {
+        'Authorization': 'App 32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+        }
+    value.service_type = 'IF'
+    conn.request("POST", "/sms/2/text/advanced", payload, headers)
+    res = conn.getresponse()
+    data = res.read().decode('utf-8')
+    data = json.loads(data)
+    if res.status == 200:
+        value.save()
+    return Response({"Status": res.status, "Message": "", "Data": data})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @shared_task
 def add():
     sum = 3+2

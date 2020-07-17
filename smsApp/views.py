@@ -33,6 +33,278 @@ from smsApi.celery import app as celeryTaskapp
 
 # Create your views here.
 
+def translateMsg(content, lang='en'):
+    #This will help translate message of customer.
+    
+    translator = Translator(service_urls=[
+        'translate.google.com',
+        'translate.google.co.kr',
+    ])
+
+    if lang is None:
+        lang = 'en'
+        translated = translator.translate(text=content, dest=lang)
+        content = translated.text
+        return content
+    else:
+        translated = translator.translate(text=content, dest=lang)
+        content = translated.text
+        return content
+
+#USING CBV TO POST SMS
+#Defining a new API that a user can send a single sms while specifying services
+class SendSingMsgCreate(generics.CreateAPIView):
+    """
+    This endpoint allows a user to send a single message, while specifying which message provider is to be used.
+    To begin user must enter the required info: 
+    {
+        "senderID" : "",
+        "service_type" : "IF or TS or TW",
+        "receiver" : "phone number",
+        "content" :  "message body"
+    }
+
+    IF == Infobip
+    TS == Telesign
+    TW == Twilio
+    """
+    
+    serializer_class = MessageSerializer
+
+    def post(self, request, *args, **kwargs):
+        service_type = request.data.get("service_type")
+        senderID = request.data.get("senderID")
+        receiver = request.data.get("receiver")
+        content = request.data.get("content")
+        language = request.data.get("language")
+        regex = re.compile(r'^\+?1?\d{9,15}$')
+        original_txt = []
+        
+        if regex.match(receiver):
+            
+            if (service_type == 'TW'):
+                
+                message_dict = {'senderID':senderID, 'service_type':service_type, 'receiver':receiver, 'content':content, 'language':language}
+
+
+                serializer_message = MessageSerializer(data=message_dict)
+
+
+                client = Client(settings.TWILIO_ACCOUNT_SID,
+                                settings.TWILIO_AUTH_TOKEN)
+                if serializer_message.is_valid():
+                    try:
+                        value = serializer_message.save()
+                        if (language != 'en' or language != None or language != " " ):
+                            original_txt.append(content)
+                            content = translateMsg(content, language)
+                            
+                            message = client.messages.create(
+                                from_=settings.TWILIO_NUMBER,
+                                to=receiver,
+                                body=content
+                            )
+                        else:
+                            message = client.messages.create(
+                                from_=settings.TWILIO_NUMBER,
+                                to=receiver,
+                                body=content
+                            )
+                        if (message.status == 'sent'):
+                            value.messageStatus = "S"
+                        elif (message.status == 'queued'):
+                            value.messageStatus = "P"
+                        elif (message.status == 'failed'):
+                            value.messageStatus = "F"
+                        elif (message.status == 'delivered'):
+                            value.messageStatus = "R"
+                        else:
+                            value.messageStatus = "U"
+                        value.transactionID= message.sid
+                        value.save()
+                        if len(original_txt) != 0:
+                            return Response({
+                                'success': 'true',
+                                'message': 'Message sent',
+                                'original message': f"{original_txt[0]}",
+                                'data': {
+                                    'receiver': f"{receiver}",
+                                    # 'userID': f"{senderID}",
+                                    'message_sent': f"{content}",
+                                    'service_type': 'TWILIO',
+                                }
+                            }, 200)
+                        return Response({
+                            'success': 'true',
+                            'message': 'Message sent',
+                            'data': {
+                                'receiver': f"{receiver}",
+                                # 'userID': f"{senderID}",
+                                'message_sent': f"{content}",
+                                'service_type': 'TWILIO',
+                            }
+                        }, 200)
+
+                    except TwilioRestException as e:
+                        value.messageStatus = "F"
+                        value.transactionID = "500-F"
+                        value.save()
+                        return Response({
+                            'success': 'false',
+                            'message': 'Message not sent',
+                            'error': {
+                                # 'userID': f"{senderID}",
+                                'recipient': f"{receiver}",
+                                'twilioError':{"error":f"{str(e)}"},
+                                'service_type': 'TWILIO',
+                                'statusCode': '400',
+                                'details': 'The Phone Number is unregistered to Twilio'
+                            }
+                        }, status=status.HTTP_400_BAD_REQUEST)
+            
+                return Response({
+                    'success': 'false',
+                    'message': 'Message cannot be sent',
+                    'error': {
+                        # 'userID': f"{senderID}",
+                        'recipient': f"{receiver}",
+                        'service_type': 'TWILIO',
+                        'statusCode': '400',
+                        'details': 'All fields are required, a field is ommitted'
+                    }
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            #Infobip
+            elif (service_type == 'IF'):
+
+                message_dict = {'senderID':senderID, 'service_type':service_type, 'receiver':receiver, 'content':content}
+                serializer = MessageSerializer(data=message_dict)
+                conn = http.client.HTTPSConnection("jdd8zk.api.infobip.com")
+                payload = "{\"messages\":[{\"from\":\"%s\",\"destinations\":[{\"to\":\"%s\"}],\"text\":\"%s\",\"flash\":false}]}" % (senderID, receiver, content)
+                # payload =  "{\"messages\":\"[{\"from\":\"{%s}\",\"destinations\":[{\"to\":\"%s\",\"messageId\":\"Stage7-Company\"}],\"text\":\"%s\",\"flash\":false,\"notifyUrl\":\"https://www.example.com/sms/advanced\",\"notifyContentType\":\"application/json\",\"callbackData\":\"DLR callback data\",\"validityPeriod\":720}}" % (senderID, receiver, content)
+                # payload = {"from": f"{senderID}", "to":f"{receiver}", "text": f"{content}"}
+                if serializer.is_valid():
+                    value = serializer.save()
+                    if (language != 'en' or language != None or language != ""):
+                        original_txt.append(content)
+                        content = translateMsg(content, language)
+                        data = {
+                            "from": senderID,
+                            "to": receiver,
+                            "text": content
+                        }
+                        headers = {
+                            'Authorization': 'App 32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b',
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                            }
+                    else:
+                        data = {
+                            "from": senderID,
+                            "to": receiver,
+                            "text": content
+                        }
+                        headers = {
+                            'Authorization': 'App 32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b',
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                            }
+                    # r = requests.post("https://jdd8zk.api.infobip.com",
+                    #                   data=payload, headers=headers)
+                    # response = r.json()
+                    value.service_type = 'IF'
+                    conn.request("POST", "/sms/2/text/advanced", payload, headers)
+                    res = conn.getresponse()
+                    data = res.read().decode('utf-8')
+                    data = json.loads(data)
+                    if res.status == 200:
+                        value.transactionID = data["messages"][0]["messageId"]
+                        value.save()
+                    # print(data)
+                    if len(original_txt) != 0:
+                        return Response({"Status": res.status, "Original Message": f"{original_txt[0]}", "Data": data})
+                    return Response({"Status": res.status, "Message": "", "Data": data})
+                else:
+                    return Response({"message": "Not Valid"})
+            
+            #For Telesign
+            elif (service_type == 'TS'):
+                message_dict = {'senderID':senderID, 'service_type':service_type, 'receiver':receiver, 'content':content}
+                serializer_message = MessageSerializer(data=message_dict)
+
+                api_key = 'HXwu/7gWs9KMHWilug9NPccJe+nZtUaG6TtfmxikOgQeCP5ErX7uGxIqpufdF2b93Qed9B/WcudRiveDXfaf2Q=='
+                customer_id = 'ACECBD93-21C7-4B8B-9300-33FDEBC27881'
+                url = 'https://rest-api.telesign.com/v1/messaging'
+
+                headers = {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/x-www-form-urlencoded'}
+                if (language != 'en' or language != None or language != ""):
+                    original_txt.append(content)
+                    content = translateMsg(content, language)
+                    data = {
+                        'phone_number': receiver,
+                        'message': content,
+                        'message_type': 'ARN'
+                    }
+                else:
+                    data = {
+                        'phone_number': receiver,
+                        'message': content,
+                        'message_type': 'ARN'
+                    }
+
+                if serializer_message.is_valid():
+                    # print(value)
+                    # print("break----")
+                    r = requests.post(url, 
+                                    auth=HTTPBasicAuth(customer_id, api_key), 
+                                    data=data, 
+                                    headers=headers)
+                    value = serializer_message.save()
+                    response = r.json()
+                    if response['status']['code'] == 290:
+                        value.service_type = 'TS'
+                        value.messageStatus = 'SC'
+                        value.transactionID = response['reference_id']
+                        value.save()
+                        if len(original_txt) != 0:
+                            return Response({
+                                "Success": True,
+                                "Message": "Message Sending",
+                                "Original SMS": f"{original_txt[0]}",
+                                "Data": response,
+                                "Service_Type": "TELESIGN"
+                                })
+                        return Response({
+                            "Success": True,
+                            "Message": "Message Sending",
+                            "Data": response,
+                            "Service_Type": "TELESIGN"
+                            })
+                    else:
+                        print(response['status']['code'])
+                        value = serializer_message.save()
+                        value.service_type = 'TS'
+                        value.messageStatus = 'F'
+                        value.receiver = receiver
+                        value.transactionID = "500-F"
+                        value.save()
+                        return Response({
+                            "Success": False,
+                            "Message": "Message Couldnt be sent",
+                            "Data": response,
+                            "Service_Type": "TELESIGN"})
+                else:
+                    return Response({"details": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
+
+            else:
+                return Response({f"Service Type {service_type}": "Not Supported"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({f"{receiver} should be a number starting with +,1,0 ": "Not Supported"}, status=status.HTTP_400_BAD_REQUEST)
+    
+
+
 class MessageDelete(generics.DestroyAPIView):
     """
     To delete simply use: /v1/sms/group_update/groupName
@@ -395,57 +667,12 @@ def translateMessages(request):
             return JsonResponse({"error": error}, status=status.HTTP_400_BAD_REQUEST)
 
 
+
 def get_numbers_from_group(request, groupID):
     group = get_object_or_404(Group, groupID=groupID)
     group_numbers =[val.phoneNumbers for val in group.numbers.all()]
     print(group_numbers)
     return group_numbers
-
-
-@api_view(["POST"])
-def send_group_twilio(request):
-    """
-    Send to an already created group. Format should be {"content":"", "groupID":"", "senderID":"" }
-    """
-    content = request.data["content"]
-    groupID = request.data["groupID"]
-    senderID = request.data["senderID"]
-    numbers = get_numbers_from_group(request, groupID)
-
-    data = {"message": content, "service_type": "TWILIO",
-            "senderID": senderID, 'details': []}
-    client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
-    if not numbers:
-        return Response({"details": "There are no numbers in this group"})
-    else:
-        for number in numbers:
-            payload = {'content': content, "receiver": number,
-                       "senderID": senderID, "service_type": "TW"}
-            serializer = MessageSerializer(data=payload)
-            if serializer.is_valid():
-                try:
-                    client.messages.create(
-                        from_=settings.TWILIO_NUMBER,
-                        to=number,
-                        body=content
-                    )
-                    data["details"].append(
-                        {"to": number, "status": "200", "Success": True})
-                    value = serializer.save()
-                    value.messageStatus = "S"
-                    value.save()
-
-                except:
-                    data["details"].append(
-                        {"to": number, "status": "400", "success": False, "error": "Number isn't valid and/or can't be sent to"})
-                    value = serializer.save()
-                    value.messageStatus = "F"
-                    value.save()
-            else:
-                msgstatus.append(
-                    f"something went wrong while sending to {number}")
-
-        return Response(data, status=status.HTTP_200_OK)
 
 
 # GROUP VIEWS
@@ -602,14 +829,18 @@ class GroupNumbersCreate(generics.CreateAPIView):
                 duplicates.append(f"{number} already exists in this group")
             else:
                 # self.create(request, *args, **kwargs)
+                request.data._mutable = True 
                 request.data["group"] = group.id
                 request.data["phoneNumbers"] = number
                 serializer = GroupNumbersPrimarySerializer(data=request.data)
+                
                 print(serializer)
                 if serializer.is_valid():
                     serializer.save()
-                    print("yeah")                 
+                    print("yeah")            
+            
         request.data["phoneNumbers"] = phoneNumbers
+        request.data._mutable = False
         return Response(
                 {
                     "Success": "True", 
@@ -791,44 +1022,6 @@ class InfobipSendMessage2(generics.CreateAPIView):
         # else:
         #     return JsonResponse({"Failure":res.status, "Message":"Message Not Sent", "Data":data.decode("utf-8")})
 
-
-@api_view(["POST"])
-def InfobipGroupMessage(request):
-    """
-    Send to an already created group. Format should be {"content":"", "groupID":"", "senderID":"" }
-    """
-    msgstatus = []
-    content = request.data["content"]
-    groupPK = request.data["groupPK"]
-    senderID = request.data["senderID"]
-    numbers = get_numbers_from_group(request, groupPK)
-
-    # client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
-    for number in numbers:
-        payload = {'content': content, "receiver": number,
-                   "senderID": senderID, "service_type": "TW"}
-        serializer = MessageSerializer(data=payload)
-        if serializer.is_valid():
-            conn = http.client.HTTPSConnection("jdd8zk.api.infobip.com")
-            payload = '{\"messages\":[{\"from\":\"Phli\",\"destinations\":[{\"to\":\"2347069501730\"}],\"text\":\"Text.\",\"flash\":true}]}'
-            headers = {
-                'Authorization': 'App 32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b'
-            }
-            conn.request("POST", "/sms/2/text/advanced", payload, headers)
-            res = conn.getresponse()
-            # print(res.msg)
-            data = res.read().decode('utf-8')
-            data = data.replace('/', '')
-            msgstatus.append(f"sent to {number}")
-            value = serializer.save()
-            value.messageStatus = "S"
-            value.save()
-
-        else:
-            msgstatus.append(f"something went wrong while sending to {number}")
-    return Response({"details": msgstatus, "service_type": "InfoBip", "senderID": senderID}, status=status.HTTP_200_OK)
-
-
 # class InfobipGroupMessage(generics.CreateAPIView):
 #     """
 #     This is to send a single SMS to a user using Infobip. Format is to be in
@@ -846,29 +1039,34 @@ def InfobipGroupMessage(request):
 #         sender = request.data["senderID"]
 #         numbers = get_numbers_from_group(request, groupPK)
 #         serializer = MessageSerializer(data=request.data)
-#         for number in numbers:
-#             if serializer.is_valid():
-#                 value = serializer.save()
-#                 data = {
-#                 "from": sender,
-#                 "to": number,
-#                 "text": text
-#                 }
-#                 headers = {'Authorization': '32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b'}
-#                 try:
-#                     r = requests.post("https://jdd8zk.api.infobip.com", data=data,headers=headers)
-#                     msgstatus.append(f'succesfully sent to {number}')
-#                     value.messageStatus = "S"
-#                     value.save()
-#                 except Exception as e:
-#                     msgstatus.append(f'cant send to the {number}, error: {e}, status: {r}')
-#                     value.messageStatus = "F"
-#                     value.save()
-#                 response = r.status_code
-#                 value.service_type = 'IF'
-#                 if response == 200:
-#                     value.save()
-#             else:
+#         conn = http.client.HTTPSConnection("jdd8zk.api.infobip.com")
+#          for number in numbers:   
+#              payload = "{\"messages\":[{\"from\":\"%s\",\"destinations\":[{\"to\":\"%s\"}],\"text\":\"%s\",\"flash\":true}]}" % (sender, receiver, text)
+#              if serializer.is_valid():
+#                  value = serializer.save()
+#                  data = {
+#                      "from": sender,
+#                      "to": receiver,
+#                      "text": text
+#                    }
+#                   headers = {
+#                      'Authorization': 'App 32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b',
+#                      'Content-Type': 'application/json',
+#                       'Accept': 'application/json'
+#                       }
+#                   r = requests.post("https://jdd8zk.api.infobip.com",
+#                                     data=payload, headers=headers)
+#                   response = r.json()
+#                   value.service_type = 'IF'
+#                   conn.request("POST", "/sms/2/text/advanced", payload, headers)
+#                   res = conn.getresponse()
+#                   data = res.read().decode('utf-8')
+#                   data = json.loads(data)
+#                   if res.status == 200:
+#                       value.save()
+#                   print(data)
+#                 return JsonResponse({"Status": res.status, "Message": "", "Data": data})"""       
+#              else:
 #                 msgstatus.append(f"something went wrong while sending to {number}")
 #         return JsonResponse(response,safe=False)
 
@@ -919,6 +1117,8 @@ class TwilioSendSms(views.APIView):
     def post(self, request):
         receiver = request.data["receiver"]
         content = request.data["content"]
+        translateMessages(content)
+        print
         request.data["service_type"] = "TW"
         serializer_message = MessageSerializer(data=request.data)
 
@@ -989,6 +1189,7 @@ class TeleSignSingleSms(generics.CreateAPIView):
 
     def post(self, request):
         receiver = request.data["receiver"]
+        print(receiver)
         text = request.data["content"]
         sender = request.data["senderID"]
         request.data["service_type"] = "TS"
@@ -1211,7 +1412,7 @@ class TeleSignCollectionSms(generics.CreateAPIView):
     def post(self, request):
         receiver = request.data["receiver"]
         text = request.data["content"]
-        sender = request.data["senderID"]
+        senderID = request.data["senderID"]
         request.data["service_type"] = "TS"
         msgstat =[]
 
@@ -1266,3 +1467,325 @@ class TaskDelete(generics.DestroyAPIView):
     def delete(self, request, taskID, format=None):
         celeryTaskapp.control.revoke(taskID)
         return Response({"Item":"Task Successfully Deleted"},status=status.HTTP_200_OK)
+
+
+# class SendGroupSms(views.APIView):
+#     """
+#         This endpoint (...v2/sms/send_group_sms) enables group sms using either Twilio, Infobip or Telesign service. 
+#         The following details are needed in sending a group sms - senderID, groupID, service type and content.
+#         The groupID is autogenerated upon creating a group, to create a group refer to the endpoint (v1/sms/create_group)
+#     """
+#     def post(self, request):
+#         service_type = request.data["service_type"] 
+
+#         #INFOBIP
+#         if (service_type.upper() == "IF") or (service_type.upper() == "INFOBIP"):
+
+#             msgstatus = []
+#             groupID = request.data["groupID"]
+#             text = request.data["content"]
+#             senderID = request.data["senderID"]
+#             numbers = get_numbers_from_group(request, groupID)
+
+#             serializer = MessageSerializer(data=request.data)
+
+#             conn = http.client.HTTPSConnection("jdd8zk.api.infobip.com")
+#             if not numbers:
+#                 return Response({"details": "There are no numbers in this group"})
+#             else:
+#                 for number in numbers:
+#                     payload = "{\"messages\":[{\"from\":\"%s\",\"destinations\":[{\"to\":\"%s\"}],\"text\":\"%s\",\"flash\":true}]}" % (senderID, numbers, text)
+#                     if serializer.is_valid():
+#                         value = serializer.save()
+#                         data = {
+#                             "from": senderID,
+#                             "to": numbers,
+#                             "text": text
+#                         }
+#                         headers = {
+#                             'Authorization': 'App 32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b',
+#                             'Content-Type': 'application/json',
+#                             'Accept': 'application/json'
+#                             }
+#                         value.service_type = 'IF'
+#                         conn.request("POST", "/sms/2/text/advanced", payload, headers)
+#                         res = conn.getresponse()
+#                         data = res.read().decode('utf-8')
+#                         data = json.loads(data)
+#                         if res.status == 200:
+#                             value.save()
+#                         return Response({"Status": res.status, "Message": "", "Data": data})
+#                     else:
+#                         return Response({
+#                             "Success":False, "Status": 400,
+#                             "Message": f"something went wrong while sending to {number}"}, status=status.HTTP_400_BAD_REQUEST)
+#                 return Response({"details": msgstatus, "service_type": "InfoBip", "senderID": senderID}, status=status.HTTP_200_OK)
+
+#         #TWILIO
+#         elif (service_type.upper() == "TW") or (service_type.upper() == "TWILIO"):
+            
+#             content = request.data["content"]
+#             groupID = request.data["groupID"]
+#             senderID = request.data["senderID"]
+#             numbers = get_numbers_from_group(request, groupID)
+
+#             data = {"message": content, "service_type": "TWILIO",
+#                     "senderID": senderID, 'details': []}
+#             client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+#             if not numbers:
+#                 return Response({"details": "There are no numbers in this group"})
+#             else:
+#                 for number in numbers:
+#                     payload = {'content': content, "receiver": number,
+#                             "senderID": senderID, "service_type": "TW"}
+#                     serializer = MessageSerializer(data=payload)
+#                     if serializer.is_valid():
+#                         try:
+#                             client.messages.create(
+#                                 from_=settings.TWILIO_NUMBER,
+#                                 to=number,
+#                                 body=content
+#                             )
+#                             data["details"].append(
+#                                 {"to": number, "status": "200", "Success": True})
+#                             value = serializer.save()
+#                             value.messageStatus = "S"
+#                             value.save()
+
+#                         except:
+#                             data["details"].append(
+#                                 {"to": number, "status": "400", "success": False, "error": "Number isn't valid and/or can't be sent to"})
+#                             value = serializer.save()
+#                             value.messageStatus = "F"
+#                             value.save()
+#                     else:
+#                         msgstatus.append(
+#                             f"something went wrong while sending to {number}", status=status.HTTP_400_BAD_REQUEST)
+#                 return Response(data, status=status.HTTP_200_OK)
+
+#         #TELESIGN 
+#         elif (service_type.upper() == "TS") or (service_type.upper() == "TELESIGN"):
+
+#             groupID = request.data["groupID"]
+#             text = request.data["content"]
+#             senderID = request.data["senderID"]
+#             msgstat = []
+#             numbers = get_numbers_from_group(request, groupID)
+#             #print(number)
+#             #grouptoken = uuid.uuid4()
+#             if not numbers:
+#                 return Response({"details": "There are no numbers in this group"})
+#             else:
+#                 for number in numbers:
+#                     # api_key = settings.TELESIGN_API
+#                     # customer_id = settings.TELESIGN_CUST
+#                     api_key = 'HXwu/7gWs9KMHWilug9NPccJe+nZtUaG6TtfmxikOgQeCP5ErX7uGxIqpufdF2b93Qed9B/WcudRiveDXfaf2Q=='
+#                     customer_id = 'ACECBD93-21C7-4B8B-9300-33FDEBC27881'
+#                     url = 'https://rest-api.telesign.com/v1/messaging'
+#                     headers = {'Accept': 'application/json',
+#                         'Content-Type': 'application/x-www-form-urlencoded'}
+#                     data = {'phone_number': number,
+#                         'message': text, 'message_type': 'ARN'}
+#                     serializer = MessageSerializer(data=request.data)
+#                     if serializer.is_valid():
+#                         try:
+#                             r = requests.post(url, auth=HTTPBasicAuth(
+#                             customer_id, api_key), data=data, headers=headers)
+#                             response = r.json()
+#                             response['status']['code'] == 290
+#                             print(response['status']['code'])
+#                             data["details"].append(
+#                                     {"to": number, "status": "200", "Success": True})
+#                             value = serializer.save()
+#                             value.service_type = 'TS'
+#                             value.messageStatus = 'S'
+#                             #value.receiver= receiver
+#                             #value.transactionID = response['reference_id']
+#                             #value.grouptoken = grouptoken
+#                             value.save()
+#                         except:
+#                             print(response['status']['code'])
+#                             data["details"].append(
+#                                 {"to": number, "status": "400", "success": False, "error": "Number isn't valid and/or can't be sent to"})
+#                             value = serializer.save()
+#                             value.service_type = 'TS'
+#                             value.messageStatus = 'F'
+#                             #value.receiver = receiver
+#                             #value.grouptoken = grouptoken
+#                             # value.transactionID = response['reference_id']
+#                             value.save()
+#                     else:
+#                         return Response({"details": data, "error":"Number isn't valid and/or can't be sent to","service_type": "Telesign", "senderID": senderID}, status=status.HTTP_400_BAD_REQUEST)
+#                 return Response({
+#                     "Success":True, 
+#                     "Message":"Message Sending", 
+#                     "Data":msgstat,
+#                     "Service_Type":"TELESIGN" }, status=status.HTTP_200_OK)
+
+#         #INVALID SERRVICE
+#         else:
+#             return Response({
+#                 "Success": False,
+#                 "details": f"{service_type} not available"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class SendGroupSms(views.APIView):
+    """
+        This endpoint (...v2/sms/send_group_sms) enables group sms using either Twilio, Infobip or Telesign service. 
+        The following details are needed in sending a group sms - senderID, groupID, service type and content.
+        The groupID is autogenerated upon creating a group, to create a group refer to the endpoint (v1/sms/create_group)
+    """
+    def post(self, request):
+        service_type = request.data["service_type"] 
+
+        #INFOBIP
+        if (service_type.upper() == "IF") or (service_type.upper() == "INFOBIP"):
+
+            msgstatus = []
+            groupID = request.data["groupID"]
+            text = request.data["content"]
+            senderID = request.data["senderID"]
+            numbers = get_numbers_from_group(request, groupID)
+
+            serializer = MessageSerializer(data=request.data)
+
+            conn = http.client.HTTPSConnection("jdd8zk.api.infobip.com")
+            if not numbers:
+                return Response({"details": "There are no numbers in this group"})
+            else:
+                for number in numbers:
+                    payload = "{\"messages\":[{\"from\":\"%s\",\"destinations\":[{\"to\":\"%s\"}],\"text\":\"%s\",\"flash\":true}]}" % (senderID, number, text)
+                    if serializer.is_valid():
+                        value = serializer.save()
+                        async_group_sms(value, senderID,number, text, payload, conn)
+                        # data = {
+                        #     "from": senderID,
+                        #     "to": numbers,
+                        #     "text": text
+                        # }
+                        # headers = {
+                        #     'Authorization': 'App 32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b',
+                        #     'Content-Type': 'application/json',
+                        #     'Accept': 'application/json'
+                        #     }
+                        # value.service_type = 'IF'
+                        # conn.request("POST", "/sms/2/text/advanced", payload, headers)
+                        # res = conn.getresponse()
+                        # data = res.read().decode('utf-8')
+                        # data = json.loads(data)
+                        # if res.status == 200:
+                        #     value.save()
+                        return Response({"Status": "Sending Group Sms", "Message": "", "Data": data})
+                    else:
+                        return Response({
+                            "Success":False, "Status": 400,
+                            "Message": f"something went wrong while sending to {number}"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"details": msgstatus, "service_type": "InfoBip", "senderID": senderID}, status=status.HTTP_200_OK)
+
+        #TWILIO
+        elif (service_type.upper() == "TW") or (service_type.upper() == "TWILIO"):
+            
+            content = request.data["content"]
+            groupID = request.data["groupID"]
+            senderID = request.data["senderID"]
+            numbers = get_numbers_from_group(request, groupID)
+
+            data = {"message": content, "service_type": "TWILIO",
+                    "senderID": senderID, 'details': []}
+            client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+            if not numbers:
+                return Response({"details": "There are no numbers in this group"})
+            else:
+                for number in numbers:
+                    payload = {'content': content, "receiver": number,
+                            "senderID": senderID, "service_type": "TW"}
+                    serializer = MessageSerializer(data=payload)
+                    if serializer.is_valid():
+                        try:
+                            client.messages.create(
+                                from_=settings.TWILIO_NUMBER,
+                                to=number,
+                                body=content
+                            )
+                            data["details"].append(
+                                {"to": number, "status": "200", "Success": True})
+                            value = serializer.save()
+                            value.messageStatus = "S"
+                            value.save()
+
+                        except:
+                            data["details"].append(
+                                {"to": number, "status": "400", "success": False, "error": "Number isn't valid and/or can't be sent to"})
+                            value = serializer.save()
+                            value.messageStatus = "F"
+                            value.save()
+                    else:
+                        msgstatus.append(
+                            f"something went wrong while sending to {number}", status=status.HTTP_400_BAD_REQUEST)
+                return Response(data, status=status.HTTP_200_OK)
+
+        #TELESIGN 
+        elif (service_type.upper() == "TS") or (service_type.upper() == "TELESIGN"):
+
+            groupID = request.data["groupID"]
+            text = request.data["content"]
+            senderID = request.data["senderID"]
+            msgstat = []
+            numbers = get_numbers_from_group(request, groupID)
+            #print(number)
+            #grouptoken = uuid.uuid4()
+            if not numbers:
+                return Response({"details": "There are no numbers in this group"})
+            else:
+                for number in numbers:
+                    # api_key = settings.TELESIGN_API
+                    # customer_id = settings.TELESIGN_CUST
+                    api_key = 'HXwu/7gWs9KMHWilug9NPccJe+nZtUaG6TtfmxikOgQeCP5ErX7uGxIqpufdF2b93Qed9B/WcudRiveDXfaf2Q=='
+                    customer_id = 'ACECBD93-21C7-4B8B-9300-33FDEBC27881'
+                    url = 'https://rest-api.telesign.com/v1/messaging'
+                    headers = {'Accept': 'application/json',
+                        'Content-Type': 'application/x-www-form-urlencoded'}
+                    data = {'phone_number': number,
+                        'message': text, 'message_type': 'ARN'}
+                    serializer = MessageSerializer(data=request.data)
+                    if serializer.is_valid():
+                        try:
+                            r = requests.post(url, auth=HTTPBasicAuth(
+                            customer_id, api_key), data=data, headers=headers)
+                            response = r.json()
+                            response['status']['code'] == 290
+                            print(response['status']['code'])
+                            data["details"].append(
+                                    {"to": number, "status": "200", "Success": True})
+                            value = serializer.save()
+                            value.service_type = 'TS'
+                            value.messageStatus = 'S'
+                            #value.receiver= receiver
+                            #value.transactionID = response['reference_id']
+                            #value.grouptoken = grouptoken
+                            value.save()
+                        except:
+                            print(response['status']['code'])
+                            data["details"].append(
+                                {"to": number, "status": "400", "success": False, "error": "Number isn't valid and/or can't be sent to"})
+                            value = serializer.save()
+                            value.service_type = 'TS'
+                            value.messageStatus = 'F'
+                            #value.receiver = receiver
+                            #value.grouptoken = grouptoken
+                            # value.transactionID = response['reference_id']
+                            value.save()
+                    else:
+                        return Response({"details": data, "error":"Number isn't valid and/or can't be sent to","service_type": "Telesign", "senderID": senderID}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({
+                    "Success":True, 
+                    "Message":"Message Sending", 
+                    "Data":msgstat,
+                    "Service_Type":"TELESIGN" }, status=status.HTTP_200_OK)
+
+        #INVALID SERRVICE
+        else:
+            return Response({
+                "Success": False,
+                "details": f"{service_type} not available"}, status=status.HTTP_400_BAD_REQUEST)

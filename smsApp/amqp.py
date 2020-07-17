@@ -40,15 +40,15 @@ class AMQPConsuming(threading.Thread):
             # Don't recover if connection was closed by broker
         except pika.exceptions.ConnectionClosedByBroker as error:
             print(error)
-            logging.debug("ERROR->",error)
+            logging.debug(f"ERROR-> {error}")
             # Don't recover on channel errors
         except pika.exceptions.AMQPChannelError as error:
             print(error)
-            logging.debug("ERROR->", error)
+            logging.debug(f"ERROR-> {error}")
             # Recover on all other connection errors
         except pika.exceptions.AMQPConnectionError as error:
             print(error)
-            logging.debug("ERROR->", error)
+            logging.debug(f"ERROR-> {error}")
             logging.debug("RETRYING TO CONNECT")
             self.establish_connection()
 
@@ -65,7 +65,7 @@ class AMQPConsuming(threading.Thread):
         print('Received Scheduled Message %r' % body)
         logger.debug('Received Scheduled Message %r' % body)
         # Ack message if the message is delivered
-        self.channel.basic_ack(method.delivery_tag);
+        self.channel.basic_ack(method.delivery_tag)
         # if not ack the message remains in the queue
         return body
 

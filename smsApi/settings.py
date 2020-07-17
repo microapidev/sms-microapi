@@ -12,17 +12,20 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 
-# SECRET_KEY = os.environ.get('SECRET_KEY')
-SECRET_KEY = 'fjfskjfksdnfjfd'
+SECRET_KEY = os.environ.get('SECRET_KEY', "fjfskjfksdnfjfd" )
+# SECRET_KEY = 'fjfskjfksdnfjfd'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']  ##allows all hosts
 
-# add twillio sid , authentication token and your twilio number
+
+
+#add twillio sid , authentication token and your twilio number
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID") # obtained from twilio.com/console 
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN") # also obtained from twilio.com/console 
 TWILIO_NUMBER = os.getenv("TWILIO_NUMBER")  # use the number you received when signing up or buy a new number 
+
 
 # add infobip login credentials
 INFOBIP_USERNAME = os.getenv("INFOBIP_USERNAME")
