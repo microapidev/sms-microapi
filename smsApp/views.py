@@ -1569,7 +1569,7 @@ class TransactionID(APIView):
             dbTransID = Message.objects.get(messageID=msgID)
             transid = dbTransID.transactionID
             #check if status is not pending and display status
-            if dbTransID.messageStatus != "SC":
+            if dbTransID.messageStatus != "P":
                 return Response({"Success": True, "Message": "Transaction status retrieved", "Data": dbTransID.messageStatus, 'status': status.HTTP_200_OK})
             #check serviceType and connect to endpoint
             elif dbTransID.service_type == "TS": #retrieve ID for Telesign
