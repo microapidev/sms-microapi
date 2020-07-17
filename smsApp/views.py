@@ -1407,147 +1407,148 @@ class SendGroupSms(views.APIView):
 
         #INFOBIP
         if (service_type.upper() == "IF") or (service_type.upper() == "INFOBIP"):
+            def post(self, request):
+                msgstatus = []
+                groupID = request.data["groupID"]
+                text = request.data["content"]
+                senderID = request.data["senderID"]
+                numbers = get_numbers_from_group(request, groupID)
 
-            msgstatus = []
-            groupID = request.data["groupID"]
-            text = request.data["content"]
-            senderID = request.data["senderID"]
-            numbers = get_numbers_from_group(request, groupID)
+                serializer = MessageSerializer(data=request.data)
 
-            serializer = MessageSerializer(data=request.data)
-
-            conn = http.client.HTTPSConnection("jdd8zk.api.infobip.com")
-            if not numbers:
-                return Response({"Success": False, "details": "There are no numbers in this group", "SenderID": senderID, "groupID": groupID})
-            else:
-                for number in numbers:
-                    payload = "{\"messages\":[{\"from\":\"%s\",\"destinations\":[{\"to\":\"%s\"}],\"text\":\"%s\",\"flash\":true}]}" % (senderID, numbers, text)
-                    if serializer.is_valid():
-                        value = serializer.save()
-                        data = {
-                            "from": senderID,
-                            "to": numbers,
-                            "text": text
-                        }
-                        headers = {
-                            'Authorization': 'App 32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b',
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json'
+                conn = http.client.HTTPSConnection("jdd8zk.api.infobip.com")
+                if not numbers:
+                    return Response({"Success": False, "details": "There are no numbers in this group", "SenderID": senderID, "groupID": groupID})
+                else:
+                    for number in numbers:
+                        payload = "{\"messages\":[{\"from\":\"%s\",\"destinations\":[{\"to\":\"%s\"}],\"text\":\"%s\",\"flash\":true}]}" % (senderID, numbers, text)
+                        if serializer.is_valid():
+                            value = serializer.save()
+                            data = {
+                                "from": senderID,
+                                "to": numbers,
+                                "text": text
                             }
-                        value.service_type = 'IF'
-                        conn.request("POST", "/sms/2/text/advanced", payload, headers)
-                        res = conn.getresponse()
-                        data = res.read().decode('utf-8')
-                        data = json.loads(data)
-                        if res.status == 200:
-                            value.save()
-                        return Response({"Status": res.status, "Message": "", "Data": data})
-                    else:
-                        return Response({
-                            "Success":False, "Status": 400,
-                            "Message": f"something went wrong while sending to {number}"}, status=status.HTTP_400_BAD_REQUEST)
-                return Response({"details": msgstatus, "service_type": "InfoBip", "senderID": senderID}, status=status.HTTP_200_OK)
+                            headers = {
+                                'Authorization': 'App 32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b',
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                                }
+                            value.service_type = 'IF'
+                            conn.request("POST", "/sms/2/text/advanced", payload, headers)
+                            res = conn.getresponse()
+                            data = res.read().decode('utf-8')
+                            data = json.loads(data)
+                            if res.status == 200:
+                                value.save()
+                            return Response({"Status": res.status, "Message": "", "Data": data})
+                        else:
+                            return Response({
+                                "Success":False, "Status": 400,
+                                "Message": f"something went wrong while sending to {number}"}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({"details": msgstatus, "service_type": "InfoBip", "senderID": senderID}, status=status.HTTP_200_OK)
 
         #TWILIO
         elif (service_type.upper() == "TW") or (service_type.upper() == "TWILIO"):
-            
-            content = request.data["content"]
-            groupID = request.data["groupID"]
-            senderID = request.data["senderID"]
-            numbers = get_numbers_from_group(request, groupID)
+            def post(self, request):
+                content = request.data["content"]
+                groupID = request.data["groupID"]
+                senderID = request.data["senderID"]
+                numbers = get_numbers_from_group(request, groupID)
 
-            data = {"message": content, "service_type": "TWILIO",
-                    "senderID": senderID, 'details': []}
-            client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
-            if not numbers:
-                return Response({"Success": False, "details": "There are no numbers in this group", "SenderID": senderID, "groupID": groupID})
-            else:
-                for number in numbers:
-                    payload = {'content': content, "receiver": number,
-                            "senderID": senderID, "service_type": "TW"}
-                    serializer = MessageSerializer(data=payload)
-                    if serializer.is_valid():
-                        try:
-                            client.messages.create(
-                                from_=settings.TWILIO_NUMBER,
-                                to=number,
-                                body=content
-                            )
-                            data["details"].append(
-                                {"to": number, "status": "200", "Success": True})
-                            value = serializer.save()
-                            value.messageStatus = "S"
-                            value.save()
+                data = {"message": content, "service_type": "TWILIO",
+                        "senderID": senderID, 'details': []}
+                client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+                if not numbers:
+                    return Response({"Success": False, "details": "There are no numbers in this group", "SenderID": senderID, "groupID": groupID})
+                else:
+                    for number in numbers:
+                        payload = {'content': content, "receiver": number,
+                                "senderID": senderID, "service_type": "TW"}
+                        serializer = MessageSerializer(data=payload)
+                        if serializer.is_valid():
+                            try:
+                                client.messages.create(
+                                    from_=settings.TWILIO_NUMBER,
+                                    to=number,
+                                    body=content
+                                )
+                                data["details"].append(
+                                    {"to": number, "status": "200", "Success": True})
+                                value = serializer.save()
+                                value.messageStatus = "S"
+                                value.save()
 
-                        except:
-                            data["details"].append(
-                                {"to": number, "status": "400", "success": False, "error": "Number isn't valid and/or can't be sent to"})
-                            value = serializer.save()
-                            value.messageStatus = "F"
-                            value.save()
-                    else:
-                        msgstatus.append(
-                            f"something went wrong while sending to {number}", status=status.HTTP_400_BAD_REQUEST)
-                return Response(data, status=status.HTTP_200_OK)
+                            except:
+                                data["details"].append(
+                                    {"to": number, "status": "400", "success": False, "error": "Number isn't valid and/or can't be sent to"})
+                                value = serializer.save()
+                                value.messageStatus = "F"
+                                value.save()
+                        else:
+                            msgstatus.append(
+                                f"something went wrong while sending to {number}", status=status.HTTP_400_BAD_REQUEST)
+                    return Response(data, status=status.HTTP_200_OK)
 
         #TELESIGN 
         elif (service_type.upper() == "TS") or (service_type.upper() == "TELESIGN"):
 
-            groupID = request.data["groupID"]
-            text = request.data["content"]
-            senderID = request.data["senderID"]
-            msgstat = []
-            numbers = get_numbers_from_group(request, groupID)
-            #print(number)
-            #grouptoken = uuid.uuid4()
-            if not numbers:
-                return Response({"Success": False, "details": "There are no numbers in this group", "SenderID": senderID, "groupID": groupID})
-            else:
-                for number in numbers:
-                    # api_key = settings.TELESIGN_API
-                    # customer_id = settings.TELESIGN_CUST
-                    api_key = 'HXwu/7gWs9KMHWilug9NPccJe+nZtUaG6TtfmxikOgQeCP5ErX7uGxIqpufdF2b93Qed9B/WcudRiveDXfaf2Q=='
-                    customer_id = 'ACECBD93-21C7-4B8B-9300-33FDEBC27881'
-                    url = 'https://rest-api.telesign.com/v1/messaging'
-                    headers = {'Accept': 'application/json',
-                        'Content-Type': 'application/x-www-form-urlencoded'}
-                    data = {'phone_number': number,
-                        'message': text, 'message_type': 'ARN'}
-                    serializer = MessageSerializer(data=request.data)
-                    if serializer.is_valid():
-                        try:
-                            r = requests.post(url, auth=HTTPBasicAuth(
-                            customer_id, api_key), data=data, headers=headers)
-                            response = r.json()
-                            response['status']['code'] == 290
-                            print(response['status']['code'])
-                            data["details"].append(
-                                    {"to": number, "status": "200", "Success": True})
-                            value = serializer.save()
-                            value.service_type = 'TS'
-                            value.messageStatus = 'S'
-                            #value.receiver= receiver
-                            #value.transactionID = response['reference_id']
-                            #value.grouptoken = grouptoken
-                            value.save()
-                        except:
-                            print(response['status']['code'])
-                            data["details"].append(
-                                {"to": number, "status": "400", "success": False, "error": "Number isn't valid and/or can't be sent to"})
-                            value = serializer.save()
-                            value.service_type = 'TS'
-                            value.messageStatus = 'F'
-                            #value.receiver = receiver
-                            #value.grouptoken = grouptoken
-                            # value.transactionID = response['reference_id']
-                            value.save()
-                    else:
-                        return Response({"details": data, "error":"Number isn't valid and/or can't be sent to","service_type": "Telesign", "senderID": senderID}, status=status.HTTP_400_BAD_REQUEST)
-                return Response({
-                    "Success":True, 
-                    "Message":"Message Sending", 
-                    "Data":msgstat,
-                    "Service_Type":"TELESIGN" }, status=status.HTTP_200_OK)
+            def post(self, request):
+                groupID = request.data["groupID"]
+                text = request.data["content"]
+                senderID = request.data["senderID"]
+                msgstat = []
+                numbers = get_numbers_from_group(request, groupID)
+                #print(number)
+                #grouptoken = uuid.uuid4()
+                if not numbers:
+                    return Response({"Success": False, "details": "There are no numbers in this group", "SenderID": senderID, "groupID": groupID})
+                else:
+                    for number in numbers:
+                        # api_key = settings.TELESIGN_API
+                        # customer_id = settings.TELESIGN_CUST
+                        api_key = 'HXwu/7gWs9KMHWilug9NPccJe+nZtUaG6TtfmxikOgQeCP5ErX7uGxIqpufdF2b93Qed9B/WcudRiveDXfaf2Q=='
+                        customer_id = 'ACECBD93-21C7-4B8B-9300-33FDEBC27881'
+                        url = 'https://rest-api.telesign.com/v1/messaging'
+                        headers = {'Accept': 'application/json',
+                            'Content-Type': 'application/x-www-form-urlencoded'}
+                        data = {'phone_number': number,
+                            'message': text, 'message_type': 'ARN'}
+                        serializer = MessageSerializer(data=request.data)
+                        if serializer.is_valid():
+                            try:
+                                r = requests.post(url, auth=HTTPBasicAuth(
+                                customer_id, api_key), data=data, headers=headers)
+                                response = r.json()
+                                response['status']['code'] == 290
+                                print(response['status']['code'])
+                                data["details"].append(
+                                        {"to": number, "status": "200", "Success": True})
+                                value = serializer.save()
+                                value.service_type = 'TS'
+                                value.messageStatus = 'S'
+                                #value.receiver= receiver
+                                #value.transactionID = response['reference_id']
+                                #value.grouptoken = grouptoken
+                                value.save()
+                            except:
+                                print(response['status']['code'])
+                                data["details"].append(
+                                    {"to": number, "status": "400", "success": False, "error": "Number isn't valid and/or can't be sent to"})
+                                value = serializer.save()
+                                value.service_type = 'TS'
+                                value.messageStatus = 'F'
+                                #value.receiver = receiver
+                                #value.grouptoken = grouptoken
+                                # value.transactionID = response['reference_id']
+                                value.save()
+                        else:
+                            return Response({"details": data, "error":"Number isn't valid and/or can't be sent to","service_type": "Telesign", "senderID": senderID}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({
+                        "Success":True, 
+                        "Message":"Message Sending", 
+                        "Data":msgstat,
+                        "Service_Type":"TELESIGN" }, status=status.HTTP_200_OK)
 
         #INVALID SERRVICE
         else:
@@ -1555,6 +1556,69 @@ class SendGroupSms(views.APIView):
                 "Success": False,
                 "details": f"{service_type} not available"}, status=status.HTTP_400_BAD_REQUEST)
 
+class SendGroupSms(views.APIView):
+    """
+    Flash messages
+    """
+    serialrizer_class = MessageSerialize
+    def post (self, request, *args, **kwargs):
+        service_type = request.data["service_type"] 
+        
+        #INFOBIP
+        if (service_type.upper() == "IF") or (service_type.upper() == "INFOBIP"): 
+
+            def post(self, request):
+                receiver = request.data["receiver"]
+                text = request.data["content"]
+                sender = request.data["senderID"]
+                conn = http.client.HTTPSConnection("jdd8zk.api.infobip.com")
+
+                # here i tried to break the payload into bits to try dynamic variables
+                dest1 = {'to': receiver}
+                destination = {'destinations': dest1}
+                flash = {'flash': 'true'}
+                text = {'text': text}
+                sender = {'from': sender}
+                array = [sender, destination, text, flash]
+                # print(array)
+
+                # this is the sample payload as it from the documentation
+                payload = "'messages':[{'from':'%s','destinations':[{'to':'%s'}],'text':'%s','flash':'true'}]" % (
+                    sender, receiver, text)
+                print(payload)
+                print('Hello')
+
+                payload3 = {'messages': []}
+                this = "{'from':'%s', 'destinations':[{'to':'%s'}], 'text':'%s', 'flash':'true'}" % (
+                    sender, receiver, text)
+                payload3['messages'].append(this)
+                print(str(payload3))
+                print('hi')
+                print(payload3)
+
+                # this is 'appended' payload that was broken into bits
+                payload2 = {"messages": array}
+
+                # the rest of the connection codes
+                headers = {
+                    'Authorization': 'App 32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b'
+                }
+                conn.request("POST", "/sms/2/text/advanced", str(payload3), headers)
+                res = conn.getresponse()
+                # print(res.msg)
+                data = res.read().decode('utf-8')
+                data = data.replace('/', '')
+                # print(data)
+                return JsonResponse({"Status": res.status, "Message": "", "Data": data})
+
+        elif (service_type.upper() == "TW") or (service_type.upper() == "TWILIO"): 
+            
+        elif (service_type.upper() == "TS") or (service_type.upper() == "TELESIGN"): 
+            
+        else:
+            return Response({
+                "Success": False,
+                "details": f"{service_type} not available"}, status=status.HTTP_400_BAD_REQUEST)
 
 class TransactionID(APIView):
     """
