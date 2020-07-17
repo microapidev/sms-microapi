@@ -1,12 +1,15 @@
 from django.urls import path
-from .views import SendSingMsgCreate
+from .views import SendSingMsgCreate, SendGroupSms
 from .views import RecipientCreate, RecipientList, RecipientDetail, RecipientsForUser
+
+from .views import InfobipSendMessage, InfobipSingleMessage, InfobipMessageList,  InfobipSendMessage2 #InfobipGroupMessage
+from .views import TwilioSendSms, sms_list, send_group_twilio
+from .views import GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupDelete, GroupNumbersList, GroupNumbersBySenderList, GroupNumbersCreate, update_group_number, GroupNumbersDetail, TransactionID
+
 from .views import InfobipSendMessage, InfobipSingleMessage, InfobipMessageList, InfobipSendMessage2
 from .views import translateMessages, MessageDelete, MessageCounter, TwilioSendSms, sms_list
 from .views import TeleSignSingleSms, TeleSignMessageList, TeleSignTransactionID3
-#from .views import  InfobipGroupMessage, TeleSignGroupSms,send_group_twilio
-from .views import GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupDelete, GroupNumbersList, GroupNumbersBySenderList, GroupNumbersCreate, update_group_number, GroupNumbersDetail
-from .views import SmsHistoryList, SmsHistoryDetail, SendGroupSms
+from .views import SmsHistoryList, SmsHistoryDetail
 from django.urls import path
 from .views import create_receipents_details, save_recipients_details  #get_recipient_details
 from rest_framework.schemas.coreapi import AutoSchema
@@ -16,7 +19,7 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from rest_framework.documentation import include_docs_urls
 
-#doc_view = get_swagger_view(title="SMS API documentation") #This generator is no longer used
+
 schema_view = get_schema_view(
    openapi.Info(
       title="SMS API",
@@ -36,6 +39,9 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
+   #MessageStatus
+   path("v2/sms/messagestatus/<str:msgID>", TransactionID.as_view(), name="message-status"),
+
    #sendsms
    path("v2/sms/send_single_msg", SendSingMsgCreate.as_view(), name="send-one-msg"),
 #   path("v2/sms/send_group_sms", SendGroupSms.as_view(), name="send-group-sms"),
@@ -54,6 +60,7 @@ urlpatterns = [
 
    #TeleSign Views
 #   path("v1/sms/telesign/group_sms", TeleSignGroupSms.as_view(), name="telesign-group-message"),
+
    path("v1/sms/telesign/send_sms", TeleSignSingleSms.as_view(), name="telesign-send-message"),
    path("v1/sms/telesign/view_all_sms", TeleSignMessageList.as_view(), name="telesign-sent-messages"),
    path("v1/sms/telesign/<transactionID>", TeleSignTransactionID3.as_view(), name="telesign-sent-messages3"),
@@ -61,7 +68,8 @@ urlpatterns = [
    #Infobip Views
    path("v1/sms/infobip/send_sms", InfobipSendMessage.as_view(), name="infobip-send-message"),
    # path("v1/sms/infobip/send_sms2", InfobipSendMessage2.as_view(), name="infobip-send-message2"),
-#   path("v1/sms/infobip/send_group_sms", InfobipGroupMessage.as_view(), name="infobip-group-message"),
+   path("v1/sms/infobip/send_group_sms", InfobipGroupMessage.as_view(), name="infobip-group-message"),
+
    path("v1/sms/infobip/view_all_sms", InfobipMessageList.as_view(), name="infobip-sent-messages"),
    path("v1/sms/infobip/view_all_sms/<str:senderID>", InfobipSingleMessage.as_view(), name="infobip-sent-messages"),
    

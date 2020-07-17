@@ -29,6 +29,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('transactionID', models.CharField(blank=True, max_length=2000, null=True)),
+                ('messageID', models.UUIDField(default=uuid.uuid4)),
                 ('grouptoken', models.UUIDField(null=True)),
                 ('receiver', models.CharField(max_length=80)),
                 ('senderID', models.CharField(max_length=30)),
