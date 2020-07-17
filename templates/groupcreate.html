@@ -4,10 +4,13 @@
 
 <head>
     <title>HNG - SMS</title>
-    <link rel="stylesheet" type="text/css" href="{% static 'style.css'%}">
     <link rel="shortcut icon" type="image/icon" href="{% static 'images/favicon.png'%}">
     <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+        integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="{% static 'style.css'%}">
 
 </head>
 
@@ -26,32 +29,67 @@
 
             <div class="form-container">
                 <h5 style="color:blue; margin: 0; padding: 0; margin-bottom: 10px;">For group sms</h5>
-                <form id="form" action="{%url 'group'%}" method="POST">
+                <form id="form" form-data-url="{%url 'group'%}" method="POST">
                     {%csrf_token%}
-                    <div id="dii">
-                        <label for="fullname">SenderID</label><br>
-                        <input id="phone" name="senderID" placeholder="Name" type="text" required><br>
-                    </div>
-                    <div id="dii">
-                        <label for="fullname">Group Name</label><br>
-                        <input id="phone" name="groupname" placeholder="Group Name" type="text" required><br>
-                    </div>
-                    
-                    <br>
-                    <div class="del" id="dii">
-                        <label for="numbers" >Numbers</label><br>
-                        <textarea id="numbers" rows="10" name="numbers"  placeholder="Numbers separated by commas "></textarea>
-                        <div class="clear"></div>
+                    <div class="row mx-auto text-center">
+                        <div class="col-8 mx-auto">
+                            <div class="row">
+                                <div class="col-12">
+                                    <label for="fullname">SenderID</label><br>
+                                    <input id="phone" name="senderID" placeholder="Name" type="text" required><br>
+                                </div>
+                            </div>
+                            <div id="col-12 col-md-6">
+                                <label for="fullname">Group Name</label><br>
+                                <input id="phone" name="groupname" placeholder="Group Name" type="text" required><br>
+                            </div>
 
+                            <br>
+                            <div id="col-12 col-md-6">
+                                <label for="numbers">Numbers</label><br>
+                                <textarea id="numbers" rows="10" name="numbers"
+                                    placeholder="Numbers separated by commas "></textarea>
+                                <div class="clear"></div>
+
+                            </div>
+                        </div>
                     </div>
 
                     <div style="text-align: right; ">
-                        <button style="width:30%" class="end"> SEND </button>
+                        <button style="width:30%" class="group"> SEND </button>
                     </div>
 
                 </form>
 
                 <div class="clear"></div>
+            </div>
+
+            <div id="id01" class="w3-modal modal" style="overflow: auto;">
+                <div class="w3-modal-content w3-round-large w3-card-4 w3-animate-zoom"
+                    style="width:600px; background-color: #ebf8fe; min-height: 450px;">
+                    <div class="w3-margin-bottom">
+                        <span class="close w3-button w3-display-topright">&times;</span>
+                    </div>
+                    <!-- Loader Mode -->
+                    <div class="all">
+                        <div class="w3-center clear w3-padding-64" style="display: none;">
+                            <div class="lds-dual-ring"></div>
+                            <div class="animate-bottom error-text"></div>
+                        </div>
+                        <div class="w3-center done" style="display: none;">
+                            <div class="">
+                                <!-- <i class="far fa-check-circle" style="font-size: 150px;"></i> -->
+                                <img src="{%static 'images/done.gif'%}" width="100%">
+                                <div class="h2 font-weight-bold">DONE😀</div>
+                            </div>
+                        </div>
+                        <div class="w3-clear"></div>
+                    </div>
+                </div>
+
+                <div class="alert-message-container">
+                </div>
+                <div id="alert-area" class="alert-area"></div>
             </div>
 
             <div class="alert-message-container">
@@ -62,5 +100,13 @@
 
     <script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
     <script src="{%static 'js/script.js'%}"></script>
-
+    <!-- <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
+        integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"
+        integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
+        crossorigin="anonymous"></script>
 </body>

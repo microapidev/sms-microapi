@@ -5,7 +5,7 @@ import requests
 import json
 
 # Create your views here.
-BASE_URL = "http://localhost:3000/"
+BASE_URL = "https://sms-microapi.herokuapp.com/"
 @csrf_exempt
 def index(request):
     if request.method == 'POST':
@@ -14,7 +14,6 @@ def index(request):
         payload["service_type"] = request.POST.get("provider")
         payload["senderID"] = request.POST.get("senderID")
         payload["receiver"] = request.POST.get("receiver")
-        print(payload)
         req = requests.post(url=BASE_URL + "v2/sms/send_single_msg", data=payload)
         print(req.content)
         return JsonResponse({"details":str(req.content)})
@@ -29,10 +28,11 @@ def bulk(request):
         payload["service_type"] = request.POST.get("provider")
         payload["senderID"] = request.POST.get("senderID")
         payload["groupID"] = request.POST.get("receiver")
-        req = requests.post(url=BASE_URL + "v2/sms/send_single_msg", data=payload)
+        req = requests.post(url=BASE_URL + "v2/sms/send_group_sms", data=payload)
         return JsonResponse({"details":str(req.content)})
     return render(request, "bulk.html")
 
+@csrf_exempt
 def create_group(request):
     if request.method == 'POST':
         payload1 = {}
@@ -49,13 +49,18 @@ def create_group(request):
             payload2["groupID"] = req["groupID"]    
             payload2["phoneNumbers"] = request.POST.get("numbers")
             print(payload2)
-            requ = requests.post(url=BASE_URL + "v1/sms/group_recipient/create", data=payload2)
-            print(requ.content)
-            requ = requ.content.decode("utf8")
-            req = json.loads(requ)
-            if requ["details"]["success"] == "True":
-                data = "Group created, number saved"
-        return JsonResponse({"details":data})
+            try:
+                requ = requests.post(url=BASE_URL + "v1/sms/group_recipient/create", data=payload2)
+                requ = requ.content.decode("utf8")
+                requ = json.loads(requ)
+                print(requ)
+                if requ["Success"] == "True" and requ["status"] == 201:
+                    data = "Group created, number saved"
+                    return JsonResponse({"details":data})
+                else:
+                    return JsonResponse({"details":"something went wrong"})
+            except:
+                return JsonResponse({"details":"Big something went wrong"})
     return render(request, "groupcreate.html")
 
 def check_status(request):

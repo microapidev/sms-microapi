@@ -1,9 +1,3 @@
-$('.add').click(function () {
-  let i = (($("form input").length - 1) + (($("form input").length - 1) / 2)) / 3;
-  var field = '<hr><div class="field_' + i + '"><input id="phone" name="phone_' + i + '" placeholder="+234 " type="text" required><select id="provider" name="provider_' + i + '" required><option> Select a Provider </option><option> MTN </option><option> Etisalat </option><option> Glo </option><option> Airtel </option></select><input id="amount" name="amount_' + i + '" placeholder="Amount" type="number" required><div class="clear"></div></div>';
-  $('.del').append(field);
-})
-
 var AlertBox = function (id, option) {
   this.show = function (msg) {
     if (msg === '' || typeof msg === 'undefined' || msg === null) {
@@ -71,6 +65,8 @@ $(".btnss").click(function () {
   event.preventDefault()
   let form_url = $("#form").attr("form-data-url")
   formdata = {}
+  $(".modal").css("display", "block")
+  $(".clear").css("display", "block")
   formdata["senderID"] = $('input[name=senderID]').val()
   formdata["receiver"] = $('input[name=receiver]').val()
   formdata["message"] = $('textarea[name=message]').val()
@@ -82,6 +78,8 @@ $(".btnss").click(function () {
     data: formdata,
     success: function (data) {
       if (data.details) {
+        $(".clear").css("display", "none")
+        $(".done").css("display", "block")
         alertbox.show(data.details);
         $("form")[0].reset()
       }
@@ -91,18 +89,12 @@ $(".btnss").click(function () {
 })
 
 
-$(".sub").click(function () {
-  let tot = (($("form input").length - 1) + (($("form input").length - 1) / 2)) / 3
-  tot = tot - 1
-  $(".field_" + tot).remove()
-
-})
-
-
 // BULK_SMS
 $(".send").click(function () {
   event.preventDefault()
   let form_url = $("#form").attr("form-data-url")
+  $(".modal").css("display", "block")
+  $(".clear").css("display", "block")
   formdata = {}
   formdata["groupID"] = $('input[name=groupID]').val()
   formdata["message"] = $('textarea[name=message]').val()
@@ -115,17 +107,49 @@ $(".send").click(function () {
     type: "POST",
     data: formdata,
     success: function (data) {
-      if (data.fail) {
-        alertbox.show(data.fail);
-        $("form")[0].reset()
-
-
-      }
-      if (data.success) {
-        alertbox.show(data.success);
+      if (data.details) {
+        $(".clear").css("display", "none")
+        $(".done").css("display", "block")
+        alertbox.show(data.details);
         $("form")[0].reset()
       }
     },
   })
 
+})
+
+$(".close").click(function () {
+  $(".lds-dual-ring").css("display", "none")
+  $(".modal").css("display", "none")
+  $(".clear").css("display", "none")
+  $(".done").css("display", "none")
+})
+
+
+$(".group").click(function() {
+  event.preventDefault()
+  let form_url = $("#form").attr("form-data-url")
+  $(".modal").css("display", "block")
+  $(".clear").css("display", "block")
+  let formdata = {}
+  formdata["senderID"] = $("input[name=senderID]").val()
+  formdata["numbers"] = $("textarea[name=numbers]").val()
+  formdata["groupname"] = $("input[name=groupname]").val()
+
+
+  $.ajax({
+    url: form_url,
+    type: "POST",
+    data: formdata,
+    success: function(data) {
+      if (data.details) {
+        $(".clear").css("display", "none")
+        $(".done").css("display", "block")
+        alertbox.show(data.details);
+        $("form")[0].reset()
+      }
+    }
+  })
+
+  
 })
