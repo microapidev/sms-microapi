@@ -1738,7 +1738,7 @@ class TransactionID(APIView):
             transid = dbTransID.transactionID
             #check if status is not pending and display status
             if dbTransID.messageStatus != "P":
-                return Response({"Success": True, "Message": "Transaction status retrieved", "Data": dbTransID.messageStatus, 'status': status.HTTP_200_OK})
+                return Response({"Success": "True", "details": "Transaction status retrieved", "Data": dbTransID.messageStatus, 'status': status.HTTP_200_OK})
             #check serviceType and connect to endpoint
             elif dbTransID.service_type == "TS": #retrieve ID for Telesign
                 api_key = settings.TELESIGN_API
@@ -1756,19 +1756,19 @@ class TransactionID(APIView):
                 if testError == 290 or testError == 291 or testError == 292 or testError == 295:
                     dbTransID.messageStatus = "P"
                     dbTransID.save()
-                    return Response({"Success": True, "Message": "Message is still pending", "Data": send, 'status': status.HTTP_200_OK})
+                    return Response({"Success": "True", "Message": "Message is still pending", "Data": send, 'status': status.HTTP_200_OK})
                 elif testError == 251 or testError == 500 or testError == 503:
                     dbTransID.messageStatus = "U"
                     dbTransID.save()
-                    return Response({"Success": True, "Message": "Message was not delivered", "Data": send, 'status': status.HTTP_200_OK})
+                    return Response({"Success": "True", "Message": "Message was not delivered", "Data": send, 'status': status.HTTP_200_OK})
                 elif testError == 200 or testError == 202 or  testError == 203:
                     dbTransID.messageStatus = "S"
                     dbTransID.save()
-                    return Response({"Success": True, "Message": "Message was successfully delivered", "Data": send, 'status': status.HTTP_200_OK})
+                    return Response({"Success": "True", "Message": "Message was successfully delivered", "Data": send, 'status': status.HTTP_200_OK})
                 elif testError in failed:
                     dbTransID.messageStatus = "F"
                     dbTransID.save()
-                    return Response({"Success": True, "Message": "Message sending failed", "Data": send, 'status': status.HTTP_200_OK})
+                    return Response({"Success": "True", "Message": "Message sending failed", "Data": send, 'status': status.HTTP_200_OK})
                 else:
                     return Response({"Message": "Error retrieving response"})
 
@@ -1789,21 +1789,21 @@ class TransactionID(APIView):
                 if testError == 1:
                     dbTransID.messageStatus = "P"
                     dbTransID.save()
-                    return Response({"Success": True, "Message": "Message is still pending", "Data": data, 'status': status.HTTP_200_OK})
+                    return Response({"Success": "True", "Message": "Message is still pending", "Data": data, 'status': status.HTTP_200_OK})
                 elif testError == 2:
                     dbTransID.messageStatus = "U"
                     dbTransID.save()
-                    return Response({"Success": True, "Message": "Message was not delivered", "Data": data, 'status': status.HTTP_200_OK})
+                    return Response({"Success": "True", "Message": "Message was not delivered", "Data": data, 'status': status.HTTP_200_OK})
                 elif testError == 3:
                     dbTransID.messageStatus = "S"
                     dbTransID.save()
-                    return Response({"Success": True, "Message": "Message was successfully delivered", "Data": data, 'status': status.HTTP_200_OK})
+                    return Response({"Success": "True", "Message": "Message was successfully delivered", "Data": data, 'status': status.HTTP_200_OK})
                 elif testError == 4 or testError == 5:
                     dbTransID.messageStatus = "F"
                     dbTransID.save()
-                    return Response({"Success": True, "Message": "Message sending failed", "Data": data, 'status': status.HTTP_200_OK})
+                    return Response({"Success": "True", "Message": "Message sending failed", "Data": data, 'status': status.HTTP_200_OK})
                 else:
-                    return Response({"Message": "Error retrieving response"})
+                    return Response({"Success": "False","Message": "Error retrieving response"})
 
         except ObjectDoesNotExist:
-            return Response({"Failure": True, "Message": "TransactionID not found", "Data": [], 'status': status.HTTP_400_BAD_REQUEST})
+            return Response({"Success": "False", "Message": "TransactionID not found", "Data": [], 'status': status.HTTP_400_BAD_REQUEST})
