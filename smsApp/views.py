@@ -1458,11 +1458,7 @@ class SendGroupSms(views.APIView):
                         return Response({
                             "Success":"False", "Status": 400,
                             "Message": f"something went wrong while sending to {number}"}, status=status.HTTP_400_BAD_REQUEST)
-<<<<<<< HEAD
-                return Response({"details": msgstatus, "Success":"False", "service_type": "InfoBip", "senderID": senderID}, status=status.HTTP_200_OK)
-=======
-                return Response({"details": data, "service_type": "InfoBip", "senderID": senderID}, status=status.HTTP_200_OK)
->>>>>>> 6a4ac3f72a65254575c3e54c3ea5b25722fad95c
+                return Response({"details": data, "service_type": "InfoBip", "Success":"False","senderID": senderID}, status=status.HTTP_200_OK)
 
         #TWILIO
         elif (service_type.upper() == "TW") or (service_type.upper() == "TWILIO"):
@@ -1495,25 +1491,15 @@ class SendGroupSms(views.APIView):
                                 body=content
                             )
                             data["details"].append(
-<<<<<<< HEAD
                                 {"to": number, "status": "200", "Success": "True"})
-                            value = serializer.save()
-=======
-                                {"to": number, "status": "200", "Success": True})
                             value = serializer_message.save()
->>>>>>> 6a4ac3f72a65254575c3e54c3ea5b25722fad95c
                             value.messageStatus = "S"
                             value.save()
 
                         except:
                             data["details"].append(
-<<<<<<< HEAD
                                 {"to": number, "status": "400", "Success": "False", "error": "Number isn't valid and/or can't be sent to"})
-                            value = serializer.save()
-=======
-                                {"to": number, "status": "400", "success": False, "error": "Number isn't valid and/or can't be sent to"})
                             value = serializer_message.save()
->>>>>>> 6a4ac3f72a65254575c3e54c3ea5b25722fad95c
                             value.messageStatus = "F"
                             value.save()
                     else:
@@ -1583,13 +1569,8 @@ class SendGroupSms(views.APIView):
                             response['status']['code'] == 290
                             print(response['status']['code'])
                             data["details"].append(
-<<<<<<< HEAD
                                     {"to": number, "status": "200", "Success": "True"})
-                            value = serializer.save()
-=======
-                                    {"to": number, "status": "200", "Success": True})
                             value = serializer_message.save()
->>>>>>> 6a4ac3f72a65254575c3e54c3ea5b25722fad95c
                             value.service_type = 'TS'
                             value.messageStatus = 'S'
                             #value.receiver= receiver
@@ -1599,13 +1580,8 @@ class SendGroupSms(views.APIView):
                         except:
                             print(response['status']['code'])
                             data["details"].append(
-<<<<<<< HEAD
-                                {"to": number, "status": "400", "Success": "False", "error": "Number isn't valid and/or can't be sent to"})
-                            value = serializer.save()
-=======
-                                {"to": number, "status": "400", "success": False, "error": "Number isn't valid and/or can't be sent to"})
+                                {"to": number, "status": "400", "success": "False", "error": "Number isn't valid and/or can't be sent to"})
                             value = serializer_message.save()
->>>>>>> 6a4ac3f72a65254575c3e54c3ea5b25722fad95c
                             value.service_type = 'TS'
                             value.messageStatus = 'F'
                             #value.receiver = receiver
@@ -1615,10 +1591,7 @@ class SendGroupSms(views.APIView):
                     else:
                         return Response({"details": data,"Success":"False", "error":"Number isn't valid and/or can't be sent to","service_type": "Telesign", "senderID": senderID}, status=status.HTTP_400_BAD_REQUEST)
                 return Response({
-<<<<<<< HEAD
                     "Success":"True", 
-=======
->>>>>>> 6a4ac3f72a65254575c3e54c3ea5b25722fad95c
                     "Message":"Message Sending", 
                     "Data":data,
                     "Service_Type":"TELESIGN" }, status=status.HTTP_200_OK)
@@ -1626,7 +1599,7 @@ class SendGroupSms(views.APIView):
         #INVALID SERRVICE
         else:
             return Response({
-                "Success": False,
+                "Success": "False",
                 "details": f"{service_type} not available"}, status=status.HTTP_400_BAD_REQUEST)
 
 class SendFlashSms(views.APIView):
