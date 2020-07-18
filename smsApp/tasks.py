@@ -11,6 +11,7 @@ from celery import shared_task
 import uuid, http.client
 from googletrans import Translator
 from rest_framework.response import Response
+from django.core import serializers
 
 #So guys Here i will try to explain what we have so far and how we can go about it. So
 # have 2 functionsof note which are async_single_infobip and async_single_telesign 
@@ -110,7 +111,9 @@ def async_single_infobip(senderID, service_type, receiver, content, payload, lan
 
 
 @app.task
-def async_single_telesign(headers,data,receiver,content, value):
+def async_single_telesign(headers,data,receiver,content, {"value":value}):
+    print("inside async")
+    value = serializers.deserialize("json", value)
     api_key = 'HXwu/7gWs9KMHWilug9NPccJe+nZtUaG6TtfmxikOgQeCP5ErX7uGxIqpufdF2b93Qed9B/WcudRiveDXfaf2Q=='
     customer_id = 'ACECBD93-21C7-4B8B-9300-33FDEBC27881'
     url = 'https://rest-api.telesign.com/v1/messaging'
@@ -120,19 +123,21 @@ def async_single_telesign(headers,data,receiver,content, value):
                     headers=headers)
     # value = serializer_message.save()
     response = r.json()
+    print(response)
     if response['status']['code'] == 290:
         value.service_type = 'TS'
         value.messageStatus = 'SC'
         value.transactionID = response['reference_id']
-        # value.save()
-        if len(original_txt) != 0:
-            print({
-                "Success": True,
-                "Message": "Message Sending",
-                "Original SMS": f"{original_txt[0]}",
-                "Data": response,
-                "Service_Type": "TELESIGN"
-                })
+        value.save()
+        # print("alue is "value)
+        # if len(original_txt) != 0:
+            # print({
+            #     "Success": True,
+            #     "Message": "Message Sending",
+            #     "Original SMS": f"{original_txt[0]}",
+            #     "Data": response,
+            #     "Service_Type": "TELESIGN"
+            #     })
         print({
             "Success": True,
             "Message": "Message Sending",
@@ -145,14 +150,17 @@ def async_single_telesign(headers,data,receiver,content, value):
         value.service_type = 'TS'
         value.messageStatus = 'F'
         value.receiver = receiver
-        value.transactionID = "500-F"
-        # value.save()
-        print({
-            "Success": False,
-            "Message": "Message Couldnt be sent",
-            "Data": response,
-            "Service_Type": "TELESIGN"})
-    return response, value
+        # value.transactionID = "500-F"
+        value.save()
+        # print("Value is "value)
+        # print({
+        #     "Success": False,
+        #     "Message": "Message Couldnt be sent",
+        #     "Data": response,
+        #     "Service_Type": "TELESIGN"})
+    print(f"value is {value}")
+    print(f"Response is{response}")
+    return value
 
 
 

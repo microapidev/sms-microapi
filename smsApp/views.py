@@ -29,6 +29,7 @@ from googletrans import Translator
 import uuid
 from .tasks import send_group_sms, async_single_infobip, async_group_sms, async_single_telesign
 from smsApi.celery import app as celeryTaskapp
+from django.core import serializers
 
 
 # Create your views here.
@@ -476,11 +477,18 @@ class SendSingMsgCreate(generics.CreateAPIView):
                     # print(value)
                     # print("break----")
                     value = serializer_message.save()
-                    resp,val = async_single_telesign.apply_async((headers,data,receiver,content, value), countdown=15)
-                    val.save()
+                    print(f"first response: {value}")
+                    value = serializers.serialize("json", [value])
+                    print(value)
+                    # message = Message.objects.create(senderID=senderID, service_type=service_type, receiver=receiver, content=original_txt, language=language)
+                    # print(message)
+                    # value = serializers.serialize("json", [message])
+                    # print(message)
+                    async_single_telesign.apply_async((headers,data,receiver,content), {'value':value}, countdown=15)
+                    # value.save()
                 else:
                     return Response({"details": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
-                return Response({"resultID":resp.id})
+                return Response({"resultID":"value"})
 
             else:
                 return Response({f"Service Type {service_type}": "Not Supported"}, status=status.HTTP_400_BAD_REQUEST)
