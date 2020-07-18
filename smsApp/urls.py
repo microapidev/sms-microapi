@@ -6,7 +6,7 @@ from .views import translateMessages, MessageDelete, MessageCounter, TwilioSendS
 from .views import TeleSignSingleSms, TeleSignMessageList, TeleSignTransactionID3
 from .views import TeleSignCollectionSms #,send_group_twilio#InfobipGroupMessage
 from .views import GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupDelete, GroupNumbersList, GroupNumbersBySenderList, GroupNumbersCreate, update_group_number, GroupNumbersDetail
-from .views import SmsHistoryList, SmsHistoryDetail, SendGroupSms
+from .views import SmsHistoryList, SmsHistoryDetail, SendGroupSms, SendFlashSms
 from django.urls import path
 from .views import create_receipents_details, save_recipients_details  #get_recipient_details
 from rest_framework.schemas.coreapi import AutoSchema
@@ -42,6 +42,7 @@ urlpatterns = [
    #sendsms
    path("v2/sms/send_single_msg", SendSingMsgCreate.as_view(), name="send-one-msg"),
    path("v2/sms/send_group_sms", SendGroupSms.as_view(), name="send-group-sms"),
+   path("v2/sms/send_flash_sms",  SendFlashSms.as_view(), name="send-flash-sms"),
    #messageDelete
    path("v1/sms/message/delete/<transactionID>", MessageDelete.as_view(), name="delete-message"),
    path("v1/sms/message/<userID>", MessageCounter.as_view(), name="count-message"),
@@ -64,7 +65,8 @@ urlpatterns = [
    #Infobip Views
    path("v1/sms/infobip/send_sms", InfobipSendMessage.as_view(), name="infobip-send-message"),
    # path("v1/sms/infobip/send_sms2", InfobipSendMessage2.as_view(), name="infobip-send-message2"),
-   # path("v1/sms/infobip/send_group_sms", InfobipGroupMessage.as_view(), name="infobip-group-message"),
+   #path("v1/sms/infobip/send_group_sms", InfobipGroupMessage.as_view(), name="infobip-group-message"),
+
    path("v1/sms/infobip/view_all_sms", InfobipMessageList.as_view(), name="infobip-sent-messages"),
    path("v1/sms/infobip/view_all_sms/<str:senderID>", InfobipSingleMessage.as_view(), name="infobip-sent-messages"),
    
