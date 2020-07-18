@@ -149,7 +149,7 @@ class SendSingMsgCreate(generics.CreateAPIView):
                         value.transactionID = "500-F"
                         value.save()
                         return Response({
-                            'success': 'false',
+                            'Success': 'False',
                             'message': 'Message not sent',
                             'error': {
                                 # 'userID': f"{senderID}",
@@ -298,10 +298,10 @@ class SendSingMsgCreate(generics.CreateAPIView):
                             "Data": response,
                             "Service_Type": "TELESIGN"})
                 else:
-                    return Response({"details": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({"Success":"False","Message": "Invalid credentials","Data": response, f"Service Type {service_type}"}, status=status.HTTP_400_BAD_REQUEST)
 
             else:
-                return Response({f"Service Type {service_type}": "Not Supported"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"Success":"False","Message": "","Data": response, f"Service Type {service_type}": "Not Supported"}, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({f"{receiver} should be a number starting with +,1,0 ": "Not Supported"}, status=status.HTTP_400_BAD_REQUEST)
     
