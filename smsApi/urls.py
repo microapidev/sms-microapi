@@ -17,9 +17,14 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+import logging
 
+logger = logging.getLogger(__name__)
+logger.error("In URLS.py")
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('smsApp.urls')),
     # path('', include('sms_api_interface.urls')),
-] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+logger.error("In URLS.py, works fine")
+
