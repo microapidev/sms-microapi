@@ -82,7 +82,7 @@ class SendSingMsgCreate(generics.CreateAPIView):
             
             if (service_type == 'TW'):
                 
-                message_dict = {'senderID':senderID, 'service_type':service_type, 'receiver':receiver, 'content':content, 'language':language}
+                message_dict = {'senderID':senderID, 'service_type':service_type, 'receiver':receiver, 'content':content}
 
 
                 serializer_message = MessageSerializer(data=message_dict)
@@ -122,9 +122,9 @@ class SendSingMsgCreate(generics.CreateAPIView):
                         value.save()
                         if len(original_txt) != 0:
                             return Response({
-                                'success': 'true',
-                                'message': 'Message sent',
-                                'original message': f"{original_txt[0]}",
+                                'Success': 'true',
+                                "Status": f"{message.status}",
+                                'Message': f"{original_txt[0]}",
                                 'data': {
                                     'receiver': f"{receiver}",
                                     # 'userID': f"{senderID}",
@@ -133,8 +133,9 @@ class SendSingMsgCreate(generics.CreateAPIView):
                                 }
                             }, 200)
                         return Response({
-                            'success': 'true',
-                            'message': 'Message sent',
+                            'Success': 'true',
+                            "Status": f"{message.status}",
+                            'Message': 'Message sent',
                             'data': {
                                 'receiver': f"{receiver}",
                                 # 'userID': f"{senderID}",
@@ -148,21 +149,21 @@ class SendSingMsgCreate(generics.CreateAPIView):
                         value.transactionID = "500-F"
                         value.save()
                         return Response({
-                            'success': 'false',
-                            'message': 'Message not sent',
+                            'Success': 'False',
+                            'Message': 'Message not sent',
                             'error': {
                                 # 'userID': f"{senderID}",
                                 'recipient': f"{receiver}",
-                                'twilioError':{"error":f"{str(e)}"},
                                 'service_type': 'TWILIO',
                                 'statusCode': '400',
-                                'details': 'The Phone Number is unregistered to Twilio'
+                                'details': 'The Phone Number is Not registered to Twilio'
                             }
                         }, status=status.HTTP_400_BAD_REQUEST)
             
                 return Response({
-                    'success': 'false',
-                    'message': 'Message cannot be sent',
+                    "Success": "False",
+                    "Status": "F",
+                    'Message': 'Message cannot be sent',
                     'error': {
                         # 'userID': f"{senderID}",
                         'recipient': f"{receiver}",
@@ -220,8 +221,8 @@ class SendSingMsgCreate(generics.CreateAPIView):
                         value.save()
                     # print(data)
                     if len(original_txt) != 0:
-                        return Response({"Status": res.status, "Original Message": f"{original_txt[0]}", "Data": data})
-                    return Response({"Status": res.status, "Message": "", "Data": data})
+                        return Response({"Success":"True", "Status": res.status, "Message": f"{original_txt[0]}", "Data": data})
+                    return Response({"Success":"True","Status": res.status, "Message": "", "Data": data})
                 else:
                     return Response({"message": "Not Valid"})
             
@@ -269,13 +270,14 @@ class SendSingMsgCreate(generics.CreateAPIView):
                         if len(original_txt) != 0:
                             return Response({
                                 "Success": True,
-                                "Message": "Message Sending",
-                                "Original SMS": f"{original_txt[0]}",
+                                "Status": f"{response['status']}",
+                                "Message": f"{original_txt[0]}",
                                 "Data": response,
                                 "Service_Type": "TELESIGN"
                                 })
                         return Response({
                             "Success": True,
+                            "Status": f"{response['status']}",
                             "Message": "Message Sending",
                             "Data": response,
                             "Service_Type": "TELESIGN"
@@ -290,14 +292,15 @@ class SendSingMsgCreate(generics.CreateAPIView):
                         value.save()
                         return Response({
                             "Success": False,
+                            "Status": "F",
                             "Message": "Message Couldnt be sent",
                             "Data": response,
                             "Service_Type": "TELESIGN"})
                 else:
-                    return Response({"details": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({"Success":"False","Message": "Invalid credentials","Data": "Not Valid", "Service Type": f"{service_type}"}, status=status.HTTP_400_BAD_REQUEST)
 
             else:
-                return Response({f"Service Type {service_type}": "Not Supported"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"Success":"False","Message": "","Data": "N/A", f"Service Type {service_type}": "Not Supported"}, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({f"{receiver} should be a number starting with +,1,0 ": "Not Supported"}, status=status.HTTP_400_BAD_REQUEST)
     
@@ -827,18 +830,18 @@ class GroupNumbersCreate(generics.CreateAPIView):
                 duplicates.append(f"{number} already exists in this group")
             else:
                 # self.create(request, *args, **kwargs)
-                request.data._mutable = True 
+                request.POST._mutable = True 
                 request.data["group"] = group.id
                 request.data["phoneNumbers"] = number
                 serializer = GroupNumbersPrimarySerializer(data=request.data)
                 
-                print(serializer)
                 if serializer.is_valid():
                     serializer.save()
-                    print("yeah")            
+                               
             
         request.data["phoneNumbers"] = phoneNumbers
-        request.data._mutable = False
+        request.POST._mutable = False 
+        # request.data._mutable = False
         return Response(
                 {
                     "Success": "True", 
@@ -1402,33 +1405,37 @@ class SendGroupSms(views.APIView):
         The following details are needed in sending a group sms - senderID, groupID, service type and content.
         The groupID is autogenerated upon creating a group, to create a group refer to the endpoint (v1/sms/create_group)
     """
-    serializer_class = MessageSerializer
-
-    def post(self, request, *args, **kwargs):
-        #msgstatus = []
-        service_type = request.data.get("service_type") 
-        senderID = request.data.get("senderID")
-        groupID = request.data.get("groupID")
-        content = request.data.get("content")
-
-        numbers = get_numbers_from_group(request, groupID)
-
+    def post(self, request):
+        service_type = request.data["service_type"] 
+        original_txt = []
         #INFOBIP
         if (service_type.upper() == "IF") or (service_type.upper() == "INFOBIP"):
 
-            data = {"message": content, "service_type": service_type,
-                    "senderID": senderID, "groupID": groupID}
 
-            serializer_message = MessageSerializer(data=data)
+
+            msgstatus = []
+            
+            groupID = request.data["groupID"]
+            text = request.data["content"]
+            senderID = request.data["senderID"]
+            language = request.data["language"]
+            numbers = get_numbers_from_group(request, groupID)
+
+            serializer = MessageSerializer(data=data)
 
             conn = http.client.HTTPSConnection("jdd8zk.api.infobip.com")
             if not numbers:
                 return Response({"Success": False, "details": "There are no numbers in this group", "SenderID": senderID, "groupID": groupID})
             else:
                 for number in numbers:
-                    payload = "{\"messages\":[{\"from\":\"%s\",\"destinations\":[{\"to\":\"%s\"}],\"text\":\"%s\",\"flash\":true}]}" % (senderID, numbers, content)
-                    if serializer_message.is_valid():
-                        value = serializer_message.save()
+                    if (language != 'en' or language != None or language != " " ):
+                        original_txt.append(text)
+                        text = translateMsg(text, language)
+                        payload = "{\"messages\":[{\"from\":\"%s\",\"destinations\":[{\"to\":\"%s\"}],\"text\":\"%s\",\"flash\":true}]}" % (senderID, numbers, text)
+                    else:
+                        payload = "{\"messages\":[{\"from\":\"%s\",\"destinations\":[{\"to\":\"%s\"}],\"text\":\"%s\",\"flash\":true}]}" % (senderID, numbers, text)
+                    if serializer.is_valid():
+                        value = serializer.save()
                         data = {
                             "from": senderID,
                             "to": numbers,
@@ -1456,20 +1463,27 @@ class SendGroupSms(views.APIView):
         #TWILIO
         elif (service_type.upper() == "TW") or (service_type.upper() == "TWILIO"):
             
-            data = {"message": content, "service_type": service_type,
-                    "senderID": senderID, "groupID": groupID}
-
-            serializer_message = MessageSerializer(data=data)
+            content = request.data["content"]
+            groupID = request.data["groupID"]
+            senderID = request.data["senderID"]
+            language = request.data["language"]
+            numbers = get_numbers_from_group(request, groupID)
 
             client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
             if not numbers:
                 return Response({"Success": False, "details": "There are no numbers in this group", "SenderID": senderID, "groupID": groupID})
             else:
                 for number in numbers:
-                    #payload = {'content': content, "receiver": number,
-                    #        "senderID": senderID, "service_type": "TW"}
-                    #serializer = MessageSerializer(data=payload)
-                    if serializer_message.is_valid():
+                    if (language != 'en' or language != None or language != " " ):
+                        original_txt.append(content)
+                        content = translateMsg(content, language)
+                        payload = {'content': content, "receiver": number,"senderID": senderID, "service_type": "TW"}
+                    else:
+                        payload = {'content': content, "receiver": number,
+                                "senderID": senderID, "service_type": "TW"}
+
+                    serializer = MessageSerializer(data=payload)
+                    if serializer.is_valid():
                         try:
                             client.messages.create(
                                 from_=settings.TWILIO_NUMBER,
@@ -1516,8 +1530,16 @@ class SendGroupSms(views.APIView):
             data = {"message": content, "service_type": service_type,
                     "senderID": senderID, "groupID": groupID}
 
-            serializer_message = MessageSerializer(data=data)
+            serializer = MessageSerializer(data=data)
 
+            groupID = request.data["groupID"]
+            text = request.data["content"]
+            senderID = request.data["senderID"]
+            msgstat = []
+            numbers = get_numbers_from_group(request, groupID)
+            language = request.data['language']
+            #print(number)
+            #grouptoken = uuid.uuid4()
             if not numbers:
                 return Response({"Success": False, "details": "There are no numbers in this group", "SenderID": senderID, "groupID": groupID})
             else:
@@ -1529,10 +1551,16 @@ class SendGroupSms(views.APIView):
                     url = 'https://rest-api.telesign.com/v1/messaging'
                     headers = {'Accept': 'application/json',
                         'Content-Type': 'application/x-www-form-urlencoded'}
-                    #data = {'phone_number': number,
-                    #    'message': content, 'message_type': 'ARN'}
-                    #serializer = MessageSerializer(data=request.data)
-                    if serializer_message.is_valid():
+                    if (language != 'en' or language != None or language != " " ):
+                        original_txt.append(text)
+                        text = translateMsg(text, language)
+                        data = {'phone_number': number,
+                            'message': text, 'message_type': 'ARN'}
+                    else:
+                        data = {'phone_number': number,
+                            'message': text, 'message_type': 'ARN'}
+                    serializer = MessageSerializer(data=request.data)
+                    if serializer.is_valid():
                         try:
                             r = requests.post(url, auth=HTTPBasicAuth(
                             customer_id, api_key), data=data, headers=headers)

@@ -1,12 +1,13 @@
 from django.urls import path
-from .views import SendSingMsgCreate, SendGroupSms,  SendFlashSms
+from .views import SendSingMsgCreate, TransactionID
 from .views import RecipientCreate, RecipientList, RecipientDetail, RecipientsForUser
-from .views import InfobipSendMessage, InfobipSingleMessage, InfobipMessageList,  InfobipSendMessage2 #InfobipGroupMessage
-from .views import TwilioSendSms, sms_list 
-from .views import GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupDelete, GroupNumbersList, GroupNumbersBySenderList, GroupNumbersCreate, update_group_number, GroupNumbersDetail, TransactionID
-from .views import translateMessages, MessageDelete, MessageCounter
+from .views import InfobipSendMessage, InfobipSingleMessage, InfobipMessageList, InfobipSendMessage2
+from .views import translateMessages, MessageDelete, MessageCounter, TwilioSendSms, sms_list
 from .views import TeleSignSingleSms, TeleSignMessageList, TeleSignTransactionID3
-from .views import SmsHistoryList, SmsHistoryDetail
+from .views import TeleSignCollectionSms #,send_group_twilio#InfobipGroupMessage
+from .views import GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupDelete, GroupNumbersList, GroupNumbersBySenderList, GroupNumbersCreate, update_group_number, GroupNumbersDetail
+from .views import SmsHistoryList, SmsHistoryDetail, SendGroupSms, SendFlashSms
+from django.urls import path
 from .views import create_receipents_details, save_recipients_details  #get_recipient_details
 from rest_framework.schemas.coreapi import AutoSchema
 from rest_framework_swagger.views import get_swagger_view
@@ -56,6 +57,7 @@ urlpatterns = [
    path('v1/sms/sms_history/<str:senderID>', SmsHistoryList.as_view(), name="history"),
 
    #TeleSign Views
+   # path("v1/sms/telesign/group_sms", TeleSignGroupSms.as_view(), name="telesign-group-message"),
    path("v1/sms/telesign/send_sms", TeleSignSingleSms.as_view(), name="telesign-send-message"),
    path("v1/sms/telesign/view_all_sms", TeleSignMessageList.as_view(), name="telesign-sent-messages"),
    path("v1/sms/telesign/<transactionID>", TeleSignTransactionID3.as_view(), name="telesign-sent-messages3"),
