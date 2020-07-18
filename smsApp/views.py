@@ -1411,8 +1411,6 @@ class SendGroupSms(views.APIView):
         #INFOBIP
         if (service_type.upper() == "IF") or (service_type.upper() == "INFOBIP"):
 
-
-
             msgstatus = []
             
             groupID = request.data["groupID"]
@@ -1463,6 +1461,7 @@ class SendGroupSms(views.APIView):
         #TWILIO
         elif (service_type.upper() == "TW") or (service_type.upper() == "TWILIO"):
             
+            data = []
             content = request.data["content"]
             groupID = request.data["groupID"]
             senderID = request.data["senderID"]
@@ -1492,14 +1491,14 @@ class SendGroupSms(views.APIView):
                             )
                             data["details"].append(
                                 {"to": number, "status": "200", "Success": True})
-                            value = serializer_message.save()
+                            value = serializer.save()
                             value.messageStatus = "S"
                             value.save()
 
                         except:
                             data["details"].append(
                                 {"to": number, "status": "400", "success": False, "error": "Number isn't valid and/or can't be sent to"})
-                            value = serializer_message.save()
+                            value = serializer.save()
                             value.messageStatus = "F"
                             value.save()
                     else:
@@ -1527,19 +1526,19 @@ class SendGroupSms(views.APIView):
 
         #TELESIGN 
         elif (service_type.upper() == "TS") or (service_type.upper() == "TELESIGN"):
-            data = {"message": content, "service_type": service_type,
+            data = {"message": text, "service_type": service_type,
                     "senderID": senderID, "groupID": groupID}
-
             serializer = MessageSerializer(data=data)
 
             groupID = request.data["groupID"]
-            text = request.data["content"]
+            text = request.data["text"]
             senderID = request.data["senderID"]
             msgstat = []
             numbers = get_numbers_from_group(request, groupID)
             language = request.data['language']
             #print(number)
             #grouptoken = uuid.uuid4()
+
             if not numbers:
                 return Response({"Success": False, "details": "There are no numbers in this group", "SenderID": senderID, "groupID": groupID})
             else:
@@ -1569,7 +1568,7 @@ class SendGroupSms(views.APIView):
                             print(response['status']['code'])
                             data["details"].append(
                                     {"to": number, "status": "200", "Success": True})
-                            value = serializer_message.save()
+                            value = serializer.save()
                             value.service_type = 'TS'
                             value.messageStatus = 'S'
                             #value.receiver= receiver
@@ -1580,7 +1579,7 @@ class SendGroupSms(views.APIView):
                             print(response['status']['code'])
                             data["details"].append(
                                 {"to": number, "status": "400", "success": False, "error": "Number isn't valid and/or can't be sent to"})
-                            value = serializer_message.save()
+                            value = serializer.save()
                             value.service_type = 'TS'
                             value.messageStatus = 'F'
                             #value.receiver = receiver
