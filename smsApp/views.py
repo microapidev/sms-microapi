@@ -220,6 +220,18 @@ class SendSingMsgCreate(generics.CreateAPIView):
                     data = json.loads(data)
                     if res.status == 200:
                         value.transactionID = data["messages"][0]["messageId"]
+                        if ( data["messages"][0]["status"]["id"] == 3 or data["messages"][0]["status"]["id"] == 26 or data["messages"][0]["status"]["id"] == 7):
+                            value.messageStatus = "P"
+                        if ( data["messages"][0]["status"]["id"] == 4 or data["messages"][0]["status"]["id"] == 9):
+                            value.messageStatus = "U"
+                        if ( data["messages"][0]["status"]["id"] == 2 or data["messages"][0]["status"]["id"] == 5):
+                            value.messageStatus = "R"
+                        if ( data["messages"][0]["status"]["id"] == 15 or data["messages"][0]["status"]["id"] == 29):
+                            value.messageStatus = "E"
+                        if ( data["messages"][0]["status"]["id"] == 6 or data["messages"][0]["status"]["id"] == 8 or data["messages"][0]["status"]["id"] == 10 or data["messages"][0]["status"]["id"] == 11 or data["messages"][0]["status"]["id"] == 12 or data["messages"][0]["status"]["id"] == 13 or data["messages"][0]["status"]["id"] == 14 or data["messages"][0]["status"]["id"] == 17 or data["messages"][0]["status"]["id"] == 18 or data["messages"][0]["status"]["id"] == 19 or data["messages"][0]["status"]["id"] == 20 or data["messages"][0]["status"]["id"] == 21 or data["messages"][0]["status"]["id"] == 23 or data["messages"][0]["status"]["id"] == 24 or data["messages"][0]["status"]["id"] == 25 or data["messages"][0]["status"]["id"] == 51 or data["messages"][0]["status"]["id"] == 52):
+                            value.messageStatus = "FR"
+                        else:
+                            value.messageStatus = 'F'
                         value.save()
                     # print(data)
                     if len(original_txt) != 0:
