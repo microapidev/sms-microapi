@@ -7,7 +7,7 @@ from .models import Recipient, Group, Message, GroupNumbers
 #     list_display = ("phoneNumber", "name", "email", "is_active", "service")
 
 class MessageAdmin(admin.ModelAdmin):
-    list_display = ('service_type', 'receiver', 'date_created','language',)
+    list_display = ('service_type', 'receiver', 'date_created','language','messageStatus',)
     list_filter = ('service_type',)
     search_fields = ('receiver',)
 
