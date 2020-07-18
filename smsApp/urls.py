@@ -15,7 +15,11 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from rest_framework.documentation import include_docs_urls
+import logging
 
+logger = logging.getLogger(__name__)
+
+logger.error("In urls.py for sms api")
 
 schema_view = get_schema_view(
    openapi.Info(
@@ -103,3 +107,4 @@ urlpatterns = [
    
 ]
 
+logger.error("at the end of urls.py for sms api")

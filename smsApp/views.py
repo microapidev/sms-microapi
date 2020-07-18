@@ -27,7 +27,11 @@ from .models import Recipient, Message, Group, GroupNumbers
 from .serializers import RecipientSerializer, MessageSerializer, GroupSerializer, GroupNumbersSerializer, GroupNumbersPrimarySerializer
 from googletrans import Translator
 import uuid
+import logging
 
+logger = logging.getLogger(__name__)
+
+logger.error("In views.py. starting")
 
 # Create your views here.
 
@@ -66,6 +70,7 @@ class SendSingMsgCreate(generics.CreateAPIView):
     TS == Telesign
     TW == Twilio
     """
+    logger.error("In single message class")
     
     serializer_class = MessageSerializer
 
@@ -77,7 +82,7 @@ class SendSingMsgCreate(generics.CreateAPIView):
         language = request.data.get("language")
         regex = re.compile(r'^\+?1?\d{9,15}$')
         original_txt = []
-        
+        logger.error("posting to message")
         if regex.match(receiver):
             
             if (service_type == 'TW'):
@@ -177,6 +182,7 @@ class SendSingMsgCreate(generics.CreateAPIView):
 
             #Infobip
             elif (service_type == 'IF'):
+                logger.error("posting to message in INFOBIP")
 
                 message_dict = {'senderID':senderID, 'service_type':service_type, 'receiver':receiver, 'content':content}
                 serializer = MessageSerializer(data=message_dict)
@@ -242,6 +248,7 @@ class SendSingMsgCreate(generics.CreateAPIView):
             
             #For Telesign
             elif (service_type == 'TS'):
+                logger.error("posting to message in telesign")
                 message_dict = {'senderID':senderID, 'service_type':service_type, 'receiver':receiver, 'content':content}
                 serializer_message = MessageSerializer(data=message_dict)
 

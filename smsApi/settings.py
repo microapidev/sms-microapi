@@ -1,8 +1,32 @@
 import django_heroku
 import os
 from dotenv import load_dotenv
+import logging
+
+logger = logging.getLogger(__name__)
 
 load_dotenv()
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'WARNING',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+            'propagate': False,
+        },
+    },
+}
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -166,6 +190,6 @@ STATICFILES_DIRS = (
 
 #  Add configuration for static files storage using whitenoise
 # STATICFILES_STORAGE = 'whitenoise.django.CompressedManifestStaticFilesStorage'
-
+logger.error("In settings.py, works fine")
 # Activate Django-Heroku.
 django_heroku.settings(locals())
