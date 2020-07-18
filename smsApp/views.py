@@ -149,7 +149,7 @@ class SendSingMsgCreate(generics.CreateAPIView):
                         value.transactionID = "500-F"
                         value.save()
                         return Response({
-                            'success': 'false',
+                            'Success': 'False',
                             'message': 'Message not sent',
                             'error': {
                                 # 'userID': f"{senderID}",
@@ -298,10 +298,10 @@ class SendSingMsgCreate(generics.CreateAPIView):
                             "Data": response,
                             "Service_Type": "TELESIGN"})
                 else:
-                    return Response({"details": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({"Success":"False","Message": "Invalid credentials","Data": response, f"Service Type {service_type}"}, status=status.HTTP_400_BAD_REQUEST)
 
             else:
-                return Response({f"Service Type {service_type}": "Not Supported"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"Success":"False","Message": "","Data": response, f"Service Type {service_type}": "Not Supported"}, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({f"{receiver} should be a number starting with +,1,0 ": "Not Supported"}, status=status.HTTP_400_BAD_REQUEST)
     
@@ -831,7 +831,7 @@ class GroupNumbersCreate(generics.CreateAPIView):
                 duplicates.append(f"{number} already exists in this group")
             else:
                 # self.create(request, *args, **kwargs)
-                request.data['_mutable'] = True 
+                request.POST._mutable = True 
                 request.data["group"] = group.id
                 request.data["phoneNumbers"] = number
                 serializer = GroupNumbersPrimarySerializer(data=request.data)
@@ -842,7 +842,7 @@ class GroupNumbersCreate(generics.CreateAPIView):
                     print("yeah")            
             
         request.data["phoneNumbers"] = phoneNumbers
-        request.data['_mutable'] = False 
+        request.POST._mutable = False 
         # request.data._mutable = False
         return Response(
                 {
