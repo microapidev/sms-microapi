@@ -135,7 +135,7 @@ class SendSingMsgCreate(generics.CreateAPIView):
                         return Response({
                             'Success': 'true',
                             "Status": f"{message.status}",
-                            'message': 'Message sent',
+                            'Message': 'Message sent',
                             'data': {
                                 'receiver': f"{receiver}",
                                 # 'userID': f"{senderID}",
@@ -150,21 +150,20 @@ class SendSingMsgCreate(generics.CreateAPIView):
                         value.save()
                         return Response({
                             'Success': 'False',
-                            'message': 'Message not sent',
+                            'Message': 'Message not sent',
                             'error': {
                                 # 'userID': f"{senderID}",
                                 'recipient': f"{receiver}",
-                                'twilioError':{"error":f"{str(e)}"},
                                 'service_type': 'TWILIO',
                                 'statusCode': '400',
-                                'details': 'The Phone Number is unregistered to Twilio'
+                                'details': 'The Phone Number is Not registered to Twilio'
                             }
                         }, status=status.HTTP_400_BAD_REQUEST)
             
                 return Response({
-                    "Success": False,
+                    "Success": "False",
                     "Status": "F",
-                    'message': 'Message cannot be sent',
+                    'Message': 'Message cannot be sent',
                     'error': {
                         # 'userID': f"{senderID}",
                         'recipient': f"{receiver}",
@@ -298,10 +297,10 @@ class SendSingMsgCreate(generics.CreateAPIView):
                             "Data": response,
                             "Service_Type": "TELESIGN"})
                 else:
-                    return Response({"Success":"False","Message": "Invalid credentials","Data": response, f"Service Type {service_type}"}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({"Success":"False","Message": "Invalid credentials","Data": "Not Valid", "Service Type": f"{service_type}"}, status=status.HTTP_400_BAD_REQUEST)
 
             else:
-                return Response({"Success":"False","Message": "","Data": response, f"Service Type {service_type}": "Not Supported"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"Success":"False","Message": "","Data": "N/A", f"Service Type {service_type}": "Not Supported"}, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({f"{receiver} should be a number starting with +,1,0 ": "Not Supported"}, status=status.HTTP_400_BAD_REQUEST)
     
