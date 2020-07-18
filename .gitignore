@@ -24,6 +24,8 @@ db.sqlite3
 .idea/**/libraries 
 *.iws /out/ 
 
+.gitignore
+
 # Python # 
 *.py[cod] 
 *$py.class 
@@ -76,14 +78,16 @@ celerybeat-schedule.*
 *.sage.py 
 
 # Environments 
-.env 
+*.env 
 .venv 
 env/ 
-venv/ 
-smsVenv/ 
+venv/
+venv2/ 
+smsvenv/ 
 ENV/ 
 env.bak/ 
 venv.bak/ 
+femvenv/
 
 # mkdocs documentation 
 /site 
