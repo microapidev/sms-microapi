@@ -46,13 +46,13 @@ SECRET_KEY= 'lmrffsgfhrilklg-za7#57vi!zr)ps8)2anyona25###dl)s-#s=7=vn_'
 TWILIO_ACCOUNT_SID = 'AC24dc3ff423be936f3efd0503045fd4e8'
 TWILIO_AUTH_TOKEN = '70846d53642b6fc91abb485b88a0fa96'
 TWILIO_NUMBER = '+13026637959'
-TELESIGN_API = 'HXwu/7gWs9KMHWilug9NPccJe+nZtUaG6TtfmxikOgQeCP5ErX7uGxIqpufdF2b93Qed9B/WcudRiveDXfaf2Q=='
-TELESIGN_CUST = 'ACECBD93-21C7-4B8B-9300-33FDEBC27881'
+TELESIGN_API = 'mp6UoFnveiSDjHSQmNdNxLrpNca844of69XAWOHYu+xRZsadpUm5XsQ50utSNAzOl/tj3lOxQMIwlmaHXL2cxQ=='
+TELESIGN_CUST = '163CFEDD-EB4D-4DEE-949C-9F44F6292FA5'
 
 #add twillio sid , authentication token and your twilio number
-#TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID") # obtained from twilio.com/console 
-#TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN") # also obtained from twilio.com/console 
-#TWILIO_NUMBER = os.getenv("TWILIO_NUMBER")  # use the number you received when signing up or buy a new number 
+# TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID") # obtained from twilio.com/console 
+# TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN") # also obtained from twilio.com/console 
+# TWILIO_NUMBER = os.getenv("TWILIO_NUMBER")  # use the number you received when signing up or buy a new number 
 
 
 # add infobip login credentials
@@ -61,8 +61,8 @@ TELESIGN_CUST = 'ACECBD93-21C7-4B8B-9300-33FDEBC27881'
 #INFOBIP_APIKEY = os.getenv("INFOBIP_APIKEY")
 
 # add Telesign credentials
-#TELESIGN_API = os.getenv("TELESIGN_API")
-#TELESIGN_CUST = os.getenv("TELESIGN_CUST")
+# TELESIGN_API = os.getenv("TELESIGN_API")
+# TELESIGN_CUST = os.getenv("TELESIGN_CUST")
 
 # Application definition
 
