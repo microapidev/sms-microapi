@@ -1706,7 +1706,8 @@ class SendFlashSms(views.APIView):
 
 class TransactionID(APIView):
     """
-    This returns the status of a message given a transactionID or groupToken
+    This returns the status of a message given a transactionID
+    Format {msgID:"your input"}
     """
     serializer = MessageSerializer
     def get(self, request, msgID, format=None):
