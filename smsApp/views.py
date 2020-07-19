@@ -1751,7 +1751,7 @@ class TransactionID(APIView):
                     dbTransID.save()
                     return Response({"Success": "True", "Message": "Message sending failed", "Data": send, 'status': status.HTTP_200_OK})
                 else:
-                    return Response({"Message": "Error retrieving response"})
+                    return Response({"Failure": "True", "Message": "Message sending failed", "Data": send, 'status': status.HTTP_200_OK})
 
             #retrieve ID for infobip
             elif dbTransID.service_type == "IF":
