@@ -1712,7 +1712,8 @@ class SendFlashSms(views.APIView):
 
 class TransactionID(APIView):
     """
-    This returns the status of a message given a transactionID or groupToken
+    This returns the status of a message given a transactionID
+    Format {msgID:"your input"}
     """
     serializer = MessageSerializer
     def get(self, request, msgID, format=None):
@@ -1756,7 +1757,7 @@ class TransactionID(APIView):
                     dbTransID.save()
                     return Response({"Success": "True", "Message": "Message sending failed", "Data": send, 'status': status.HTTP_200_OK})
                 else:
-                    return Response({"Message": "Error retrieving response"})
+                    return Response({"Failure": "True", "Message": "Message sending failed", "Data": send, 'status': status.HTTP_200_OK})
 
             #retrieve ID for infobip
             elif dbTransID.service_type == "IF":
@@ -1789,7 +1790,7 @@ class TransactionID(APIView):
                     dbTransID.save()
                     return Response({"Success": "True", "Message": "Message sending failed", "Data": data, 'status': status.HTTP_200_OK})
                 else:
-                    return Response({"Success": "False","Message": "Error retrieving response"})
+                    return Response({"Success": "False","Message": "Error retrieving response", "Data": data})
 
         except ObjectDoesNotExist:
             return Response({"Success": "False", "Message": "TransactionID not found", "Data": [], 'status': status.HTTP_400_BAD_REQUEST})
