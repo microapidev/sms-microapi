@@ -1784,7 +1784,7 @@ class TransactionID(APIView):
                     dbTransID.save()
                     return Response({"Success": "True", "Message": "Message sending failed", "Data": data, 'status': status.HTTP_200_OK})
                 else:
-                    return Response({"Success": "False","Message": "Error retrieving response"})
+                    return Response({"Success": "False","Message": "Error retrieving response", "Data": data})
 
         except ObjectDoesNotExist:
             return Response({"Success": "False", "Message": "TransactionID not found", "Data": [], 'status': status.HTTP_400_BAD_REQUEST})
