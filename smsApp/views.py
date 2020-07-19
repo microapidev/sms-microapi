@@ -101,6 +101,7 @@ class SendSingMsgCreate(generics.CreateAPIView):
                         if (language != 'en' or language != None or language != " " ):
                             original_txt.append(content)
                             content = translateMsg(content, language)
+                            value.language = language
                             
                             message = client.messages.create(
                                 from_=settings.TWILIO_NUMBER,
@@ -152,6 +153,7 @@ class SendSingMsgCreate(generics.CreateAPIView):
                     except TwilioRestException as e:
                         value.messageStatus = "F"
                         value.transactionID = "500-F"
+                        value.language = "en"
                         value.save()
                         return Response({
                             'Success': 'False',
@@ -195,6 +197,7 @@ class SendSingMsgCreate(generics.CreateAPIView):
                     if (language != 'en' or language != None or language != ""):
                         original_txt.append(content)
                         content = translateMsg(content, language)
+                        value.language = language
                         data = {
                             "from": senderID,
                             "to": receiver,
@@ -206,6 +209,7 @@ class SendSingMsgCreate(generics.CreateAPIView):
                             'Accept': 'application/json'
                             }
                     else:
+                        value.language = "en"
                         data = {
                             "from": senderID,
                             "to": receiver,
@@ -236,7 +240,7 @@ class SendSingMsgCreate(generics.CreateAPIView):
                             value.messageStatus = "E"
                         if ( data["messages"][0]["status"]["groupId"] == 5):
                             value.messageStatus = "FR"
-                        value.save()
+                    value.save()
                     # print(data)
                     if len(original_txt) != 0:
                         return Response({"Success":"True", "Status": res.status, "Message": f"{original_txt[0]}", "MessageID":f"{value.messageID}", "Data": data})
@@ -250,36 +254,38 @@ class SendSingMsgCreate(generics.CreateAPIView):
                 message_dict = {'senderID':senderID, 'service_type':service_type, 'receiver':receiver, 'content':content}
                 serializer_message = MessageSerializer(data=message_dict)
 
-                api_key = 'HXwu/7gWs9KMHWilug9NPccJe+nZtUaG6TtfmxikOgQeCP5ErX7uGxIqpufdF2b93Qed9B/WcudRiveDXfaf2Q=='
-                customer_id = 'ACECBD93-21C7-4B8B-9300-33FDEBC27881'
+                api_key = settings.TELESIGN_API
+                customer_id = settings.TELESIGN_CUST 
                 url = 'https://rest-api.telesign.com/v1/messaging'
 
                 headers = {
                     'Accept': 'application/json',
                     'Content-Type': 'application/x-www-form-urlencoded'}
-                if (language != 'en' or language != None or language != ""):
-                    original_txt.append(content)
-                    content = translateMsg(content, language)
-                    data = {
-                        'phone_number': receiver,
-                        'message': content,
-                        'message_type': 'ARN'
-                    }
-                else:
-                    data = {
-                        'phone_number': receiver,
-                        'message': content,
-                        'message_type': 'ARN'
-                    }
-
                 if serializer_message.is_valid():
                     # print(value)
                     # print("break----")
+                    value = serializer_message.save()
+                    if (language != 'en' or language != None or language != ""):
+                        original_txt.append(content)
+                        content = translateMsg(content, language)
+                        value.language = language
+                        data = {
+                            'phone_number': receiver,
+                            'message': content,
+                            'message_type': 'ARN'
+                        }
+                    else:
+                        value.language = "en"
+                        data = {
+                            'phone_number': receiver,
+                            'message': content,
+                            'message_type': 'ARN'
+                        }
+
                     r = requests.post(url, 
                                     auth=HTTPBasicAuth(customer_id, api_key), 
                                     data=data, 
                                     headers=headers)
-                    value = serializer_message.save()
                     response = r.json()
                     if response['status']['code'] == 290:
                         value.service_type = 'TS'
