@@ -1806,7 +1806,7 @@ class GroupTransactionID(APIView):
         msgResponse = [] #used to store responses
         serializer = MessageSerializer
         try:
-            dbTransID = Message.objects.filter(messageID=grpToken)
+            dbTransID = Message.objects.filter(grouptoken=grpToken)
             if dbTransID.exists(): 
                 for msgID in dbTransID.iterator(): #pick the values in chunks
                     # ids.append([msgID.transactionID, msgID.messageStatus, msgID.service_type, msgID.receiver])
