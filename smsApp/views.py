@@ -295,7 +295,7 @@ class SendSingMsgCreate(generics.CreateAPIView):
                         if len(original_txt) != 0:
                             return Response({
                                 "success": "True",
-                                "status": f"{response['status']}",
+                                "status": f"{value.messageStatus}",
                                 "message": f"{original_txt[0]}",
                                 "messageID":f"{value.messageID}",
                                 "data": response,
@@ -303,13 +303,12 @@ class SendSingMsgCreate(generics.CreateAPIView):
                                 })
                         return Response({
                             "success": "True",
-                            "status": f"{response['status']}",
+                            "status": f"{value.messageStatus}",
                             "message": "Message Sending",
                             "data": response,
                             "service_type": "TELESIGN"
                             })
                     else:
-                        print(response['status']['code'])
                         value = serializer_message.save()
                         value.service_type = 'TS'
                         value.messageStatus = 'F'
