@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import SendSingMsgCreate, TransactionID
+from .views import SendSingMsgCreate, TransactionID, GroupTransactionID
 from .views import RecipientCreate, RecipientList, RecipientDetail, RecipientsForUser
 from .views import InfobipSendMessage, InfobipSingleMessage, InfobipMessageList, InfobipSendMessage2
 from .views import translateMessages, MessageDelete, MessageCounter, TwilioSendSms, sms_list
@@ -42,6 +42,8 @@ schema_view = get_schema_view(
 urlpatterns = [
    #MessageStatus
    path("v2/sms/messagestatus/<str:msgID>", TransactionID.as_view(), name="message-status"),
+   #GroupMessageStatus
+   path("v2/sms/messagestatusgroup/<str:grpToken>", GroupTransactionID.as_view(), name="groupmsg-status"),
 
    #sendsms
    path("v2/sms/send_single_msg", SendSingMsgCreate.as_view(), name="send-one-msg"),
