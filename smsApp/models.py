@@ -29,7 +29,7 @@ class Group(models.Model):
     # groupID = models.ForeignKey(GroupUnique, related_name='grp_id', on_delete=models.SET_NULL)
     groupName = models.CharField(max_length=90)
     senderID = models.CharField(max_length=30, default="user") #creator of the group123e4567-e89b-12d3-a456-426652340000
-    groupID = models.UUIDField(default=uuid.uuid4, editable=False)
+    groupID = models.UUIDField(default=uuid.uuid4)
     dateCreated = models.DateTimeField(default=timezone.now)
 
     def __str__(self):

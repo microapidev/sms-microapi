@@ -150,7 +150,7 @@ class SendSingMsgCreate(generics.CreateAPIView):
                             }
                         }, 200)
 
-                    except TwilioRestException as e:
+                    except TwilioRestException:
                         value.messageStatus = "F"
                         value.transactionID = "500-F"
                         value.language = "en"
@@ -894,7 +894,7 @@ class GroupNumbersDetail(APIView):
     def delete(self, request, pk, format=None):
         groupNumber = self.get_object(pk=pk)
         groupNumber.delete()
-        return Response({"Item": "Successfully Deleted"}, status=status.HTTP_204_NO_CONTENT)
+        return Response({"Item": "Successfully Deleted"}, status=status.HTTP_204_OK)
 
 
 @api_view(["PUT"])
@@ -913,7 +913,7 @@ def update_group_number(request, pk):
 
     if request.method == 'PUT':
         data = request.data
-        serializer = GroupNumbersPrimarySerializer(groupnumber, data=data)
+        serializer = GroupNumbersSerializer(groupnumber, data=data)
         if serializer.is_valid():
             serializer.save()
             return Response({"Success": status.HTTP_202_ACCEPTED, "Message": "PhoneNumber updated", "Number": serializer.data})
@@ -954,6 +954,7 @@ class InfobipSendMessage(generics.CreateAPIView):
         receiver = request.data["receiver"]
         text = request.data["content"]
         sender = request.data["senderID"]
+        request.data["service_type"] = "IF"
         serializer = MessageSerializer(data=request.data)
         conn = http.client.HTTPSConnection("jdd8zk.api.infobip.com")
         payload = "{\"messages\":[{\"from\":\"%s\",\"destinations\":[{\"to\":\"%s\"}],\"text\":\"%s\",\"flash\":true}]}" % (sender, receiver, text)
@@ -973,14 +974,17 @@ class InfobipSendMessage(generics.CreateAPIView):
             #                   data=payload, headers=headers)
             # response = r.json()
             value.service_type = 'IF'
+            value.messageStatus = 'P'
             conn.request("POST", "/sms/2/text/advanced", payload, headers)
             res = conn.getresponse()
             data = res.read().decode('utf-8')
             data = json.loads(data)
             if res.status == 200:
                 value.save()
+            return JsonResponse({"status": res.status, "message": "", "Data": data})
             # print(data)
-        return JsonResponse({"Status": res.status, "Message": "", "Data": data})
+        else:
+            return Response({"message": "Not Valid"})
         
 
 
@@ -1144,8 +1148,7 @@ class TwilioSendSms(views.APIView):
     def post(self, request):
         receiver = request.data["receiver"]
         content = request.data["content"]
-        translateMessages(content)
-        print
+
         request.data["service_type"] = "TW"
         serializer_message = MessageSerializer(data=request.data)
 
