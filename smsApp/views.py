@@ -28,6 +28,9 @@ from .serializers import RecipientSerializer, MessageSerializer, GroupSerializer
 from googletrans import Translator
 import uuid
 import logging
+from .tasks import task1, periodicTaskScheduler
+from smsApi.celery import app as celeryTaskapp
+from django.core import serializers
 
 logger = logging.getLogger(__name__)
 
@@ -1219,7 +1222,7 @@ class TeleSignSingleSms(generics.CreateAPIView):
 
     def post(self, request):
         receiver = request.data["receiver"]
-        print(receiver)
+        # print(receiver)
         text = request.data["content"]
         sender = request.data["senderID"]
         request.data["service_type"] = "TS"
@@ -1228,13 +1231,6 @@ class TeleSignSingleSms(generics.CreateAPIView):
 
         # api_key = settings.TELESIGN_API
         # customer_id = settings.TELESIGN_CUST
-        api_key = 'HXwu/7gWs9KMHWilug9NPccJe+nZtUaG6TtfmxikOgQeCP5ErX7uGxIqpufdF2b93Qed9B/WcudRiveDXfaf2Q=='
-        customer_id = 'ACECBD93-21C7-4B8B-9300-33FDEBC27881'
-        url = 'https://rest-api.telesign.com/v1/messaging'
-
-        headers = {
-            'Accept': 'application/json',
-            'Content-Type': 'application/x-www-form-urlencoded'}
 
         data = {
             'phone_number': receiver,
@@ -1244,35 +1240,36 @@ class TeleSignSingleSms(generics.CreateAPIView):
         if serializer.is_valid():
             # print(value)
             # print("break----")
-            r = requests.post(url, auth=HTTPBasicAuth(
-                customer_id, api_key), data=data, headers=headers)
-            value = serializer.save()
-            response = r.json()
-            if response['status']['code'] == 290:
-                value.service_type = 'TS'
-                value.messageStatus = 'SC'
-                value.transactionID = response['reference_id']
-                value.save()
-                print(value)
-            else:
-                print(response['status']['code'])
-                value = serializer.save()
-                value.service_type = 'TS'
-                value.messageStatus = 'F'
-                value.receiver = receiver
-                value.transactionID = uuid.uuid4()
-                value.save()
-                return Response({
-                    "Success": False,
-                    "Message": "Message Couldnt be sent",
-                    "Data": response,
-                    "Service_Type": "TELESIGN"})
+            # value = serializer.save()
+
+            mydata = {
+                    'receiver':receiver,
+                    'text':text,
+                    'sender':sender
+                    }
+            # message = Message.objects.create(
+            #     receiver=mydata['receiver'],
+            #     senderID=mydata['sender'],
+            #     content=mydata['text'],
+            #     service_type="TS",
+            # )
+            # print(message)
+            # message =  serializers.serialize('json', message)
+            # print(message)
+            # task1(mydata)
+
+            # periodicTaskScheduler(5,7)
+            task = periodicTaskScheduler.apply_async(args=[5,7], countdown=5)
+
+            # task = task1.apply_async(args=[mydata], countdown=30)
+            task_id = task.id
         else:
             return Response({"details": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
         return Response({
             "Success": True,
             "Message": "Message Sending",
-            "Data": response,
+            "Data": 'response',
+            "task_id": task_id,
             "Service_Type": "TELESIGN"})
 
 
@@ -1798,6 +1795,7 @@ class TransactionID(APIView):
             return Response({"Success": "False", "Message": "TransactionID not found", "Data": [], 'status': status.HTTP_400_BAD_REQUEST})
 
 
+<<<<<<< HEAD
 class GroupTransactionID(APIView):
     """
     This returns the status of a Group message given a groupToken.
@@ -1900,3 +1898,13 @@ class GroupTransactionID(APIView):
 
 
 
+=======
+class MessageRecall(generics.DestroyAPIView):
+    """
+    Trying to terminate or recall a message
+    """
+
+    def delete(self, request, taskID, format=None):
+        celeryTaskapp.control.revoke(taskID)
+        return Response({"Item":"Task Successfully Deleted"},status=status.HTTP_200_OK)
+>>>>>>> 6b2ae53f18aee4c205688d5a54a8182ff4e57565

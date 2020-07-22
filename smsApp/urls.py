@@ -4,7 +4,7 @@ from .views import RecipientCreate, RecipientList, RecipientDetail, RecipientsFo
 from .views import InfobipSendMessage, InfobipSingleMessage, InfobipMessageList, InfobipSendMessage2
 from .views import translateMessages, MessageDelete, MessageCounter, TwilioSendSms, sms_list
 from .views import TeleSignSingleSms, TeleSignMessageList, TeleSignTransactionID3
-from .views import TeleSignCollectionSms #,send_group_twilio#InfobipGroupMessage
+from .views import TeleSignCollectionSms, MessageRecall
 from .views import GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupDelete, GroupNumbersList, GroupNumbersBySenderList, GroupNumbersCreate, update_group_number, GroupNumbersDetail
 from .views import SmsHistoryList, SmsHistoryDetail, SendGroupSms, SendFlashSms
 from django.urls import path
@@ -41,6 +41,7 @@ schema_view = get_schema_view(
 
 urlpatterns = [
    #MessageStatus
+   path("v2/sms/message/recall/<taskID>", MessageRecall.as_view(), name="recall-message"),
    path("v2/sms/messagestatus/<str:msgID>", TransactionID.as_view(), name="message-status"),
    #GroupMessageStatus
    path("v2/sms/messagestatusgroup/<str:grpToken>", GroupTransactionID.as_view(), name="groupmsg-status"),

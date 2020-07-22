@@ -65,6 +65,21 @@ TELESIGN_CUST = '163CFEDD-EB4D-4DEE-949C-9F44F6292FA5'
 # TELESIGN_CUST = os.getenv("TELESIGN_CUST")
 
 # Application definition
+#celery config
+CELERY_BROKER_URL = 'amqp://rabbitmq'
+# CELERY_RESULT_BACKEND = 'django-db'
+CELERY_RESULT_BACKEND = 'db+sqlite:///db.sqlite3'
+CELERY_RESULT_EXTENDED = True
+
+# Q_CLUSTER = {
+#     'name': 'DjangORM',
+#     'workers': 4,
+#     'timeout': 90,
+#     'retry': 120,
+#     'queue_limit': 50,
+#     'bulk': 10,
+#     'orm': 'default'
+# }
 
 
 INSTALLED_APPS = [
@@ -83,6 +98,8 @@ INSTALLED_APPS = [
     'broadcast',
     'drf_yasg',
     'coreapi',
+    'django_celery_results',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [

@@ -7,7 +7,23 @@ services:
         volumes: 
             - .:/code
         ports:
-            - "8007:8000"
+            - "8000:8000"
+        depends_on:
+            - rabbitmq
+
+    celery:
+        build: .
+        command: celery -A smsApi worker -l info
+        volumes: 
+            - .:/code
+        depends_on:
+            - rabbitmq
+
+    celery-beat:
+        build: .
+        command: celery -A smsApi beat -l info
+        volumes: 
+            - .:/code
         depends_on:
             - rabbitmq
 
