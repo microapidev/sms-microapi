@@ -99,6 +99,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'coreapi',
     'django_celery_results',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [

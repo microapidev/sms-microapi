@@ -28,7 +28,9 @@ from .serializers import RecipientSerializer, MessageSerializer, GroupSerializer
 from googletrans import Translator
 import uuid
 import logging
-from .tasks import task1
+from .tasks import task1, periodicTaskScheduler
+from smsApi.celery import app as celeryTaskapp
+from django.core import serializers
 
 logger = logging.getLogger(__name__)
 
@@ -1212,7 +1214,7 @@ class TeleSignSingleSms(generics.CreateAPIView):
 
     def post(self, request):
         receiver = request.data["receiver"]
-        print(receiver)
+        # print(receiver)
         text = request.data["content"]
         sender = request.data["senderID"]
         request.data["service_type"] = "TS"
@@ -1237,8 +1239,21 @@ class TeleSignSingleSms(generics.CreateAPIView):
                     'text':text,
                     'sender':sender
                     }
+            # message = Message.objects.create(
+            #     receiver=mydata['receiver'],
+            #     senderID=mydata['sender'],
+            #     content=mydata['text'],
+            #     service_type="TS",
+            # )
+            # print(message)
+            # message =  serializers.serialize('json', message)
+            # print(message)
             # task1(mydata)
-            task = task1.apply_async(args=[mydata], countdown=30)
+
+            # periodicTaskScheduler(5,7)
+            task = periodicTaskScheduler.apply_async(args=[5,7], countdown=5)
+
+            # task = task1.apply_async(args=[mydata], countdown=30)
             task_id = task.id
         else:
             return Response({"details": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
@@ -1770,3 +1785,13 @@ class TransactionID(APIView):
 
         except ObjectDoesNotExist:
             return Response({"Success": "False", "Message": "TransactionID not found", "Data": [], 'status': status.HTTP_400_BAD_REQUEST})
+
+
+class MessageRecall(generics.DestroyAPIView):
+    """
+    Trying to terminate or recall a message
+    """
+
+    def delete(self, request, taskID, format=None):
+        celeryTaskapp.control.revoke(taskID)
+        return Response({"Item":"Task Successfully Deleted"},status=status.HTTP_200_OK)

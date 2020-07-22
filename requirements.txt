@@ -96,3 +96,4 @@ telesign==2.2.2
 # redis==3.5.3
 celery==4.4.6
 django-celery-results==1.2.1
+django-celery-beat==2.0.0
