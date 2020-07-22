@@ -2,10 +2,18 @@ FROM python:3
 
 ENV PYTHONUNBUFFERED=1
 
-RUN mkdir /code
+RUN mkdir /myapp
 
-WORKDIR /code
+# WORKDIR /code
 
-COPY . /code/
+# COPY . /code/
 
-RUN pip install -r requirements.txt --no-cache-dir
+# RUN pip install -r requirements.txt --no-cache-dir
+
+WORKDIR /myapp
+COPY requirements.txt /myapp  
+RUN pip install -r requirements.txt  
+RUN rm requirements.txt  
+
+COPY . /myapp
+WORKDIR /myapp
