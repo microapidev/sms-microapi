@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Recipient, Message, Group, GroupNumbers
+from .models import Recipient, Message, Group, GroupNumbers, SenderDetails, Sender
 import uuid
 
 
@@ -13,7 +13,7 @@ import uuid
 class RecipientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipient
-        fields = ["recipientName", "recipientNumber", "userID"]
+        fields = ["recipientName", "recipientNumber", "senderID"]
 
 
 class MessageSerializer(serializers.ModelSerializer):
@@ -40,11 +40,10 @@ class GroupSerializer(serializers.ModelSerializer):
     dateCreated = serializers.DateTimeField(read_only=True)
     groupName = serializers.CharField(required=True)
     groupID = serializers.UUIDField(format='hex_verbose', initial=uuid.uuid4, read_only=True)
-    senderID = serializers.CharField(required=True)
     numbers = serializers.StringRelatedField(many=True, read_only=True)
     class Meta:
         model = Group
-        fields = ["groupName", "senderID", "groupID", "dateCreated", "numbers"]
+        fields = ["groupName", "groupID", "dateCreated", "numbers"]
         depth = 1
 
 class GroupNumbersSerializer(serializers.ModelSerializer):
@@ -64,4 +63,18 @@ class GroupNumbersPrimarySerializer(serializers.ModelSerializer):
         model = GroupNumbers
         fields = "__all__"
 
+class SenderSerializer(serializers.ModelSerializer):
+    sender_details = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    class Meta:
+        model = Sender
+        fields = ("senderID", "sender_details")
 
+
+class SenderDetailsSerializer(serializers.ModelSerializer):
+    senderID = serializers.CharField(required=True)
+    sid = serializers.CharField(max_length=1200, required=True)
+    token = serializers.CharField(max_length=1200, required=True)
+    service_name = serializers.CharField(max_length=50, required=True)
+    class Meta:
+        model = SenderDetails
+        fields = ("sid", "token", "service_name", "senderID")
