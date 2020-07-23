@@ -119,6 +119,4 @@ GitHub.sublime-settings
 !.vscode/launch.json 
 !.vscode/extensions.json 
 .history
-
-# Virtual Environment
-penv
+smsApp/migrations/0007_auto_20200720_1854.py

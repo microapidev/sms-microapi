@@ -19,21 +19,23 @@ class RecipientSerializer(serializers.ModelSerializer):
 class MessageSerializer(serializers.ModelSerializer):
     SERVICE_CHOICES = [
         ('INFOBIP', 'IF'),
-        ('TWILLO', 'TW'),
-        ('TELESIGN', 'TS'),       
-		('MSG91', 'MS'),
+        ('TWILIO', 'TW'),
+		("MESSAGEBIRD", 'MB'),
+		("GATEWAYAPI", 'GA'),
     ]
-    service_type = serializers.ChoiceField(choices=Message.SERVICE_CHOICES)
+    service_type = serializers.ChoiceField(choices=Message.SERVICE_CHOICES, read_only=True)
     grouptoken = serializers.CharField(read_only=True)
+    # dateScheduled = serializers.DateField(input_formats="%Y-%m-%dT%H:%M:%S.%fZ")
     date_created = serializers.CharField(read_only=True)
     messageStatus = serializers.ChoiceField(choices=['D', 'S','F','R','P','U','SC'], read_only=True)
     language = serializers.ChoiceField(choices=Message.LANG_CHOICES, default='en', required=False)
     transactionID = serializers.CharField(read_only=True)
     messageID = serializers.UUIDField(format='hex_verbose', initial=uuid.uuid4, read_only=True)
+    senderID = serializers.SlugRelatedField(slug_field='senderID', queryset=Sender.objects.all())
 
     class Meta:
         model = Message
-        fields = ["senderID", "content", "receiver", "service_type", "messageStatus", "date_created", "transactionID", "grouptoken", "language", "messageID"]
+        fields = ["senderID", "content", "receiver", "messageStatus", "date_created", "transactionID", "grouptoken", "language", "messageID", "dateScheduled", "service_type"]
 
 
 class GroupSerializer(serializers.ModelSerializer):
@@ -76,9 +78,10 @@ class SenderDetailsSerializer(serializers.ModelSerializer):
     token = serializers.CharField(max_length=1200, required=True)
     SERVICE_CHOICES = [
         ("INFOBIP", 'IF'),
-        ("TWILLO", 'TW'),
+        ("TWILIO", 'TW'),
         ("TELESIGN", 'TS'),       
-		("MSG91", 'MS'),
+		("MESSAGEBIRD", 'MB'),
+		("GATEWAYAPI", 'GA'),
     ]
     service_name = serializers.ChoiceField(choices=SERVICE_CHOICES, required=True)
 

@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.core.files.storage import FileSystemStorage
 from django.core.validators import RegexValidator
 from django.utils.translation import ugettext_lazy as _
+from phonenumber_field.modelfields import PhoneNumberField
 # from .managers import CustomUserManager
 
 class Sender(models.Model):
@@ -17,7 +18,7 @@ class Sender(models.Model):
 class Group(models.Model):
     # groupID = models.ForeignKey(GroupUnique, related_name='grp_id', on_delete=models.SET_NULL)
     groupName = models.CharField(max_length=90)
-    senderID = models.ForeignKey(Sender, on_delete=models.CASCADE) #creator of the group123e4567-e89b-12d3-a456-426652340000
+    senderID = models.ForeignKey(Sender,related_name='group', on_delete=models.CASCADE) #creator of the group123e4567-e89b-12d3-a456-426652340000
     groupID = models.UUIDField(default=uuid.uuid4, editable=False)
     dateCreated = models.DateTimeField(default=timezone.now)
 
@@ -34,7 +35,7 @@ class GroupNumbers(models.Model):
         return self.phoneNumbers
 
 class Recipient(models.Model):
-    senderID = models.ForeignKey(Sender, on_delete=models.CASCADE) #user who added the recipient
+    senderID = models.ForeignKey(Sender, related_name='recipients', on_delete=models.CASCADE) #user who added the recipient
     recipientName = models.CharField(max_length=80)
     recipientNumber = models.CharField(max_length=80)
     dateCreated = models.DateTimeField(default=timezone.now)
@@ -47,18 +48,23 @@ class Message(models.Model):
     messageID = models.UUIDField(default=uuid.uuid4)
     grouptoken = models.UUIDField(null=True)
     receiver = models.CharField(max_length=80)
-    senderID = models.ForeignKey(Sender, on_delete=models.CASCADE)
+    senderID = models.ForeignKey(Sender, related_name='messages', on_delete=models.CASCADE)
     date_created = models.DateTimeField(default=timezone.now)
     content = models.TextField(max_length=500)
     INFOBIP = 'IF'
-    TWILLO = 'TW'
+    TWILIO = 'TW'
     TELESIGN = 'TS'
     MSG91 = 'MS'
+    MESSAGEBIRD = 'MB'
+    GATEWAYAPI = 'GA'
+    D7 = 'D7'
     SERVICE_CHOICES = [
         (INFOBIP, 'IF'),
-        (TWILLO, 'TW'),
+        (TWILIO, 'TW'),
         (TELESIGN, 'TS'),       
-		(MSG91, 'MS'),
+		(MESSAGEBIRD, 'MB'),
+		(GATEWAYAPI, 'GA'),
+
     ]
     service_type = models.CharField(
         max_length=2,
@@ -219,15 +225,17 @@ class Message(models.Model):
 
 
 class SenderDetails(models.Model):
-    senderID = models.ForeignKey(Sender, on_delete=models.CASCADE)
+    senderID = models.ForeignKey(Sender, related_name='details', on_delete=models.CASCADE)
     default = models.BooleanField(default=False)
     sid = models.CharField(max_length=1200)
-    token = models.CharField(max_length=1200)
+    token = models.CharField(max_length=1300)
+    verified_no = models.CharField(max_length=20000, blank=False)
     SERVICE_CHOICES = [
         ("INFOBIP", 'IF'),
-        ("TWILLO", 'TW'),
+        ("TWILIO", 'TW'),
         ("TELESIGN", 'TS'),       
-		("MSG91", 'MS'),
+        ("MESSAGEBIRD", 'MB'),
+		("GATEWAYAPI", 'GA'),
     ]
     service_name = models.CharField(max_length=50, choices=SERVICE_CHOICES)
 
