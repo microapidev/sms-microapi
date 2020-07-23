@@ -7,7 +7,7 @@ from .views import TeleSignSingleSms, TeleSignMessageList, TeleSignTransactionID
 from .views import TeleSignCollectionSms, MessageRecall
 from .views import GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupDelete, GroupNumbersList, GroupNumbersBySenderList, GroupNumbersCreate, update_group_number, GroupNumbersDetail
 from .views import SmsHistoryList, SmsHistoryDetail, SendGroupSms, SendFlashSms
-from .views import SenderDetailsConfigure, SenderRegister
+from .views import SenderDetailsCreate, SenderRegister, SenderDetailsUpdate
 from django.urls import path
 from .views import create_receipents_details, save_recipients_details  #get_recipient_details
 from rest_framework.schemas.coreapi import AutoSchema
@@ -43,8 +43,8 @@ schema_view = get_schema_view(
 urlpatterns = [
    # Sender
    path("v2/sms/user_register", SenderRegister.as_view(), name="register"),
-   path("v2/sms/config/add_config", SenderDetailsConfigure.as_view(), name="configure"),
-   path("v2/sms/config/update_config", SendSingMsgCreate.as_view(), name="send-one-msg"),
+   path("v2/sms/config/add_config", SenderDetailsCreate.as_view(), name="configure"),
+   path("v2/sms/config/update_config", SenderDetailsUpdate.as_view(), name="send-one-msg"),
    path("v2/sms/config/view_config", SendSingMsgCreate.as_view(), name="send-one-msg"),
 
    #MessageStatus

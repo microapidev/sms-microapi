@@ -1910,17 +1910,23 @@ class SenderRegister(generics.CreateAPIView):
     serializer_class = SenderSerializer
 
     def post(self, request, *args, **kwargs):
+        sender = request.datat.get("senderID")
         serializer = SenderSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return JsonResponse({"status":status.HTTP_201_CREATED, "success":"True", "details":"User created"})
-        return JsonResponse({"status":status.HTTP_400_BAD_REQUEST, "success":"False", "details":"Improper use of endpoint"})
+        queryset = Sender.objects.filter(senderID=sender)
+        if not queryset.exists():
+            if serializer.is_valid():
+                serializer.save()
+                return JsonResponse({"status":status.HTTP_201_CREATED, "success":"True", "details":"User created"})
+            return JsonResponse({"status":status.HTTP_400_BAD_REQUEST, "success":"False", "details":"Improper use of endpoint"})
+        else:
+            return JsonResponse({"status":status.HTTP_400_BAD_REQUEST, "success":"False", "details":"Sender ID already exists"})
+        
 
-class SenderDetailsConfigure(generics.CreateAPIView):
+class SenderDetailsCreate(generics.CreateAPIView):
     """
 
     User have to specify the given SID and Token supplied by the service provider alongside the name of the senderID
-    Format should be {"senderID":"<register User>", "token":"<token>", "sid":"<sid>"}
+    Format should be {"senderID":"<register User>", "token":"<token>", "sid":"<sid>", "service_name":"<TWILIO OR INFOBIP OR MSG91 OR TELESIGN>"}
     """
     serializer_class = SenderDetailsSerializer
 
@@ -1947,7 +1953,32 @@ class SenderDetailsConfigure(generics.CreateAPIView):
                 value.default = True
                 value.save()
                 return JsonResponse({"status":status.HTTP_201_CREATED, "success":"True", "details":"Details added"}, status=status.HTTP_201_CREATED)
+            return JsonResponse({"status":status.HTTP_400_BAD_REQUEST, "success":"False", "details":"Improper use of endpoint"}, status=status.HTTP_400_BAD_REQUEST)
         else:
             return JsonResponse({"status":status.HTTP_400_BAD_REQUEST, "success":"False", "details":f"{service_name} Credentials already exists"}, status=status.HTTP_400_BAD_REQUEST)
-        return JsonResponse({"status":status.HTTP_400_BAD_REQUEST, "success":"False", "details":"Improper use of endpoint"}, status=status.HTTP_400_BAD_REQUEST)
+        
 
+
+class SenderDetailsUpdate(generics.UpdateAPIView):
+    """
+
+    User have to specify the given SID and Token supplied by the service provider alongside the name of the senderID
+    Format should be {"senderID":"<register User>", "token":"<token>", "sid":"<sid>", "service_name":"<TWILIO OR INFOBIP OR MSG91 OR TELESIGN>"}
+    """
+
+    serializer_class = SenderDetailsSerializer
+
+    def put(self, request, *args, **kwargs):
+        senderID = request.data.get("sender")
+        
+        senderID = get_object_or_404(Sender, senderID=senderID)
+        service_name = request.data.get("service_name")
+        
+        senderDetails = get_object_or_404(SenderDetails, senderID=senderID, service_name=service_name)
+
+        serializer = SenderDetailsSerializer(senderDetails, data=request.data)
+        print(serializer)
+        if serializer.is_valid():
+            serializer.save()
+            return JsonResponse({"status":status.HTTP_202_ACCEPTED, "success":"True", "details":f"{service_name} Credentials updated"}, status=status.HTTP_202_ACCEPTED)
+        return JsonResponse({"status":status.HTTP_400_BAD_REQUEST, "success":"False", "details":"Improper use of endpoint"}, status=status.HTTP_400_BAD_REQUEST)
