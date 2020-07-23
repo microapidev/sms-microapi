@@ -10,7 +10,7 @@ from django.utils.translation import ugettext_lazy as _
 class Sender(models.Model):
     senderID = models.CharField(max_length=65)  
 
-    def __str_(self):
+    def __str__(self):
         return self.senderID
 
 
@@ -223,7 +223,13 @@ class SenderDetails(models.Model):
     default = models.BooleanField(default=False)
     sid = models.CharField(max_length=1200)
     token = models.CharField(max_length=1200)
-    service_name = models.CharField(max_length=50)
+    SERVICE_CHOICES = [
+        ("INFOBIP", 'IF'),
+        ("TWILLO", 'TW'),
+        ("TELESIGN", 'TS'),       
+		("MSG91", 'MS'),
+    ]
+    service_name = models.CharField(max_length=50, choices=SERVICE_CHOICES)
 
     def __str__(self):
         return self.service_name

@@ -23,7 +23,7 @@ import http.client
 import mimetypes
 import urllib.parse
 from urllib.parse import urlencode
-from .models import Recipient, Message, Group, GroupNumbers, SenderDetails
+from .models import Recipient, Message, Group, GroupNumbers, SenderDetails, Sender
 from .serializers import RecipientSerializer, MessageSerializer, GroupSerializer, GroupNumbersSerializer, GroupNumbersPrimarySerializer
 from .serializers import SenderSerializer, SenderDetailsSerializer
 from googletrans import Translator
@@ -1924,18 +1924,29 @@ class SenderDetailsConfigure(generics.CreateAPIView):
     serializer_class = SenderDetailsSerializer
 
     def post(self, request, *args, **kwargs):
-        serializer = SenderDetailsSerializer(data=request.data)
-        if serializer.is_valid():
-            value = serializer.save()
-            senderID = value.senderID 
-            print(senderID)
-            details = SenderDetails.objects.filter(senderID=senderID)
-            if len(details) != 0:
-                for detail in details:
-                    detail.default = False
-                    detail.save()
-            value.default = True
-            value.save()
-            return JsonResponse({"status":status.HTTP_201_CREATED, "success":"True", "details":"Details added"})
-        return JsonResponse({"status":status.HTTP_400_BAD_REQUEST, "success":"False", "details":"Improper use of endpoint"})
+        senderID = request.data.get("sender")
+        service_name = request.data.get("service_name")
+        user = get_object_or_404(Sender, senderID=senderID)
+        senderID = user.senderID
+        request.POST._mutable = True
+        request.data["sender"] = senderID
+        request.POST._mutable = False
+        queryset = SenderDetails.objects.filter(service_name=service_name)
+        if not queryset.exists():
+            serializer = SenderDetailsSerializer(data=request.data)
+            if serializer.is_valid():
+                value = serializer.save()
+                senderID = value.senderID 
+                print(senderID)
+                details = SenderDetails.objects.filter(senderID=senderID)
+                if len(details) != 0:
+                    for detail in details:
+                        detail.default = False
+                        detail.save()
+                value.default = True
+                value.save()
+                return JsonResponse({"status":status.HTTP_201_CREATED, "success":"True", "details":"Details added"}, status=status.HTTP_201_CREATED)
+        else:
+            return JsonResponse({"status":status.HTTP_400_BAD_REQUEST, "success":"False", "details":f"{service_name} Credentials already exists"}, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({"status":status.HTTP_400_BAD_REQUEST, "success":"False", "details":"Improper use of endpoint"}, status=status.HTTP_400_BAD_REQUEST)
 

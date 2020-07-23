@@ -71,10 +71,26 @@ class SenderSerializer(serializers.ModelSerializer):
 
 
 class SenderDetailsSerializer(serializers.ModelSerializer):
-    senderID = serializers.CharField(required=True)
+    sender = serializers.CharField(source="senderID.senderID", required=True)
     sid = serializers.CharField(max_length=1200, required=True)
     token = serializers.CharField(max_length=1200, required=True)
-    service_name = serializers.CharField(max_length=50, required=True)
+    SERVICE_CHOICES = [
+        ("INFOBIP", 'IF'),
+        ("TWILLO", 'TW'),
+        ("TELESIGN", 'TS'),       
+		("MSG91", 'MS'),
+    ]
+    service_name = serializers.ChoiceField(choices=SERVICE_CHOICES, required=True)
+
+    def create(self, validated_data):
+        senderID = validated_data["senderID"]["senderID"]
+        senderID = Sender.objects.get(senderID=senderID)
+        validated_data["senderID"] = senderID
+        print(validated_data)
+        return SenderDetails.objects.create(**validated_data)
+
     class Meta:
         model = SenderDetails
-        fields = ("sid", "token", "service_name", "senderID")
+        fields = ("sid", "token", "service_name", "sender")
+
+    
