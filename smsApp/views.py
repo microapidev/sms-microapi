@@ -1,6 +1,6 @@
 import requests
 from requests.auth import HTTPBasicAuth
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, get_list_or_404
 from rest_framework.parsers import JSONParser
 # from smsApp.models import user
 # from smsApp.serializers import UserSerializer
@@ -1905,6 +1905,9 @@ class MessageRecall(generics.DestroyAPIView):
         celeryTaskapp.control.revoke(taskID)
         return Response({"Item":"Task Successfully Deleted"},status=status.HTTP_200_OK)
 
+
+
+# =============================================== SENDER DETAILS ================================================
 class SenderRegister(generics.CreateAPIView):
     """ Create a user by simply passing an authorised senderid"""
     serializer_class = SenderSerializer
@@ -1982,3 +1985,14 @@ class SenderDetailsUpdate(generics.UpdateAPIView):
             serializer.save()
             return JsonResponse({"status":status.HTTP_202_ACCEPTED, "success":"True", "details":f"{service_name} Credentials updated"}, status=status.HTTP_202_ACCEPTED)
         return JsonResponse({"status":status.HTTP_400_BAD_REQUEST, "success":"False", "details":"Improper use of endpoint"}, status=status.HTTP_400_BAD_REQUEST)
+
+class SenderDetailsList(generics.ListAPIView):
+    serializer_class = SenderDetailsSerializer
+
+    def get_queryset(self):
+        senderID = self.kwargs["senderID"]
+        senderID = get_object_or_404(Sender, senderID=senderID)
+        queryset = get_list_or_404(SenderDetails, senderID=senderID)
+        return queryset
+
+    
