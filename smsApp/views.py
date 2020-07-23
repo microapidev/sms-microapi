@@ -6,6 +6,7 @@ from rest_framework.parsers import JSONParser
 # from smsApp.serializers import UserSerializer
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.views.decorators.csrf import csrf_exempt
+from django.db.models import Q
 from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 from rest_framework import generics, views
@@ -1802,7 +1803,10 @@ class GroupTransactionID(APIView):
         msgResponse = [] #used to store responses
         serializer = MessageSerializer
         try:
-            dbTransID = Message.objects.filter(grouptoken=groupToken)
+            lookups= Q(messageID__icontains=groupToken) | Q(grouptoken__icontains=grouptoken)
+            # dbTransID = Message.objects.get(lookups)
+            dbTransID = Message.objects.filter(lookups)
+            # dbTransID = Message.objects.filter(grouptoken=groupToken)
             # dbTransID2 = Message.objects.filter(messageID=groupToken)
             # if (dbTransID.exists()) or (dbTransID2.exists()):
             if dbTransID.exists(): 
