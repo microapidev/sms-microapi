@@ -86,7 +86,6 @@ class SenderDetailsSerializer(serializers.ModelSerializer):
         senderID = validated_data["senderID"]["senderID"]
         senderID = Sender.objects.get(senderID=senderID)
         validated_data["senderID"] = senderID
-        print(validated_data)
         return SenderDetails.objects.create(**validated_data)
 
     class Meta:
