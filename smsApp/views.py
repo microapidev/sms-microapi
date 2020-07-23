@@ -6,6 +6,7 @@ from rest_framework.parsers import JSONParser
 # from smsApp.serializers import UserSerializer
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.views.decorators.csrf import csrf_exempt
+from django.db.models import Q
 from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 from rest_framework import generics, views
@@ -2127,23 +2128,17 @@ class TransactionID(APIView):
 
 class GroupTransactionID(APIView):
     """
-    This returns the status of a Group message given a groupToken.
-    Format: {"groupToken":'your group token'}
+    This returns the status of a Group message given a groupToken (for group message) or messageID (for single message).
+    Format: {"Token":'your group token OR message ID'}
     """
     serializer = MessageSerializer
-    def get(self, request, groupToken, format=None):
-        # ids = [] #used to store transID
+    def get(self, request, Token, format=None):
         msgResponse = [] #used to store responses
         serializer = MessageSerializer
         try:
-            dbTransID = Message.objects.filter(grouptoken=groupToken)
-            # dbTransID2 = Message.objects.filter(messageID=groupToken)
-            # if (dbTransID.exists()) or (dbTransID2.exists()):
+            dbTransID = Message.objects.filter(Q(messageID=Token) | Q(transactionID=Token))
             if dbTransID.exists(): 
                 for msgID in dbTransID.iterator(): #pick the values in chunks
-                    # ids.append([msgID.transactionID, msgID.messageStatus, msgID.service_type, msgID.receiver])
-                # ids = list(dict.fromkeys(ids))
-                    
                     if msgID.messageStatus == "P":
                         if (msgID.service_type.upper() == "TS"): 
                             api_key = settings.TELESIGN_API
@@ -2223,7 +2218,7 @@ class GroupTransactionID(APIView):
                         msgResponse.append (result)
                 return Response({"Success": "True", "details": "Transaction status retrieved", "Data": {"Service Type": msgID.service_type, "Response": msgResponse }, 'status': status.HTTP_200_OK})
             else:
-                return Response({"Error": status.HTTP_400_BAD_REQUEST, "Message": "Group token not found", "Token": grpToken})
+                return Response({"Error": status.HTTP_400_BAD_REQUEST, "Message": "Token not found", "Token": Token})
         except ObjectDoesNotExist:
             return Response({"Success": "False", "Data": [], 'status': status.HTTP_400_BAD_REQUEST})
 
