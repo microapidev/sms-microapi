@@ -19,9 +19,36 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('groupName', models.CharField(max_length=90)),
-                ('senderID', models.CharField(default='user', max_length=30)),
-                ('groupID', models.UUIDField(default=uuid.uuid4)),
+                ('groupID', models.UUIDField(default=uuid.uuid4, editable=False)),
                 ('dateCreated', models.DateTimeField(default=django.utils.timezone.now)),
+            ],
+        ),
+        migrations.CreateModel(
+            name='Sender',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('senderID', models.CharField(max_length=65)),
+            ],
+        ),
+        migrations.CreateModel(
+            name='SenderDetails',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('default', models.BooleanField(default=False)),
+                ('sid', models.CharField(max_length=1200)),
+                ('token', models.CharField(max_length=1200)),
+                ('service_name', models.CharField(choices=[('INFOBIP', 'IF'), ('TWILLO', 'TW'), ('TELESIGN', 'TS'), ('MSG91', 'MS')], max_length=50)),
+                ('senderID', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='smsApp.Sender')),
+            ],
+        ),
+        migrations.CreateModel(
+            name='Recipient',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('recipientName', models.CharField(max_length=80)),
+                ('recipientNumber', models.CharField(max_length=80)),
+                ('dateCreated', models.DateTimeField(default=django.utils.timezone.now)),
+                ('senderID', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='smsApp.Sender')),
             ],
         ),
         migrations.CreateModel(
@@ -32,22 +59,13 @@ class Migration(migrations.Migration):
                 ('messageID', models.UUIDField(default=uuid.uuid4)),
                 ('grouptoken', models.UUIDField(null=True)),
                 ('receiver', models.CharField(max_length=80)),
-                ('senderID', models.CharField(max_length=30)),
                 ('date_created', models.DateTimeField(default=django.utils.timezone.now)),
                 ('content', models.TextField(max_length=500)),
                 ('service_type', models.CharField(choices=[('IF', 'IF'), ('TW', 'TW'), ('TS', 'TS'), ('MS', 'MS'), ('MB', 'MB'), ('GA', 'GA'), ('D7', 'D7')], max_length=2)),
                 ('messageStatus', models.CharField(choices=[('D', 'D'), ('P', 'P'), ('S', 'S'), ('U', 'U'), ('F', 'F'), ('E', 'E'), ('FR', 'FR'), ('R', 'R'), ('SC', 'SC')], default='D', max_length=2)),
                 ('dateScheduled', models.DateTimeField(null=True)),
                 ('language', models.CharField(blank=True, choices=[('af', 'af'), ('sq', 'sq'), ('am', 'am'), ('ar', 'ar'), ('hy', 'hy'), ('az', 'az'), ('eu', 'eu'), ('be', 'be'), ('bn', 'bn'), ('bs', 'bs'), ('bg', 'bg'), ('ca', 'ca'), ('ceb', 'ceb'), ('ny', 'ny'), ('zh-cn', 'zh-cn'), ('zh-tw', 'zh-tw'), ('co', 'co'), ('hr', 'hr'), ('cs', 'cs'), ('da', 'da'), ('nl', 'nl'), ('en', 'en'), ('eo', 'eo'), ('et', 'et'), ('tl', 'tl'), ('fi', 'fi'), ('fr', 'fr'), ('fy', 'fy'), ('gl', 'gl'), ('ka', 'ka'), ('de', 'de'), ('el', 'el'), ('gu', 'gu'), ('ht', 'ht'), ('ha', 'ha'), ('haw', 'haw'), ('iw', 'iw'), ('hi', 'hin'), ('hmn', 'hmn'), ('hu', 'hu'), ('is', 'is'), ('ig', 'ig'), ('id', 'id'), ('ga', 'ga'), ('it', 'it'), ('ja', 'ja'), ('jw', 'jw'), ('kn', 'kn'), ('kk', 'kk'), ('km', 'km'), ('ko', 'ko'), ('ku', 'ku'), ('ky', 'ky'), ('lo', 'la'), ('la', 'la'), ('lv', 'lv'), ('lt', 'lt'), ('lb', 'lb'), ('mk', 'mk'), ('mg', 'mg'), ('ms', 'ms'), ('ml', 'ml'), ('mt', 'mt'), ('mi', 'mi'), ('mr', 'mr'), ('mn', 'mn'), ('my', 'my'), ('ne', 'ne'), ('no', 'no'), ('ps', 'ps'), ('fa', 'fa'), ('pl', 'pl'), ('pt', 'pt'), ('pa', 'pa'), ('ro', 'ro'), ('ru', 'ru'), ('sm', 'sm'), ('gd', 'gd'), ('sr', 'sr'), ('st', 'st'), ('sn', 'sn'), ('sd', 'si'), ('si', 'si'), ('sk', 'sk'), ('sl', 'sl'), ('so', 'so'), ('es', 'es'), ('su', 'su'), ('sw', 'sw'), ('sv', 'sv'), ('tg', 'tg'), ('ta', 'ta'), ('te', 'te'), ('th', 'th'), ('tr', 'tr'), ('uk', 'uk'), ('ur', 'ur'), ('uz', 'uz'), ('vi', 'vi'), ('cy', 'cy'), ('xh', 'xh'), ('yi', 'yi'), ('yo', 'yo'), ('zu', 'zu'), ('fil', 'Fil'), ('he', 'He')], default='en', max_length=5, null=True)),
-            ],
-        ),
-        migrations.CreateModel(
-            name='Recipient',
-            fields=[
-                ('userID', models.CharField(max_length=30, primary_key=True, serialize=False)),
-                ('recipientName', models.CharField(max_length=80)),
-                ('recipientNumber', models.CharField(max_length=80)),
-                ('dateCreated', models.DateTimeField(default=django.utils.timezone.now)),
+                ('senderID', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='smsApp.Sender')),
             ],
         ),
         migrations.CreateModel(
@@ -58,5 +76,10 @@ class Migration(migrations.Migration):
                 ('dateCreated', models.DateTimeField(default=django.utils.timezone.now)),
                 ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='numbers', to='smsApp.Group')),
             ],
+        ),
+        migrations.AddField(
+            model_name='group',
+            name='senderID',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='smsApp.Sender'),
         ),
     ]
