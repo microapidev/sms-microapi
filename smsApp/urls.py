@@ -51,8 +51,8 @@ urlpatterns = [
    path("v2/sms/message_recall/<taskID>", MessageRecall.as_view(), name="recall-message"),
 
    #MessageStatus
-   path("v2/sms/message_status/single/<str:messageID>", TransactionID.as_view(), name="message-status"),
-   path("v2/sms/message_status/group/<str:groupToken>", GroupTransactionID.as_view(), name="groupmsg-status"),
+   # path("v2/sms/message_status/single/<str:messageID>", TransactionID.as_view(), name="message-status"),
+   path("v2/sms/message_status/<str:Token>", GroupTransactionID.as_view(), name="groupmsg-status"),
 
    #sendsms
    path("v2/sms/send/send_single_msg", SendSingMsgCreate.as_view(), name="send-one-msg"),
@@ -106,16 +106,16 @@ urlpatterns = [
    # path('v1/sms/message/translate', translateMessages),
 
    #Group Views
-   path("v1/sms/list_group", GroupList.as_view(), name="list-group"),
-   path("v1/sms/list_group/<senderID>", GroupBySenderList.as_view(), name="list-group"),
-   path("v1/sms/create_group", GroupCreate.as_view(), name="update-group"),
-   path("v1/sms/group_update/<str:pk>", GroupDetail.as_view(), name="update-group"),
-   path("v1/sms/group_delete/<str:groupname>", GroupDelete.as_view(), name="delete-group"),
-   path("v1/sms/group_recipient/", GroupNumbersList.as_view(), name="group-numbers"),
-   path("v1/sms/group_recipient/create", GroupNumbersCreate.as_view(), name="create-group-numbers"),
-   path("v1/sms/group_recipient_list/<str:senderID>", GroupNumbersBySenderList.as_view(), name="list-group-numbers-senderID"),
-   path("v1/sms/group_recipient_update/<str:pk>", update_group_number, name="update-group-umbers"),
-   path("v1/sms/group_recipient_delete/<str:pk>", GroupNumbersDetail.as_view(), name="update-group-umbers"),
+   # path("v1/sms/list_group", GroupList.as_view(), name="list-group"),
+   # path("v1/sms/list_group/<senderID>", GroupBySenderList.as_view(), name="list-group"),
+   # path("v1/sms/create_group", GroupCreate.as_view(), name="update-group"),
+   # path("v1/sms/group_update/<str:pk>", GroupDetail.as_view(), name="update-group"),
+   # path("v1/sms/group_delete/<str:groupname>", GroupDelete.as_view(), name="delete-group"),
+   # path("v1/sms/group_recipient/", GroupNumbersList.as_view(), name="group-numbers"),
+   # path("v1/sms/group_recipient/create", GroupNumbersCreate.as_view(), name="create-group-numbers"),
+   # path("v1/sms/group_recipient_list/<str:groupname>", GroupNumbersBySenderList.as_view(), name="list-group-numbers-senderID"),
+   # path("v1/sms/group_recipient_update/<str:pk>", update_group_number, name="update-group-umbers"),
+   # path("v1/sms/group_recipient_delete/<str:pk>", GroupNumbersDetail.as_view(), name="update-group-umbers"),
    
 ]
 

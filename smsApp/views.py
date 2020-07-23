@@ -6,6 +6,7 @@ from rest_framework.parsers import JSONParser
 # from smsApp.serializers import UserSerializer
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.views.decorators.csrf import csrf_exempt
+from django.db.models import Q
 from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 from rest_framework import generics, views
@@ -86,7 +87,7 @@ class SendSingMsgCreate(generics.CreateAPIView):
         token = service.token
         service_type = service.service_name
         verified_no = service.verified_no
-        print(service, service_type, token, sid)
+        print(service, service_type, token, sid, verified_no)
         receiver = request.data.get("receiver")
         content = request.data.get("content")
         language = request.data.get("language")
@@ -102,26 +103,27 @@ class SendSingMsgCreate(generics.CreateAPIView):
 
 
                 serializer_message = MessageSerializer(data=message_dict)
-
-
-                client = Client(sid,token)
+                
+                client = Client(f"{sid}",
+                                f"{token}")
                 if serializer_message.is_valid():
+                    print('yeah')
+                    value = serializer_message.save()
+                    value.service_type = 'TW'
                     try:
-                        value = serializer_message.save()
-                        value.service_type = 'TW'
                         if (language != 'en' or language != None or language != " " ):
                             original_txt.append(content)
                             content = translateMsg(content, language)
                             value.language = language
                             
                             message = client.messages.create(
-                                from_=verified_no,
+                                from_=senderID,
                                 to=receiver,
                                 body=content
                             )
                         else:
                             message = client.messages.create(
-                                from_=verified_no,
+                                from_=senderID,
                                 to=receiver,
                                 body=content
                             )
@@ -177,7 +179,7 @@ class SendSingMsgCreate(generics.CreateAPIView):
                                 'statusCode': '400',
                                 'details': 'The Phone Number is Not registered to Twilio'
                             }
-                        }, status=status.HTTP_400_BAD_REQUEST)      
+                        }, status=status.HTTP_400_BAD_REQUEST)                             
                 return Response({
                     "success": "False",
                     "status": "F",
@@ -193,7 +195,7 @@ class SendSingMsgCreate(generics.CreateAPIView):
                 }, status=status.HTTP_400_BAD_REQUEST)
 
             #Infobip
-            elif (service_type == 'IF'):
+            elif (service_type.upper() == 'IF' or service_type.upper() == "INFOBIP"):
                 logger.error("posting to message in INFOBIP")
 
                 message_dict = {'senderID':senderID, 'receiver':receiver, 'content':content}
@@ -251,6 +253,9 @@ class SendSingMsgCreate(generics.CreateAPIView):
                             value.messageStatus = "E"
                         if ( data["messages"][0]["status"]["groupId"] == 5):
                             value.messageStatus = "FR"
+                    else:
+                        value.messageStatus = "F"
+                        return Response("someting went wrong while sending, please try again")
                     value.save()
                     # print(data)
                     if len(original_txt) != 0:
@@ -260,7 +265,7 @@ class SendSingMsgCreate(generics.CreateAPIView):
                     return Response({"message": "Not Valid"})
             
             #For Telesign
-            elif (service_type == 'TS'):
+            elif (service_type == 'TS' or service_type.upper() == "TELESIGN"):
                 logger.error("posting to message in telesign")
                 message_dict = {'senderID':senderID, 'receiver':receiver, 'content':content}
                 serializer_message = MessageSerializer(data=message_dict)
@@ -337,7 +342,7 @@ class SendSingMsgCreate(generics.CreateAPIView):
                     return Response({"success":"False","message": "Invalid credentials","messageID":f"{value.messageID}","data": "Not Valid", "service type": f"{service_type}"}, status=status.HTTP_400_BAD_REQUEST)
             
             #for MessageBird
-            elif (service_type == 'MB'):
+            elif (service_type == 'MB' or service_type.upper() == "MESSAGEBIRD"):
 
                 logger.error("posting to message in MessageBird")
                 message_dict = {'senderID':senderID, 'receiver':receiver, 'content':content}
@@ -360,13 +365,9 @@ class SendSingMsgCreate(generics.CreateAPIView):
                             body=content
                         )
                         # data = json.loads(message)
-                        print(client)
-                        print(message.__dict__)
+
                         data = message.__dict__
                         item = data['_recipients']['items'][0].__dict__
-                        print(item['recipient'])
-                        print(data)
-                        print(data['id'])
                         if data['gateway'] == 10:
                             value.messageStatus = "F"
                             return Response({
@@ -423,7 +424,7 @@ class SendSingMsgCreate(generics.CreateAPIView):
                     return Response({"success":"False","message": "Invalid credentials","messageID":"","data": "Not Valid", "service type": f"{service_type}"}, status=status.HTTP_400_BAD_REQUEST)
             
             #For GatewayAPi
-            elif (service_type == 'GA'):
+            elif (service_type == 'GA' or service_type.upper() == "GATEWAYAPI"):
                 logger.error("posting to message in GatewayAPi")
                 message_dict = {'senderID':senderID, 'receiver':receiver, 'content':content}
                 serializer_message = MessageSerializer(data=message_dict)
@@ -482,7 +483,7 @@ class SendSingMsgCreate(generics.CreateAPIView):
             else:
                 return Response({"success":"False","message": "","messageID":"","data": "N/A", f"service_type {service_type}": "Not Supported"}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response({f"{receiver} should be a number starting with +,1,0 ": "Not Supported"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({f"{receiver}  does not start with +,1,0 or is a single number.": "Not Supported"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -903,21 +904,27 @@ class GroupCreate(generics.CreateAPIView):
     def post(self, request, *args, **kwargs):
         groupName = request.data.get("groupName")
         senderID = request.data.get("senderID")
-        queryset = Group.objects.filter(senderID=senderID, groupName=groupName)
+        try:
+            get_object_or_404(Sender, senderID=senderID)
+            queryset = Group.objects.filter(senderID=senderID, groupName=groupName)
 
-        if senderID == "string" or senderID == None:
-            return Response({"Failure": status.HTTP_400_BAD_REQUEST, "Message": "String is empty", "Data": {"userID": "string is empty"}})
-        if groupName == "string" or groupName == None:
-            return Response({"Failure": status.HTTP_400_BAD_REQUEST, "Message": "String is empty", "Data": {"groupName": "empty"}})
-        if queryset.exists():
-            return Response({"This group exists and it has same user, please specify another group with or change the senderID"}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            # self.create(request, *args, **kwargs)
-            serializer = GroupSerializer(data=request.data)
-            if serializer.is_valid():
-                value = serializer.save()
-                groupID = value.groupID
-            return Response({"Success": "True", "status": status.HTTP_201_CREATED, "Message": "Group Created", "Data": request.data, "groupID": groupID})
+            if senderID == "string" or senderID == None:
+                return Response({"Failure": status.HTTP_400_BAD_REQUEST, "Message": "String is empty", "Data": {"userID": "string is empty"}})
+            if groupName == "string" or groupName == None:
+                return Response({"Failure": status.HTTP_400_BAD_REQUEST, "Message": "String is empty", "Data": {"groupName": "empty"}})
+            if queryset.exists():
+                return Response({"This group exists and it has same user, please specify another group with or change the senderID"}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                # self.create(request, *args, **kwargs)
+                serializer = GroupSerializer(data=request.data)
+                if serializer.is_valid():
+                    value = serializer.save()
+                    groupID = value.groupID
+                    value.save()
+                    return Response({"Success": "True", "status": status.HTTP_201_CREATED, "Message": "Group Created", "Data": request.data, "groupID": groupID})
+                return Response({"Failure": status.HTTP_400_BAD_REQUEST, "Message": "Bad Request", "Data": serializer.errors})
+        except:
+            return Response({"Failure": status.HTTP_400_BAD_REQUEST, "Message": "Bad Request", "Data": serializer.errors})
 
 # This is the function for updating and deleting each recipient in a list
 
@@ -978,12 +985,13 @@ class GroupNumbersBySenderList(APIView):
     The user can List all numbers in a specific group. This requires  {"userID":""}
     """
 
-    def get(self, request, senderID, format=None):
+    def get(self, request, groupname, format=None):
         if ValueError:
             return Response({"Success": False, "Message": "Failed Request", "Data": "String UserID needed", 'status': status.HTTP_400_BAD_REQUEST})
-        groupNumber = GroupNumbers.objects.filter(group__userID=senderID)
+        # groupNumber = GroupNumbers.objects.filter(group__groupName=groupname)
+        groupNumber = get_object_or_404(GroupNumbers, group__groupName=groupname)
         serializer = GroupNumbersSerializer(groupNumber, many=True)
-        return Response({"Success": "True", "status": status.HTTP_200_OK, "Message": f"PhoneNumbers Available to {senderID}", "Numbers": serializer.data})
+        return Response({"Success": "True", "status": status.HTTP_200_OK, "Message": f"PhoneNumbers Available to {groupname}", "Numbers": serializer.data})
 
 
 class GroupNumbersCreate(generics.CreateAPIView):
@@ -1586,33 +1594,50 @@ class SendGroupSms(views.APIView):
     """
         Send SMS to multiple recipients. 
         {
-        "groupID": "autogenerated from v1/sms/create_group",
-        "content": "",
-        "senderID": "your user id",
-        "language": "can be null"
+        "senderID": "existing senderID",
+        "content": "body",
+        "receiver": "multiple numbers separated by comma and must start with '+' or '1' or '0' or all three",
+        "language": "can be null (google api translation of languages are used...e.g "en" represents 'english')"
         }
     """
     def post(self, request):
+        #request senderID from user
         senderID = request.data.get("senderID")
         sender = get_object_or_404(Sender, senderID=senderID)
-        # sender = Sender.objects.get(senderID=senderID)
-        # sender.details.get(default=2)
-        service = sender.details.get(default=True)
-        sid = service.sid
-        token = service.token
-        service_type = service.service_name
-        verified_no = service.verified_no
-        print(service, service_type, token, sid)
+
+        #collecting the info of user from the sender table which is linked to sender details table
+        account = sender.details.get(default=True)
+        sid = account.sid
+        token = account.token
+        service_type = account.service_name
+        verified_no = account.verified_no
+        
+        #Original Text before translation occurs
         original_txt = []
+        #log error
         logger.error("posting to group message")
-
-
-        original_txt = []
+        
+        #messageStatus to return
         msgstatus = []
-        groupID = request.data["groupID"]
+
+        #more request data from user
         text = request.data["content"]
         language = request.data["language"]
-        numbers = get_numbers_from_group(request, groupID)
+        receiver = request.data["receiver"]
+
+        #Handling the multiple entry info for user to send to group
+        receiver = receiver.split(',')
+        numbers = []
+        for number in receiver:
+            number.strip()
+            numbers.append(number) 
+        numbers = list(set(numbers))
+        #check if it only one number
+        if len(numbers) <=1:
+            result = {'You need to add more numbers...this is a group feature'}
+            msgstatus.append(result)
+            return Response(msgstatus)
+
         logger.error("Infobib")
         grouptoken = uuid.uuid4()
         #INFOBIP
@@ -1667,9 +1692,12 @@ class SendGroupSms(views.APIView):
                         result = {"success":"True","status": value.messageStatus, "message": f"{value.content}", "messageID":f"{value.messageID}","groupToken":f"{value.grouptoken}", "data": {"to": To, "msg-id":IF_MSID, "description":description}}
                         msgstatus.append(result)
                         print(msgstatus, number)
+                    else:
+                        result = {"someting went wrong while sending to this {}, please try again".format(number)}
+                        msgstatus.append(result)
                     value.save()
                 else:
-                    result = {"success":"False","message": f"something went wrong while sending to {number}","status":status.HTTP_400_BAD_REQUEST}
+                    result = {"success":"False","message": f"Please check that this {number} is valid as we cant send to it","status":status.HTTP_400_BAD_REQUEST}
                     msgstatus.append(result)
                     # return Response({
                     #     "Success":"False","Message": f"something went wrong while sending to {number}","status":status.HTTP_400_BAD_REQUEST})
@@ -1776,7 +1804,7 @@ class SendGroupSms(views.APIView):
             return Response(msgstatus)
 
         # #MessageBird
-        elif (service_type == 'MB'):
+        elif (service_type.upper() == 'MB' or service_type.upper() == 'MESSAGEBIRD'):
             for number in numbers:
                 msg_dict = {'grouptoken':grouptoken, 'content':text, 'senderID':senderID, 'receiver':number}
                 serializer = MessageSerializer(data=msg_dict)
@@ -1873,7 +1901,7 @@ class SendGroupSms(views.APIView):
             return Response(msgstatus)
         
         #GatewayApi
-        elif (service_type == 'GA'):
+        elif (service_type.upper() == 'GA' or service_type.upper() == 'GATEWAYAPI'):
             for number in numbers:
                 msg_dict = {'grouptoken':grouptoken, 'content':text, 'senderID':senderID, 'receiver':number}
                 serializer = MessageSerializer(data=msg_dict)
@@ -2130,23 +2158,17 @@ class TransactionID(APIView):
 
 class GroupTransactionID(APIView):
     """
-    This returns the status of a Group message given a groupToken.
-    Format: {"groupToken":'your group token'}
+    This returns the status of a Group message given a groupToken (for group message) or messageID (for single message).
+    Format: {"Token":'your group token OR message ID'}
     """
     serializer = MessageSerializer
-    def get(self, request, groupToken, format=None):
-        # ids = [] #used to store transID
+    def get(self, request, Token, format=None):
         msgResponse = [] #used to store responses
         serializer = MessageSerializer
         try:
-            dbTransID = Message.objects.filter(grouptoken=groupToken)
-            # dbTransID2 = Message.objects.filter(messageID=groupToken)
-            # if (dbTransID.exists()) or (dbTransID2.exists()):
+            dbTransID = Message.objects.filter(Q(messageID=Token) | Q(transactionID=Token))
             if dbTransID.exists(): 
                 for msgID in dbTransID.iterator(): #pick the values in chunks
-                    # ids.append([msgID.transactionID, msgID.messageStatus, msgID.service_type, msgID.receiver])
-                # ids = list(dict.fromkeys(ids))
-                    
                     if msgID.messageStatus == "P":
                         if (msgID.service_type.upper() == "TS"): 
                             api_key = settings.TELESIGN_API
@@ -2226,7 +2248,7 @@ class GroupTransactionID(APIView):
                         msgResponse.append (result)
                 return Response({"Success": "True", "details": "Transaction status retrieved", "Data": {"Service Type": msgID.service_type, "Response": msgResponse }, 'status': status.HTTP_200_OK})
             else:
-                return Response({"Error": status.HTTP_400_BAD_REQUEST, "Message": "Group token not found", "Token": grpToken})
+                return Response({"Error": status.HTTP_400_BAD_REQUEST, "Message": "Token not found", "Token": Token})
         except ObjectDoesNotExist:
             return Response({"Success": "False", "Data": [], 'status': status.HTTP_400_BAD_REQUEST})
 
