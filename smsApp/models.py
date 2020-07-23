@@ -65,11 +65,16 @@ class Message(models.Model):
     TWILLO = 'TW'
     TELESIGN = 'TS'
     MSG91 = 'MS'
+    MESSAGEBIRD = 'MB'
+    GATEWAYAPI = 'GA'
+    D7 = 'D7'
     SERVICE_CHOICES = [
         (INFOBIP, 'IF'),
         (TWILLO, 'TW'),
         (TELESIGN, 'TS'),       
-		(MSG91, 'MS'),
+		(MESSAGEBIRD, 'MB'),
+		(GATEWAYAPI, 'GA'),
+
     ]
     service_type = models.CharField(
         max_length=2,

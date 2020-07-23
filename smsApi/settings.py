@@ -48,6 +48,15 @@ TWILIO_AUTH_TOKEN = '70846d53642b6fc91abb485b88a0fa96'
 TWILIO_NUMBER = '+13026637959'
 TELESIGN_API = 'mp6UoFnveiSDjHSQmNdNxLrpNca844of69XAWOHYu+xRZsadpUm5XsQ50utSNAzOl/tj3lOxQMIwlmaHXL2cxQ=='
 TELESIGN_CUST = '163CFEDD-EB4D-4DEE-949C-9F44F6292FA5'
+#MessageBird
+MB_ACCESS_KEY = 'T9KCkelsJGqAwRU6Htdy2LI7m'
+#Gatewayapi.com
+GA_KEY='OCALazyE4I9G26K7fXiMcdyn'
+GA_SECRET='F-ltreMai8m-M2QMtWsVoTNF&4RU4XmAUjC^4l*d'
+#D7
+D7_TOKEN= 'dmF5aTIxODA6VjRjNUZmRm4='
+D7_USERNAME= 'vayi2180'
+D7_PASSWORD= 'V4c5FfFn'
 
 #add twillio sid , authentication token and your twilio number
 # TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID") # obtained from twilio.com/console 
@@ -139,7 +148,8 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
-    ]
+    ],
+    'DATETIME_FORMAT': "%Y-%m-%dT%H:%M:%S.%fZ",
 }
 
 # AUTH_USER_MODEL = "smsApp.User"
