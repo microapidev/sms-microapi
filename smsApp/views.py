@@ -1906,6 +1906,7 @@ class MessageRecall(generics.DestroyAPIView):
         return Response({"Item":"Task Successfully Deleted"},status=status.HTTP_200_OK)
 
 class SenderRegister(generics.CreateAPIView):
+    """ Create a user by simply passing an authorised senderid"""
     serializer_class = SenderSerializer
 
     def post(self, request, *args, **kwargs):
