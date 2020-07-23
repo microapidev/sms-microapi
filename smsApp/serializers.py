@@ -88,6 +88,13 @@ class SenderDetailsSerializer(serializers.ModelSerializer):
         validated_data["senderID"] = senderID
         return SenderDetails.objects.create(**validated_data)
 
+    def update(self, instance, validated_data):
+        instance.token = validated_data.get('token', instance.token)
+        instance.sid = validated_data.get('sid', instance.sid)
+        instance.save()
+        return instance
+
+
     class Meta:
         model = SenderDetails
         fields = ("sid", "token", "service_name", "sender")
