@@ -26,6 +26,7 @@ class MessageSerializer(serializers.ModelSerializer):
     service_type = serializers.ChoiceField(choices=Message.SERVICE_CHOICES)
     grouptoken = serializers.CharField(read_only=True)
     date_created = serializers.CharField(read_only=True)
+    dateScheduled = serializers.DateField()
     messageStatus = serializers.ChoiceField(choices=['D', 'S','F','R','P','U','SC'], read_only=True)
     language = serializers.ChoiceField(choices=Message.LANG_CHOICES, default='en', required=False)
     transactionID = serializers.CharField(read_only=True)
@@ -33,7 +34,7 @@ class MessageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Message
-        fields = ["senderID", "content", "receiver", "service_type", "messageStatus", "date_created", "transactionID", "grouptoken", "language", "messageID"]
+        fields = ["senderID", "content", "receiver", "service_type", "messageStatus","dateScheduled", "date_created", "transactionID", "grouptoken", "language", "messageID"]
 
 
 class GroupSerializer(serializers.ModelSerializer):

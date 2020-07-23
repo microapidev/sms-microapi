@@ -68,8 +68,8 @@ TELESIGN_CUST = 'ACECBD93-21C7-4B8B-9300-33FDEBC27881'
 #celery config
 CELERY_BROKER_URL = 'amqp://rabbitmq'
 # CELERY_RESULT_BACKEND = 'django-db'
-CELERY_RESULT_BACKEND = 'db+sqlite:///db.sqlite3'
-CELERY_RESULT_EXTENDED = True
+# CELERY_RESULT_BACKEND = 'db+sqlite:///db.sqlite3'
+# CELERY_RESULT_EXTENDED = True
 
 # Q_CLUSTER = {
 #     'name': 'DjangORM',
@@ -139,7 +139,8 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
-    ]
+    ],
+    'DATETIME_FORMAT': "%Y-%m-%dT%H:%M:%S.%fZ",
 }
 
 # AUTH_USER_MODEL = "smsApp.User"

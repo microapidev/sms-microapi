@@ -28,9 +28,9 @@ from .serializers import RecipientSerializer, MessageSerializer, GroupSerializer
 from googletrans import Translator
 import uuid
 import logging
-from .tasks import task1, periodicTaskScheduler
+from .tasks import singleMessageSchedule, periodicTaskScheduler
 from smsApi.celery import app as celeryTaskapp
-from django.core import serializers
+from django.forms.models import model_to_dict
 
 logger = logging.getLogger(__name__)
 
@@ -1215,7 +1215,8 @@ class TeleSignSingleSms(generics.CreateAPIView):
     def post(self, request):
         receiver = request.data["receiver"]
         # print(receiver)
-        text = request.data["content"]
+        content = request.data["content"]
+        dateScheduled = request.data["dateScheduled"]
         sender = request.data["senderID"]
         request.data["service_type"] = "TS"
         serializer = MessageSerializer(data=request.data)
@@ -1224,44 +1225,46 @@ class TeleSignSingleSms(generics.CreateAPIView):
         # api_key = settings.TELESIGN_API
         # customer_id = settings.TELESIGN_CUST
 
-        data = {
-            'phone_number': receiver,
-            'message': text,
-            'message_type': 'ARN'}
-
         if serializer.is_valid():
-            # print(value)
-            # print("break----")
-            # value = serializer.save()
 
             mydata = {
                     'receiver':receiver,
-                    'text':text,
+                    'text':content,
                     'sender':sender
                     }
-            # message = Message.objects.create(
-            #     receiver=mydata['receiver'],
-            #     senderID=mydata['sender'],
-            #     content=mydata['text'],
-            #     service_type="TS",
-            # )
-            # print(message)
-            # message =  serializers.serialize('json', message)
-            # print(message)
-            # task1(mydata)
+            message = Message.objects.create(
+                receiver=receiver,
+                senderID=sender,
+                content=content,
+                service_type="TS",
+                dateScheduled=dateScheduled
+            )
+
+            #calling model method works,but circular import wont allow update on msg obj
+            # message.oneTimeSchedule() 
+
+            #Here we write the schedule fn, to remove circualr imports
+            message.save()
+            messageID = message.messageID
+            print(f'Message is {message}')
+            print(f'MessaageID is {messageID}')
+            task = singleMessageSchedule.apply_async(args=[mydata, messageID], countdown=30)
+            message.scheduleID = task.id
+
 
             # periodicTaskScheduler(5,7)
-            task = periodicTaskScheduler.apply_async(args=[5,7], countdown=5)
 
-            # task = task1.apply_async(args=[mydata], countdown=30)
-            task_id = task.id
+
+            # task = periodicTaskScheduler.apply_async(args=[5,7], countdown=5)
+            # task = singleMessageSchedule.apply_async(args=[mydata], countdown=30)
+            # task_id = task.id
         else:
             return Response({"details": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
         return Response({
             "Success": True,
             "Message": "Message Sending",
             "Data": 'response',
-            "task_id": task_id,
+            "Msg Recall ID": task.id,
             "Service_Type": "TELESIGN"})
 
 
