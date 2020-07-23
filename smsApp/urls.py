@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import SendSingMsgCreate, TransactionID
+from .views import SendSingMsgCreate, TransactionID, GroupTransactionID
 from .views import RecipientCreate, RecipientList, RecipientDetail, RecipientsForUser
 from .views import InfobipSendMessage, InfobipSingleMessage, InfobipMessageList, InfobipSendMessage2
 from .views import translateMessages, MessageDelete, MessageCounter, TwilioSendSms, sms_list
@@ -7,6 +7,7 @@ from .views import TeleSignSingleSms, TeleSignMessageList, TeleSignTransactionID
 from .views import TeleSignCollectionSms, MessageRecall
 from .views import GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupDelete, GroupNumbersList, GroupNumbersBySenderList, GroupNumbersCreate, update_group_number, GroupNumbersDetail
 from .views import SmsHistoryList, SmsHistoryDetail, SendGroupSms, SendFlashSms
+from .views import SenderDetailsCreate, SenderRegister, SenderDetailsUpdate, SenderDetailsList
 from django.urls import path
 from .views import create_receipents_details, save_recipients_details  #get_recipient_details
 from rest_framework.schemas.coreapi import AutoSchema
@@ -40,44 +41,55 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
+   # Sender
+   path("v2/sms/user_register", SenderRegister.as_view(), name="register"),
+   path("v2/sms/config/add_config", SenderDetailsCreate.as_view(), name="configure"),
+   path("v2/sms/config/update_config", SenderDetailsUpdate.as_view(), name="send-one-msg"),
+   path("v2/sms/config/view_config/<senderID>", SenderDetailsList.as_view(), name="send-one-msg"),
+
    #MessageStatus
-   path("v2/sms/message/recall/<taskID>", MessageRecall.as_view(), name="recall-message"),
-   path("v2/sms/messagestatus/<str:msgID>", TransactionID.as_view(), name="message-status"),
+   path("v2/sms/message_recall/<taskID>", MessageRecall.as_view(), name="recall-message"),
+
+   #MessageStatus
+   path("v2/sms/message_status/single/<str:messageID>", TransactionID.as_view(), name="message-status"),
+   path("v2/sms/message_status/group/<str:groupToken>", GroupTransactionID.as_view(), name="groupmsg-status"),
 
    #sendsms
-   path("v2/sms/send_single_msg", SendSingMsgCreate.as_view(), name="send-one-msg"),
-   path("v2/sms/send_group_sms", SendGroupSms.as_view(), name="send-group-sms"),
-   path("v2/sms/send_flash_sms",  SendFlashSms.as_view(), name="send-flash-sms"),
+   path("v2/sms/send/send_single_msg", SendSingMsgCreate.as_view(), name="send-one-msg"),
+   path("v2/sms/send/send_group_sms", SendGroupSms.as_view(), name="send-group-sms"),
+   path("v2/sms/send/send_flash_sms",  SendFlashSms.as_view(), name="send-flash-sms"),
+
+
    #messageDelete
-   path("v1/sms/message/delete/<transactionID>", MessageDelete.as_view(), name="delete-message"),
-   path("v1/sms/message/<userID>", MessageCounter.as_view(), name="count-message"),
+   # path("v1/sms/message/delete/<transactionID>", MessageDelete.as_view(), name="delete-message"),
+   # path("v1/sms/message/<userID>", MessageCounter.as_view(), name="count-message"),
 
    #Recipient Views
-   path('v1/sms/recipients/create', RecipientCreate.as_view(), name="create-new-recipient"),
-   path('v1/sms/recipients/all', RecipientList.as_view(), name="get-all-recipients"),
-   path('v1/sms/recipients/<str:userID>', RecipientsForUser.as_view(), name="get-user-recipients"),
-   path("v1/sms/recipients/<str:recipientNumber>", RecipientDetail.as_view(), name="update-recipient"),
+   # path('v1/sms/recipients/create', RecipientCreate.as_view(), name="create-new-recipient"),
+   # path('v1/sms/recipients/all', RecipientList.as_view(), name="get-all-recipients"),
+   # path('v1/sms/recipients/<str:userID>', RecipientsForUser.as_view(), name="get-user-recipients"),
+   # path("v1/sms/recipients/<str:recipientNumber>", RecipientDetail.as_view(), name="update-recipient"),
    
    #History Views, General Histories
-   path('v1/sms/sms_history/<str:senderID>', SmsHistoryList.as_view(), name="history"),
+   path('v2/sms/history/<str:userID>', SmsHistoryList.as_view(), name="history"),
 
    #TeleSign Views
    # path("v1/sms/telesign/group_sms", TeleSignGroupSms.as_view(), name="telesign-group-message"),
-   path("v1/sms/telesign/send_sms", TeleSignSingleSms.as_view(), name="telesign-send-message"),
-   path("v1/sms/telesign/view_all_sms", TeleSignMessageList.as_view(), name="telesign-sent-messages"),
-   path("v1/sms/telesign/<transactionID>", TeleSignTransactionID3.as_view(), name="telesign-sent-messages3"),
+   # path("v1/sms/telesign/send_sms", TeleSignSingleSms.as_view(), name="telesign-send-message"),
+   # path("v1/sms/telesign/view_all_sms", TeleSignMessageList.as_view(), name="telesign-sent-messages"),
+   # path("v1/sms/telesign/<transactionID>", TeleSignTransactionID3.as_view(), name="telesign-sent-messages3"),
 
    #Infobip Views
-   path("v1/sms/infobip/send_sms", InfobipSendMessage.as_view(), name="infobip-send-message"),
+   # path("v1/sms/infobip/send_sms", InfobipSendMessage.as_view(), name="infobip-send-message"),
    # path("v1/sms/infobip/send_sms2", InfobipSendMessage2.as_view(), name="infobip-send-message2"),
    #path("v1/sms/infobip/send_group_sms", InfobipGroupMessage.as_view(), name="infobip-group-message"),
 
-   path("v1/sms/infobip/view_all_sms", InfobipMessageList.as_view(), name="infobip-sent-messages"),
-   path("v1/sms/infobip/view_all_sms/<str:senderID>", InfobipSingleMessage.as_view(), name="infobip-sent-messages"),
+   # path("v1/sms/infobip/view_all_sms", InfobipMessageList.as_view(), name="infobip-sent-messages"),
+   # path("v1/sms/infobip/view_all_sms/<str:senderID>", InfobipSingleMessage.as_view(), name="infobip-sent-messages"),
    
    #Twillo Views path
-   path('v1/sms/Twillo_sms_history', sms_list),
-   path('v1/sms/twilio_send_single', TwilioSendSms.as_view(), name="sendsms"),
+   # path('v1/sms/twilio_sms_history', sms_list),
+   # path('v1/sms/twilio_send_single', TwilioSendSms.as_view(), name="sendsms"),
    #path('v1/sms/twilio_send_group', send_group_twilio),
 
 
@@ -86,13 +98,12 @@ urlpatterns = [
    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
    path('', include_docs_urls(title='SMS API', description=
    """
-      SMS API testing - This is done using PostMan Testing tool. To start, all you need to do is have a senderID or userID. Once supplied, it would be used to 
-      identify all transactions done by you. To send a single sms using an service,visit the respective endpoint and follow the instructions based on format and 
-      request to be sent. Remember senderID == userID, and this is personally generated. LET'S TEST!!!."""
+      To begin, visit the config endpoint via `/v2/sms/config/add_config` to setup your credentials. Next, proceed to using the create endpoint to send single or group messages. YOUR FIRST REGISTERED SERVICE IS SET AS DEFAULT. To change default, visit the `/v2/sms/config/update_config` endpoint.
+   """
    ,permission_classes=(permissions.AllowAny,))),
     
    #Message translation
-   path('v1/sms/message/translate', translateMessages),
+   # path('v1/sms/message/translate', translateMessages),
 
    #Group Views
    path("v1/sms/list_group", GroupList.as_view(), name="list-group"),
