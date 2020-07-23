@@ -43,20 +43,20 @@ ALLOWED_HOSTS = ['*']  ##allows all hosts
 
 #Devops suggested we include this for deployment
 SECRET_KEY= 'lmrffsgfhrilklg-za7#57vi!zr)ps8)2anyona25###dl)s-#s=7=vn_'
-TWILIO_ACCOUNT_SID = 'AC24dc3ff423be936f3efd0503045fd4e8'
-TWILIO_AUTH_TOKEN = '70846d53642b6fc91abb485b88a0fa96'
-TWILIO_NUMBER = '+13026637959'
-TELESIGN_API = 'mp6UoFnveiSDjHSQmNdNxLrpNca844of69XAWOHYu+xRZsadpUm5XsQ50utSNAzOl/tj3lOxQMIwlmaHXL2cxQ=='
-TELESIGN_CUST = '163CFEDD-EB4D-4DEE-949C-9F44F6292FA5'
-#MessageBird
-MB_ACCESS_KEY = 'T9KCkelsJGqAwRU6Htdy2LI7m'
-#Gatewayapi.com
-GA_KEY='OCALazyE4I9G26K7fXiMcdyn'
-GA_SECRET='F-ltreMai8m-M2QMtWsVoTNF&4RU4XmAUjC^4l*d'
-#D7
-D7_TOKEN= 'dmF5aTIxODA6VjRjNUZmRm4='
-D7_USERNAME= 'vayi2180'
-D7_PASSWORD= 'V4c5FfFn'
+# TWILIO_ACCOUNT_SID = 'AC24dc3ff423be936f3efd0503045fd4e8'
+# TWILIO_AUTH_TOKEN = '70846d53642b6fc91abb485b88a0fa96'
+# TWILIO_NUMBER = '+13026637959'
+# TELESIGN_API = 'mp6UoFnveiSDjHSQmNdNxLrpNca844of69XAWOHYu+xRZsadpUm5XsQ50utSNAzOl/tj3lOxQMIwlmaHXL2cxQ=='
+# TELESIGN_CUST = '163CFEDD-EB4D-4DEE-949C-9F44F6292FA5'
+# #MessageBird
+# MB_ACCESS_KEY = 'T9KCkelsJGqAwRU6Htdy2LI7m'
+# #Gatewayapi.com
+# GA_KEY='OCALazyE4I9G26K7fXiMcdyn'
+# GA_SECRET='F-ltreMai8m-M2QMtWsVoTNF&4RU4XmAUjC^4l*d'
+# #D7
+# D7_TOKEN= 'dmF5aTIxODA6VjRjNUZmRm4='
+# D7_USERNAME= 'vayi2180'
+# D7_PASSWORD= 'V4c5FfFn'
 
 #add twillio sid , authentication token and your twilio number
 # TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID") # obtained from twilio.com/console 
@@ -109,6 +109,7 @@ INSTALLED_APPS = [
     'coreapi',
     'django_celery_results',
     'django_celery_beat',
+    'phonenumber_field',
 ]
 
 MIDDLEWARE = [
