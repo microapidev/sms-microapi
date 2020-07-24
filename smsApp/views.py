@@ -2173,8 +2173,10 @@ class GroupTransactionID(APIView):
             dbTransID = Message.objects.filter(Q(messageID=Token) | Q(transactionID=Token))
             if dbTransID.exists(): 
                 for msgID in dbTransID.iterator(): #pick the values in chunks
+                    # print (msgID)
                     if msgID.messageStatus == "D":
-                        userInfo = SenderDetails.objects.get(msgID.senderID)
+                        userInfo = SenderDetails.objects.get(senderID=msgID.senderID).filter(default=True)
+                        # userInfo = SenderDetails.objects.get(Q(senderID=msgID.senderID) & Q(default=True))
                         api_key = userInfo.token
                         customer_id = userInfo.sid
                         #Telesign
