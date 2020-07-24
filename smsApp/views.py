@@ -119,13 +119,13 @@ class SendSingMsgCreate(generics.CreateAPIView):
                             message = client.messages.create(
                                 from_=senderID,
                                 to=receiver,
-                                body=content
+                                body=content,
                             )
                         else:
                             message = client.messages.create(
                                 from_=senderID,
                                 to=receiver,
-                                body=content
+                                body=content,
                             )
                         if (message.status == 'sent'):
                             value.messageStatus = "S"
@@ -1731,7 +1731,7 @@ class SendGroupSms(views.APIView):
                         message = client.messages.create(
                             from_=verified_no,
                             to=number,
-                            body=text
+                            body=text,
                         )
                         if (message.status == 'sent'):
                             value.messageStatus = "S"
@@ -1832,7 +1832,7 @@ class SendGroupSms(views.APIView):
                         message = client.message_create(
                             originator=senderID,
                             recipients=[number],
-                            body=content
+                            body=content,
                         )
                         # data = json.loads(message)
                         #accessing the response
@@ -2047,7 +2047,7 @@ class SendFlashSms(views.APIView):
                     client.messages.create(
                         from_=settings.TWILIO_NUMBER,
                         to=receiver,
-                        body=text
+                        body=text,
                     )
                     data["details"].append(
                         {"to": receiver, "status": "200", "Success": True})
