@@ -81,8 +81,8 @@ class SendSingMsgCreate(generics.CreateAPIView):
         senderID = request.data.get("senderID")
         sender = get_object_or_404(Sender, senderID=senderID)
         # sender = Sender.objects.get(senderID=senderID)
-        # sender.details.get(default=2)
         service = sender.details.get(default=True)
+        print(service)
         sid = service.sid
         token = service.token
         service_type = service.service_name
@@ -117,15 +117,15 @@ class SendSingMsgCreate(generics.CreateAPIView):
                             value.language = language
                             
                             message = client.messages.create(
-                                from_=senderID,
+                                from_=verified_no,
                                 to=receiver,
-                                body=content,
+                                body=content
                             )
                         else:
                             message = client.messages.create(
-                                from_=senderID,
+                                from_=verified_no,
                                 to=receiver,
-                                body=content,
+                                body=content
                             )
                         if (message.status == 'sent'):
                             value.messageStatus = "S"
