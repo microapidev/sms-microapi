@@ -94,6 +94,22 @@ class SendSingMsgCreate(generics.CreateAPIView):
         regex = re.compile(r'^\+?1?\d{9,15}$')
         original_txt = []
         logger.error("posting to message")
+
+        myData = {
+            "senderID":senderID,
+            "sender":sender,
+            "sid":sid,
+            "token":token,
+            "service_type":service_type,
+            "verified_no":verified_no,
+            "groupID":'',               #This will be empty because we dont need it for sending single sms
+            "content":content,
+            "language":language,
+            "numbers":'',               #this will be a list of numbers for group, #This will be empty because we dont need it for sending single sms
+            "number":receiver,            #this will be a single number for singlesms
+            "grouptoken":''             #This will be empty because we dont need it for sending single sms
+        }
+
         # print(senderID.service_name) 
         if regex.match(receiver):
             
@@ -104,9 +120,14 @@ class SendSingMsgCreate(generics.CreateAPIView):
 
                 serializer_message = MessageSerializer(data=message_dict)
                 
-                client = Client(f"{sid}",
-                                f"{token}")
                 if serializer_message.is_valid():
+
+                    result = taskTwilioAsync.applyasync()
+
+
+
+                    client = Client(f"{sid}",
+                                    f"{token}")
                     print('yeah')
                     value = serializer_message.save()
                     value.service_type = 'TW'
@@ -339,7 +360,7 @@ class SendSingMsgCreate(generics.CreateAPIView):
                             "data": response,
                             "service_type": "TELESIGN"})
                 else:
-                    return Response({"success":"False","message": "Invalid credentials","messageID":f"{value.messageID}","data": "Not Valid", "service type": f"{service_type}"}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({"success":"False","message": "Invalid credentials","messageID":"{'value.messageID'}","data": "Not Valid", "service type": f"{service_type}"}, status=status.HTTP_400_BAD_REQUEST)
             
             #for MessageBird
             elif (service_type == 'MB' or service_type.upper() == "MESSAGEBIRD"):
