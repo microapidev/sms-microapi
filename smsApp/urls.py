@@ -57,7 +57,7 @@ urlpatterns = [
    #sendsms
    path("v2/sms/send/send_single_msg", SendSingMsgCreate.as_view(), name="send-one-msg"),
    path("v2/sms/send/send_group_sms", SendGroupSms.as_view(), name="send-group-sms"),
-   path("v2/sms/send/send_flash_sms",  SendFlashSms.as_view(), name="send-flash-sms"),
+   # path("v2/sms/send/send_flash_sms",  SendFlashSms.as_view(), name="send-flash-sms"),
 
 
    #messageDelete
