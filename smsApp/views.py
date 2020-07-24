@@ -692,8 +692,9 @@ class SmsHistoryList(generics.ListAPIView):
     serializer_class = MessageSerializer
 
     def get_queryset(self):
-        userID = self.kwargs["userID"]
-        return Message.objects.filter(senderID=userID)
+        senderID = self.kwargs["senderID"]
+        senderID = get_object_or_404(Sender, senderID=senderID)
+        return Message.objects.filter(senderID=senderID)
 
 
 class SmsHistoryDetail(generics.RetrieveAPIView):
@@ -2418,6 +2419,7 @@ class SenderDetailsUpdate(generics.UpdateAPIView):
             return JsonResponse({"status":status.HTTP_202_ACCEPTED, "success":"True", "details":f"{service_name} Credentials updated"}, status=status.HTTP_202_ACCEPTED)
         return JsonResponse({"status":status.HTTP_400_BAD_REQUEST, "success":"False", "details":"Improper use of endpoint"}, status=status.HTTP_400_BAD_REQUEST)
 
+
 class SenderDetailsList(generics.ListAPIView):
     serializer_class = SenderDetailsSerializer
 
@@ -2428,3 +2430,17 @@ class SenderDetailsList(generics.ListAPIView):
         return queryset
 
     
+class SenderDetailsDelete(generics.DestroyAPIView):
+    serializer_class = SenderDetailsSerializer
+
+    def delete(self, senderID, service_name):
+        print("y")
+        sender = self.kwargs["senderID"]
+        print("yssss")
+        sender = get_object_or_404(Sender, senderID=senderID)
+        print("ysjs")
+        service = self.kwargs["service_name"]
+        service = SenderDetails.objects.get(senderID=sender, service_name=service)
+        service.delete()
+        return JsonResponse({"status":status.HTTP_202_ACCEPTED, "success":"True", "details":f"{service_name} Credentials updated"}, status=status.HTTP_204_NO_CONTENT)
+
