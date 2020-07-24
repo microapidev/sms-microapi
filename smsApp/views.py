@@ -2299,7 +2299,7 @@ class SenderDetailsCreate(generics.CreateAPIView):
         request.POST._mutable = True
         request.data["sender"] = senderID
         request.POST._mutable = False
-        queryset = SenderDetails.objects.filter(service_name=service_name)
+        queryset = SenderDetails.objects.filter(senderID=user, service_name=service_name)
         if not queryset.exists():
             serializer = SenderDetailsSerializer(data=request.data)
             if serializer.is_valid():
