@@ -5,8 +5,8 @@ from .views import InfobipSendMessage, InfobipSingleMessage, InfobipMessageList,
 from .views import translateMessages, MessageDelete, MessageCounter, TwilioSendSms, sms_list
 from .views import TeleSignSingleSms, TeleSignMessageList, TeleSignTransactionID3
 from .views import TeleSignCollectionSms, MessageRecall
-from .views import GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupDelete, GroupNumbersList, GroupNumbersBySenderList, GroupNumbersCreate, update_group_number, GroupNumbersDetail
-from .views import SmsHistoryList, SmsHistoryDetail, SendGroupSms, SendFlashSms
+from .views import GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupDelete, GroupNumbersList, GroupNumbersBySenderList,  GroupNumbersCreate, update_group_number, GroupNumbersDetail
+from .views import SmsHistoryList, SmsHistoryDetail, SendGroupSms, SendFlashSms, MessageList, UserList
 from .views import SenderDetailsCreate, SenderRegister, SenderDetailsUpdate, SenderDetailsList
 from django.urls import path
 from .views import create_receipents_details, save_recipients_details  #get_recipient_details
@@ -26,22 +26,18 @@ schema_view = get_schema_view(
    openapi.Info(
       title="SMS API",
       default_version='v1',
-      description="""SMS API testing - This is done using PostMan Testing tool. To start, you need to register using the '/v1/register endpoint'. Using a key-value instance, 
-        post your email, phoneNumber, name, password with the former as the respective keys, also specify content-type and make sure it is set to application/json.
-        Set the HTTP Method to post and hit send. Your account has been created. Next is to get your token via 'v1/api-token-auth/' endpoint using the key-value instance 
-        of username and password (username being your email address). Copy the given token. To test any endpoint, you need to add your token to the header tab using key-value. 
-        in the format {"Authorization": "Token <your token you copied>"}. LET'S TEST!!!.
+      description="""To begin, register your unique userID via `/v2/sms/user_register`. Next, go to the config endpoint via `/v2/sms/config/add_config` to setup your credentials before proceeding to using the Send group endpoint to send single or group messages. NOTE: YOUR FIRST REGISTERED SERVICE IS SET AS DEFAULT. To change default, visit the `/v2/sms/config/update_config` endpoint. To view the status of a sent message, visit `/v2/sms/message_status/{Token}`
       """,
-      terms_of_service="https://www.google.com/policies/terms/",
-      contact=openapi.Contact(email="contact@snippets.local"),
-      license=openapi.License(name="BSD License"),
+      # terms_of_service="https://www.google.com/policies/terms/",
+      # contact=openapi.Contact(email="contact@snippets.local"),
+      # license=openapi.License(name="BSD License"),
    ),
    public=True,
    permission_classes=(permissions.AllowAny,),
 )
 
 urlpatterns = [
-   # Sender
+   # Config
    path("v2/sms/user_register", SenderRegister.as_view(), name="register"),
    path("v2/sms/config/add_config", SenderDetailsCreate.as_view(), name="configure"),
    path("v2/sms/config/update_config", SenderDetailsUpdate.as_view(), name="send-one-msg"),
@@ -59,6 +55,9 @@ urlpatterns = [
    path("v2/sms/send/send_group_sms", SendGroupSms.as_view(), name="send-group-sms"),
    # path("v2/sms/send/send_flash_sms",  SendFlashSms.as_view(), name="send-flash-sms"),
 
+   #admin
+   # path('v2/sms/admin/messages', MessageList.as_view(), name="view-all-messages"),
+   # path('v2/sms/admin/users', UserList.as_view(), name="view-all-users"),
 
    #messageDelete
    # path("v1/sms/message/delete/<transactionID>", MessageDelete.as_view(), name="delete-message"),
@@ -66,7 +65,6 @@ urlpatterns = [
 
    #Recipient Views
    # path('v1/sms/recipients/create', RecipientCreate.as_view(), name="create-new-recipient"),
-   # path('v1/sms/recipients/all', RecipientList.as_view(), name="get-all-recipients"),
    # path('v1/sms/recipients/<str:userID>', RecipientsForUser.as_view(), name="get-user-recipients"),
    # path("v1/sms/recipients/<str:recipientNumber>", RecipientDetail.as_view(), name="update-recipient"),
    
@@ -98,7 +96,7 @@ urlpatterns = [
    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
    path('', include_docs_urls(title='SMS API', description=
    """
-      To begin, visit the config endpoint via `/v2/sms/config/add_config` to setup your credentials. Next, proceed to using the create endpoint to send single or group messages. YOUR FIRST REGISTERED SERVICE IS SET AS DEFAULT. To change default, visit the `/v2/sms/config/update_config` endpoint.
+       To begin, register your unique userID via '/v2/sms/user_register'. Next, go to the config endpoint via `/v2/sms/config/add_config` to setup your credentials before proceeding to using the Send group endpoint to send single or group messages. NOTE: YOUR FIRST REGISTERED SERVICE IS SET AS DEFAULT. To change default, visit the `/v2/sms/config/update_config` endpoint. To view the status of a sent message, visit /v2/sms/message_status/{Token}
    """
    ,permission_classes=(permissions.AllowAny,))),
     
