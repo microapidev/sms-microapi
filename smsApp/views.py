@@ -693,7 +693,7 @@ class SmsHistoryList(generics.ListAPIView):
 
     def get_queryset(self):
         userID = self.kwargs["userID"]
-        return Message.objects.get(senderID=userID)
+        return Message.objects.filter(senderID=userID)
 
 
 class SmsHistoryDetail(generics.RetrieveAPIView):
@@ -2173,7 +2173,7 @@ class GroupTransactionID(APIView):
             dbTransID = Message.objects.filter(Q(messageID=Token) | Q(transactionID=Token))
             if dbTransID.exists(): 
                 for msgID in dbTransID.iterator(): #pick the values in chunks
-                    if msgID.messageStatus == "P":
+                    if msgID.messageStatus == "D":
                         userInfo = SenderDetails.objects.get(msgID.senderID)
                         api_key = userInfo.token
                         customer_id = userInfo.sid
