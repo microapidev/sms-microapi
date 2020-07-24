@@ -113,7 +113,7 @@ urlpatterns = [
    # path("v1/sms/group_delete/<str:groupname>", GroupDelete.as_view(), name="delete-group"),
    # path("v1/sms/group_recipient/", GroupNumbersList.as_view(), name="group-numbers"),
    # path("v1/sms/group_recipient/create", GroupNumbersCreate.as_view(), name="create-group-numbers"),
-   # path("v1/sms/group_recipient_list/<str:senderID>", GroupNumbersBySenderList.as_view(), name="list-group-numbers-senderID"),
+   # path("v1/sms/group_recipient_list/<str:groupname>", GroupNumbersBySenderList.as_view(), name="list-group-numbers-senderID"),
    # path("v1/sms/group_recipient_update/<str:pk>", update_group_number, name="update-group-umbers"),
    # path("v1/sms/group_recipient_delete/<str:pk>", GroupNumbersDetail.as_view(), name="update-group-umbers"),
    

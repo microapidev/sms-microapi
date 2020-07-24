@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.core.files.storage import FileSystemStorage
 from django.core.validators import RegexValidator
 from django.utils.translation import ugettext_lazy as _
+# from .tasks import singleMessageSchedule
 from phonenumber_field.modelfields import PhoneNumberField
 # from .managers import CustomUserManager
 
@@ -51,6 +52,8 @@ class Message(models.Model):
     senderID = models.ForeignKey(Sender, related_name='messages', on_delete=models.CASCADE)
     date_created = models.DateTimeField(default=timezone.now)
     content = models.TextField(max_length=500)
+    dateScheduled = models.DateField(null=True)
+    scheduleID = models.UUIDField(null=True)
     INFOBIP = 'IF'
     TWILIO = 'TW'
     TELESIGN = 'TS'
@@ -214,6 +217,17 @@ class Message(models.Model):
     def __str__(self):
         return f'service {self.service_type}, receiver {self.receiver}'
 
+    # def oneTimeSchedule(self):
+    #     date = self.dateScheduled
+    #     # task_name=f'{self.project_name}-{self.id}'        #for Periodic tasks
+    #     mylist = ['list of all the args we need to send d async', content, senderID, receiver, tasknameOrid,]
+    #     task = singleMessageSchedule.apply_async(args=[mylst], eta=date)
+    #     self.scheduleID = task.id
+    #     return self.messageID, self.scheduleID
+
+
+
+
 
 # class Media(models.Model):
 #     senderID = models.CharField(max_length=30) 
@@ -227,7 +241,7 @@ class Message(models.Model):
 class SenderDetails(models.Model):
     senderID = models.ForeignKey(Sender, related_name='details', on_delete=models.CASCADE)
     default = models.BooleanField(default=False)
-    sid = models.CharField(max_length=1200)
+    sid = models.CharField(max_length=1200, blank=True, null=True)
     token = models.CharField(max_length=1300)
     verified_no = models.CharField(max_length=20000, blank=False)
     SERVICE_CHOICES = [
