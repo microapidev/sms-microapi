@@ -119,13 +119,13 @@ class SendSingMsgCreate(generics.CreateAPIView):
                             message = client.messages.create(
                                 from_=senderID,
                                 to=receiver,
-                                body=content
+                                body=content,
                             )
                         else:
                             message = client.messages.create(
                                 from_=senderID,
                                 to=receiver,
-                                body=content
+                                body=content,
                             )
                         if (message.status == 'sent'):
                             value.messageStatus = "S"
@@ -359,10 +359,11 @@ class SendSingMsgCreate(generics.CreateAPIView):
                             value.language = language
                         else:
                             value.language = "en"
+
                         message = client.message_create(
                             originator=senderID,
                             recipients=[receiver],
-                            body=content
+                            body=content,
                         )
                         # data = json.loads(message)
 
@@ -401,13 +402,15 @@ class SendSingMsgCreate(generics.CreateAPIView):
                                 "service_type": "MessageBird"
                                 })
                     except messagebird.client.ErrorException as e:
+                        data = e.__dict__
+                        print(data['errors'])
+                        erra = data['errors'][0].__dict__
+                        print(erra)
                         value.messageStatus = "F"
                         value.transactionID = "500-F"
                         value.language = "en"
                         value.save()
-                        errors = []
-                        for error in e.errors:
-                            errors.append(error)
+
                         return Response({
                             'success': 'False',
                             'message': 'Message not sent',
@@ -417,7 +420,7 @@ class SendSingMsgCreate(generics.CreateAPIView):
                                 'recipient': f"{receiver}",
                                 'service_type': 'MessageBird',
                                 'statusCode': '400',
-                                'details': errors
+                                'details': f"{str(e)}"
                             }
                         }, status=status.HTTP_400_BAD_REQUEST) 
                 else:
@@ -1728,7 +1731,7 @@ class SendGroupSms(views.APIView):
                         message = client.messages.create(
                             from_=verified_no,
                             to=number,
-                            body=text
+                            body=text,
                         )
                         if (message.status == 'sent'):
                             value.messageStatus = "S"
@@ -1829,7 +1832,7 @@ class SendGroupSms(views.APIView):
                         message = client.message_create(
                             originator=senderID,
                             recipients=[number],
-                            body=content
+                            body=content,
                         )
                         # data = json.loads(message)
                         #accessing the response
@@ -2044,7 +2047,7 @@ class SendFlashSms(views.APIView):
                     client.messages.create(
                         from_=settings.TWILIO_NUMBER,
                         to=receiver,
-                        body=text
+                        body=text,
                     )
                     data["details"].append(
                         {"to": receiver, "status": "200", "Success": True})
