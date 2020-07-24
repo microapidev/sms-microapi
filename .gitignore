@@ -84,6 +84,7 @@ env/
 venv/
 venv2/ 
 smsvenv/ 
+penv/
 ENV/ 
 env.bak/ 
 venv.bak/ 
