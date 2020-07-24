@@ -1694,7 +1694,6 @@ class SendGroupSms(views.APIView):
                         description = data["messages"][0]["status"]["description"]
                         result = {"success":"True","status": value.messageStatus, "message": f"{value.content}", "messageID":f"{value.messageID}","groupToken":f"{value.grouptoken}", "data": {"to": To, "msg-id":IF_MSID, "description":description}}
                         msgstatus.append(result)
-                        print(msgstatus, number)
                     else:
                         result = {"someting went wrong while sending to this {}, please try again".format(number)}
                         msgstatus.append(result)
