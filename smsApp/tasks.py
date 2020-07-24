@@ -117,7 +117,7 @@ def listMessageSchedule(mydata, messageID):
 
 
 @shared_task
-def taskInfobipAsync(myData, bulksms):
+def taskInfobipAsync(myData, is_group):
     message = Message.objects.create(
                 senderID=myData['senderID'],
                 content=myData['content'],
@@ -133,7 +133,7 @@ def taskInfobipAsync(myData, bulksms):
         'Content-Type': 'application/json',
         'Accept': 'application/json'
         }
-    if bulksms:
+    if is_group:
         message.grouptoken=myData['grouptoken']
         for number in myData['numbers']:
             message.receiver=number
@@ -198,7 +198,7 @@ def taskInfobipAsync(myData, bulksms):
 
 
 @shared_task
-def taskTwilioAsync(myData, bulksms):
+def taskTwilioAsync(myData, is_group):
     message = Message.objects.create(
         senderID=myData['senderID'],
         content=myData['content'],
@@ -209,7 +209,7 @@ def taskTwilioAsync(myData, bulksms):
     language=myData['language']
     content=myData['content']
     client = Client(myData['sid'],myData['token'])
-    if bulksms:
+    if is_group:
         message.grouptoken=myData['grouptoken']
         for number in myData['numbers']:
             message.receiver = number
@@ -283,7 +283,7 @@ def taskTwilioAsync(myData, bulksms):
 
 
 @shared_task
-def taskTelesignAsync(myData, bulksms):
+def taskTelesignAsync(myData, is_group):
     message = Message.objects.create(
             senderID=myData['senderID'],
             content=myData['content'],
@@ -298,7 +298,7 @@ def taskTelesignAsync(myData, bulksms):
     url = 'https://rest-api.telesign.com/v1/messaging'
     headers = {'Accept': 'application/json',
         'Content-Type': 'application/x-www-form-urlencoded'}
-    if bulksms:
+    if is_group:
         message.grouptoken=myData['grouptoken']
         for number in myData['numbers']:
             message.receiver = number
