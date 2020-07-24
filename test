@@ -1,0 +1,186 @@
+ #MessageBird
+                        # if (msgID.service_type.upper() == "MB"):
+                        #         url = "https://rest.messagebird.com/messages?id=" + msgID.transactionID
+                        #         # api_key = str(api_key)
+                        #         headers = {
+                        #             # 'Authorization': 'AccessKey %s' % (api_key),
+                        #             # 'Authorization': 'AccessKey ' + api_key,
+                        #             # 'Authorization': 'AccessKey 32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b',
+                        #             'Accept': 'application/json'
+                        #         }
+                        #         client = messagebird.Client(api_key)
+                        #         messages = client.message_list()
+                        #         # testError = messages["_items"][0]["status"]["groupId"]
+                        #         # data = json.loads(data)
+                        #         # testError = data["results"][0]["status"]["groupId"]
+                        #         if testError == 1:
+                        #             msgID.messageStatus = "P"
+                        #             msgID.save()
+                        #             result  = {"Transaction ID": msgID.transactionID, "Message Status": "P",  "Service Message": data["results"][0]["status"], "Recipient": msgID.receiver }
+                        #             msgResponse.append(result)
+                        #         elif testError == 2:
+                        #             msgID.messageStatus = "U"
+                        #             msgID.save()
+                        #             result  = {"Transaction ID": msgID.transactionID, "Message Status": "U", "Service Message": data["results"][0]["status"], "Recipient": msgID.receiver }
+                        #             msgResponse.append(result)
+                        #         elif testError == 3:
+                        #             msgID.messageStatus = "S"
+                        #             msgID.save()
+                        #             result  = {"Transaction ID": msgID.transactionID, "Message Status": "S",  "Service Message": data["results"][0]["status"], "Recipient": msgID.receiver }
+                        #             msgResponse.append(result)
+                        #         elif testError == 4 or testError == 5:
+                        #             msgID.messageStatus = "F"
+                        #             msgID.save()
+                        #             result  = {"Transaction ID": msgID.transactionID, "Message Status": "F",  "Service Message": data["results"][0]["status"], "Recipient": msgID.receiver }
+                        #             msgResponse.append(result)
+                        #         else:
+                        #             result  = {"Transaction ID": msgID.transactionID, "Message Status": "Error retrieving response", "Service Message": data, "Recipient": msgID.receiver}
+                        #             msgResponse.append(result)
+
+
+class GroupTransactionID(APIView):
+    """
+    This returns the status of a Group message given a groupToken (for group message) or messageID (for single message).
+    Format: {"Token":'your group token OR message ID'}
+    """
+    serializer = MessageSerializer
+    def get(self, request, Token, format=None):
+        msgResponse = [] #used to store responses
+        serializer = MessageSerializer
+        try:
+            dbTransID = Message.objects.filter(Q(messageID=Token) | Q(transactionID=Token))
+            if dbTransID.exists(): 
+                for msgID in dbTransID.iterator(): #pick the values in chunks
+                    if msgID.messageStatus == "D":
+                        # userInfo = SenderDetails.objects.filter(senderID=msgID.senderID).filter(default=True)
+                        userInfo = get_object_or_404(Sender, senderID=msgID.senderID)
+                        infor = userInfo.details.get(default=True)
+                        # print (userInfo)
+                        # userInfo = SenderDetails.objects.get(Q(senderID=msgID.senderID) & Q(default=True))
+                        api_key = infor.token
+                        customer_id = infor.sid
+                        #Telesign
+                        if (msgID.service_type.upper() == "TS"): 
+                            api_key = settings.TELESIGN_API
+                            customer_id = settings.TELESIGN_CUST
+                            url = 'https://rest-api.telesign.com/v1/messaging/'+ msgID.transactionID
+                            headers = {'Accept' : 'application/json', 'Content-Type' : 'application/x-www-form-urlencoded'}
+                            payload = ""
+                            send = requests.request("GET", url, 
+                                                auth=HTTPBasicAuth(customer_id, api_key), 
+                                                data=payload, 
+                                                headers=headers)
+                            send = send.json()
+                            testError = send['status']['code']
+                            failed = [207,210,211,220,221,222.230,231,237,238,250,402,401,400,404,429,500,502,503,504,505,506,507,508,509,510,511,512,513,514,515,599,10008,10009,10010,10011,10012,10013,10014,10015,10017,10019,10020,10030,10032,10033,10034,10036,11000,11001,11003,11004,11005,11009,11010,11011,11017,12000,12009,12017]
+                            if testError == 290 or testError == 291 or testError == 292 or testError == 295:
+                                msgID.messageStatus = "P"
+                                msgID.save()
+                                result  = {"Transaction ID": msgID.transactionID, "Message Status": "P", "Service Message": send, "Recipient": msgID.receiver }
+                                msgResponse.append(result)
+                            elif testError == 251 or testError == 500 or testError == 503:
+                                msgID.messageStatus = "U"
+                                msgID.save()
+                                result  = {"Transaction ID": msgID.transactionID, "Message Status": "U", "Service Message": send, "Recipient": msgID.receiver }
+                                msgResponse.append(result)
+                            elif testError == 200 or testError == 202 or  testError == 203:
+                                msgID.messageStatus = "S"
+                                msgID.save()
+                                result  = {"Transaction ID": msgID.transactionID, "Message Status": "S", "Service Message": send, "Recipient": msgID.receiver }
+                                msgResponse.append(result)
+                            elif testError in failed:
+                                msgID.messageStatus = "F"
+                                msgID.save()
+                                result  = {"Transaction ID": msgID.transactionID, "Message Status": "F", "Service Message": send, "Recipient": msgID.receiver }
+                                msgResponse.append(result)
+                            else:
+                                result  = {"Transaction ID": msgID.transactionID, "Message Status": "Error retrieving response", "Service Message": send, "Recipient": msgID.receiver }
+                                msgResponse.append(result)
+
+                                #For INFOBIP
+                        if (msgID.service_type.upper() == "IF"):
+                            # api_key = str(api_key)
+                            url = "/sms/1/reports?messageId=" + msgID.transactionID
+                            headers = {
+                                'Authorization': 'App %s' % (api_key),
+                                # 'Authorization': 'App 32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b',
+                                'Accept': 'application/json'
+                            }
+                            payload = ""
+                            conn.request("GET", url, payload, headers)
+                            res = conn.getresponse()
+                            data = res.read().decode('utf-8')
+                            data = json.loads(data)
+                            testError = data["results"][0]["status"]["groupId"]
+                            if testError == 1:
+                                msgID.messageStatus = "P"
+                                msgID.save()
+                                result  = {"Transaction ID": msgID.transactionID, "Message Status": "P",  "Service Message": data["results"][0]["status"], "Recipient": msgID.receiver }
+                                msgResponse.append(result)
+                            elif testError == 2:
+                                msgID.messageStatus = "U"
+                                msgID.save()
+                                result  = {"Transaction ID": msgID.transactionID, "Message Status": "U", "Service Message": data["results"][0]["status"], "Recipient": msgID.receiver }
+                                msgResponse.append(result)
+                            elif testError == 3:
+                                msgID.messageStatus = "S"
+                                msgID.save()
+                                result  = {"Transaction ID": msgID.transactionID, "Message Status": "S",  "Service Message": data["results"][0]["status"], "Recipient": msgID.receiver }
+                                msgResponse.append(result)
+                            elif testError == 4 or testError == 5:
+                                msgID.messageStatus = "F"
+                                msgID.save()
+                                result  = {"Transaction ID": msgID.transactionID, "Message Status": "F",  "Service Message": data["results"][0]["status"], "Recipient": msgID.receiver }
+                                msgResponse.append(result)
+                            else:
+                                result  = {"Transaction ID": msgID.transactionID, "Message Status": "Error retrieving response", "Service Message": data, "Recipient": msgID.receiver}
+                                msgResponse.append(result)
+                        #MessageBird
+                        # if (msgID.service_type.upper() == "MB"):
+                        #         url = "https://rest.messagebird.com/messages?id=" + msgID.transactionID
+                        #         # api_key = str(api_key)
+                        #         headers = {
+                        #             # 'Authorization': 'AccessKey %s' % (api_key),
+                        #             # 'Authorization': 'AccessKey ' + api_key,
+                        #             # 'Authorization': 'AccessKey 32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b',
+                        #             'Accept': 'application/json'
+                        #         }
+                        #         client = messagebird.Client(api_key)
+                        #         messages = client.message_list()
+                        #         # testError = messages["_items"][0]["status"]["groupId"]
+                        #         # data = json.loads(data)
+                        #         # testError = data["results"][0]["status"]["groupId"]
+                        #         if testError == 1:
+                        #             msgID.messageStatus = "P"
+                        #             msgID.save()
+                        #             result  = {"Transaction ID": msgID.transactionID, "Message Status": "P",  "Service Message": data["results"][0]["status"], "Recipient": msgID.receiver }
+                        #             msgResponse.append(result)
+                        #         elif testError == 2:
+                        #             msgID.messageStatus = "U"
+                        #             msgID.save()
+                        #             result  = {"Transaction ID": msgID.transactionID, "Message Status": "U", "Service Message": data["results"][0]["status"], "Recipient": msgID.receiver }
+                        #             msgResponse.append(result)
+                        #         elif testError == 3:
+                        #             msgID.messageStatus = "S"
+                        #             msgID.save()
+                        #             result  = {"Transaction ID": msgID.transactionID, "Message Status": "S",  "Service Message": data["results"][0]["status"], "Recipient": msgID.receiver }
+                        #             msgResponse.append(result)
+                        #         elif testError == 4 or testError == 5:
+                        #             msgID.messageStatus = "F"
+                        #             msgID.save()
+                        #             result  = {"Transaction ID": msgID.transactionID, "Message Status": "F",  "Service Message": data["results"][0]["status"], "Recipient": msgID.receiver }
+                        #             msgResponse.append(result)
+                        #         else:
+                        #             result  = {"Transaction ID": msgID.transactionID, "Message Status": "Error retrieving response", "Service Message": data, "Recipient": msgID.receiver}
+                        #             msgResponse.append(result)
+                        else:
+                            result  = {"Transaction ID": msgID.transactionID, "Message Status": msgID.messageStatus, "Service Message": " ", "Recipient": msgID.receiver }
+                            msgResponse.append (result)
+                    else:
+                        result  = {"Transaction ID": msgID.transactionID, "Message Status": msgID.messageStatus, "Service Message": " ", "Recipient": msgID.receiver }
+                        msgResponse.append (result)
+                return Response({"Success": "True", "details": "Transaction status retrieved", "Data": {"Service Type": msgID.service_type, "Response": msgResponse }, 'status': status.HTTP_200_OK})
+            else:
+                return Response({"Error": status.HTTP_400_BAD_REQUEST, "Message": "Token not found", "Token": Token})
+        except ObjectDoesNotExist:
+            return Response({"Success": "False", "Data": [], 'status': status.HTTP_400_BAD_REQUEST})

@@ -29,7 +29,7 @@ class MessageSerializer(serializers.ModelSerializer):
     grouptoken = serializers.CharField(read_only=True)
     dateScheduled = serializers.DateTimeField(default=timezone.now())
     date_created = serializers.CharField(read_only=True)
-    dateScheduled = serializers.DateField()
+    # dateScheduled = serializers.DateField()
     messageStatus = serializers.ChoiceField(choices=['D', 'S','F','R','P','U','SC'], read_only=True)
     language = serializers.ChoiceField(choices=Message.LANG_CHOICES, default='en', required=False)
     transactionID = serializers.CharField(read_only=True)
