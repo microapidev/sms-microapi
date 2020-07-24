@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Recipient, Message, Group, GroupNumbers, SenderDetails, Sender
 import uuid
+from django.utils import timezone
 
 
 
@@ -25,7 +26,7 @@ class MessageSerializer(serializers.ModelSerializer):
     ]
     service_type = serializers.ChoiceField(choices=Message.SERVICE_CHOICES, read_only=True)
     grouptoken = serializers.CharField(read_only=True)
-    # dateScheduled = serializers.DateField(input_formats="%Y-%m-%dT%H:%M:%S.%fZ")
+    dateScheduled = serializers.DateTimeField(default=timezone.now())
     date_created = serializers.CharField(read_only=True)
     messageStatus = serializers.ChoiceField(choices=['D', 'S','F','R','P','U','SC'], read_only=True)
     language = serializers.ChoiceField(choices=Message.LANG_CHOICES, default='en', required=False)
@@ -43,10 +44,12 @@ class GroupSerializer(serializers.ModelSerializer):
     groupName = serializers.CharField(required=True)
     groupID = serializers.UUIDField(format='hex_verbose', initial=uuid.uuid4, read_only=True)
     numbers = serializers.StringRelatedField(many=True, read_only=True)
+    senderID = serializers.SlugRelatedField(slug_field='senderID', queryset=Sender.objects.all())
     class Meta:
         model = Group
-        fields = ["groupName", "groupID", "dateCreated", "numbers"]
+        fields = "__all__"
         depth = 1
+        # fields = ["groupName", "groupID", "dateCreated", "numbers", "senderID"]
 
 class GroupNumbersSerializer(serializers.ModelSerializer):
     dateCreated = serializers.DateTimeField(read_only=True)
@@ -74,7 +77,7 @@ class SenderSerializer(serializers.ModelSerializer):
 
 class SenderDetailsSerializer(serializers.ModelSerializer):
     sender = serializers.CharField(source="senderID.senderID", required=True)
-    sid = serializers.CharField(max_length=1200, required=True)
+    sid = serializers.CharField(max_length=1200, required=False)
     token = serializers.CharField(max_length=1200, required=True)
     SERVICE_CHOICES = [
         ("INFOBIP", 'IF'),
@@ -100,6 +103,6 @@ class SenderDetailsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SenderDetails
-        fields = ("sid", "token", "service_name", "sender")
+        fields = ("sid", "token", "service_name", "sender", "verified_no")
 
     

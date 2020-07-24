@@ -96,7 +96,7 @@ class Message(models.Model):
         choices=MESSAGE_CHOICES,
         default=DRAFT,
     )
-    dateScheduled = models.DateTimeField(null=True)
+    dateScheduled = models.DateTimeField(default=timezone.now, null=True)
     
     LANG_CHOICES = (
 
@@ -227,7 +227,7 @@ class Message(models.Model):
 class SenderDetails(models.Model):
     senderID = models.ForeignKey(Sender, related_name='details', on_delete=models.CASCADE)
     default = models.BooleanField(default=False)
-    sid = models.CharField(max_length=1200)
+    sid = models.CharField(max_length=1200, blank=True, null=True)
     token = models.CharField(max_length=1300)
     verified_no = models.CharField(max_length=20000, blank=False)
     SERVICE_CHOICES = [
