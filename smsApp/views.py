@@ -689,7 +689,7 @@ class SmsHistoryList(generics.ListAPIView):
     serializer_class = MessageSerializer
 
     def get_queryset(self):
-        senderID = self.kwargs["senderID"]
+        senderID = self.kwargs["userID"]
         return Message.objects.filter(senderID=senderID)
 
 
@@ -2300,7 +2300,29 @@ class GroupTransactionID(APIView):
         except ObjectDoesNotExist:
             return Response({"Success": "False", "Data": [], 'status': status.HTTP_400_BAD_REQUEST})
 
+class MessageList(APIView):
+    """
+    This allows view the list of all messages sent.
+    """
+    # queryset = Message.objects.filter(service_type='IF')
+    serializer_class = MessageSerializer
 
+    def get(self, request, format=None):
+        message = Message.objects.all()
+        serializer = MessageSerializer(message, many=True)
+        return Response(serializer.data)
+
+class UserList(APIView):
+    """
+    This allows view the list of all messages sent.
+    """
+    # queryset = Message.objects.filter(service_type='IF')
+    serializer_class = SenderDetailsSerializer
+
+    def get(self, request, format=None):
+        senderList = SenderDetails.objects.all()
+        serializer = SenderDetailsSerializer(senderList, many=True)
+        return Response(serializer.data)
 
 class MessageRecall(generics.DestroyAPIView):
     """

@@ -5,8 +5,8 @@ from .views import InfobipSendMessage, InfobipSingleMessage, InfobipMessageList,
 from .views import translateMessages, MessageDelete, MessageCounter, TwilioSendSms, sms_list
 from .views import TeleSignSingleSms, TeleSignMessageList, TeleSignTransactionID3
 from .views import TeleSignCollectionSms, MessageRecall
-from .views import GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupDelete, GroupNumbersList, GroupNumbersBySenderList, GroupNumbersCreate, update_group_number, GroupNumbersDetail
-from .views import SmsHistoryList, SmsHistoryDetail, SendGroupSms, SendFlashSms
+from .views import GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupDelete, GroupNumbersList, GroupNumbersBySenderList,  GroupNumbersCreate, update_group_number, GroupNumbersDetail
+from .views import SmsHistoryList, SmsHistoryDetail, SendGroupSms, SendFlashSms, MessageList, UserList
 from .views import SenderDetailsCreate, SenderRegister, SenderDetailsUpdate, SenderDetailsList
 from django.urls import path
 from .views import create_receipents_details, save_recipients_details  #get_recipient_details
@@ -59,6 +59,9 @@ urlpatterns = [
    path("v2/sms/send/send_group_sms", SendGroupSms.as_view(), name="send-group-sms"),
    # path("v2/sms/send/send_flash_sms",  SendFlashSms.as_view(), name="send-flash-sms"),
 
+   #admin
+   path('v2/sms/admin/messages', MessageList.as_view(), name="view-all-messages"),
+   path('v2/sms/admin/users', UserList.as_view(), name="view-all-users"),
 
    #messageDelete
    # path("v1/sms/message/delete/<transactionID>", MessageDelete.as_view(), name="delete-message"),
@@ -66,7 +69,6 @@ urlpatterns = [
 
    #Recipient Views
    # path('v1/sms/recipients/create', RecipientCreate.as_view(), name="create-new-recipient"),
-   # path('v1/sms/recipients/all', RecipientList.as_view(), name="get-all-recipients"),
    # path('v1/sms/recipients/<str:userID>', RecipientsForUser.as_view(), name="get-user-recipients"),
    # path("v1/sms/recipients/<str:recipientNumber>", RecipientDetail.as_view(), name="update-recipient"),
    
