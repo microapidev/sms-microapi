@@ -1,3 +1,4 @@
+from  django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
 from .models import Recipient, Message, Group, GroupNumbers, SenderDetails, Sender
 import uuid
@@ -101,12 +102,20 @@ class SenderDetailsSerializer(serializers.ModelSerializer):
         instance.token = validated_data.get('token', instance.token)
         instance.sid = validated_data.get('sid', instance.sid)
         instance.default = validated_data.get('default', instance.default)
+        instance.verified_no = validated_data.get('verified_no', instance.verified_no)
+        print(instance.senderID)
         if instance.default == True:
             other_inst = SenderDetails.objects.get(senderID=instance.senderID, default=True)
             print(other_inst)
             other_inst.default = False
             other_inst.save()
-        instance.verified_no = validated_data.get('verified_no', instance.verified_no)
+        else:
+            try:
+                other_inst = SenderDetails.objects.get(senderID=instance.senderID, default=True)
+            except ObjectDoesNotExist:
+                other_inst = SenderDetails.objects.filter(senderID=instance.senderID, default=False)[0]
+                other_inst.default = True
+                other_inst.save()        
         instance.save()
         return instance
 
