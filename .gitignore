@@ -120,3 +120,7 @@ GitHub.sublime-settings
 !.vscode/extensions.json 
 .history
 smsApp/migrations/0007_auto_20200720_1854.py
+
+
+# Virtual Env
+penv

@@ -78,8 +78,8 @@ class SenderSerializer(serializers.ModelSerializer):
 
 class SenderDetailsSerializer(serializers.ModelSerializer):
     sender = serializers.CharField(source="senderID.senderID", required=True)
-    sid = serializers.CharField(max_length=1200, required=False)
-    token = serializers.CharField(max_length=1200, required=True)
+    token = serializers.CharField(max_length=1200, required=True, label="Token or Access key or Username")
+    sid = serializers.CharField(max_length=1200, required=False, label="SID or Password")
     SERVICE_CHOICES = [
         ("INFOBIP", 'IF'),
         ("TWILIO", 'TW'),
@@ -88,6 +88,7 @@ class SenderDetailsSerializer(serializers.ModelSerializer):
 		("GATEWAYAPI", 'GA'),
     ]
     service_name = serializers.ChoiceField(choices=SERVICE_CHOICES, required=True)
+    verified_no = serializers.CharField(max_length=1200, required=False, label="Registered Number if any")
 
     def create(self, validated_data):
         senderID = validated_data["senderID"]["senderID"]
@@ -98,6 +99,8 @@ class SenderDetailsSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         instance.token = validated_data.get('token', instance.token)
         instance.sid = validated_data.get('sid', instance.sid)
+        if instance.verfied_no:
+            instance.verfied_no = validated_data.get('verfied_no', instance.verfied_no)
         instance.save()
         return instance
 
