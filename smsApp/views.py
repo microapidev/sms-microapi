@@ -2173,12 +2173,14 @@ class GroupTransactionID(APIView):
             dbTransID = Message.objects.filter(Q(messageID=Token) | Q(transactionID=Token))
             if dbTransID.exists(): 
                 for msgID in dbTransID.iterator(): #pick the values in chunks
-                    # print (msgID)
-                    if msgID.messageStatus == "D":
-                        userInfo = SenderDetails.objects.get(senderID=msgID.senderID).filter(default=True)
+                    if msgID.messageStatus == "P":
+                        # userInfo = SenderDetails.objects.filter(senderID=msgID.senderID).filter(default=True)
+                        userInfo = get_object_or_404(Sender, senderID=msgID.senderID)
+                        infor = userInfo.details.get(default=True)
+                        # print (userInfo)
                         # userInfo = SenderDetails.objects.get(Q(senderID=msgID.senderID) & Q(default=True))
-                        api_key = userInfo.token
-                        customer_id = userInfo.sid
+                        api_key = infor.token
+                        customer_id = infor.sid
                         #Telesign
                         if (msgID.service_type.upper() == "TS"): 
                             api_key = settings.TELESIGN_API
@@ -2362,7 +2364,7 @@ class SenderDetailsCreate(generics.CreateAPIView):
     """
 
     User supplies the given SID and Token provided by the service provider alongside the name of the userID. 
-    {"sender":"<ID to associate this credentials with>", "token":"<from SMS gateway>", "sid":"<from SMS gateway>", "service_name":"<TWILIO OR INFOBIP OR MESSAGEBIRD OR TELESIGN OR GATEWAYAPI>"}
+    {"sender":"<Your unique userID>", "token":"<from SMS gateway>", "sid":"<from SMS gateway>", "service_name":"<TWILIO OR INFOBIP OR MESSAGEBIRD OR TELESIGN OR GATEWAYAPI>"}
     """
     serializer_class = SenderDetailsSerializer
 
@@ -2397,8 +2399,8 @@ class SenderDetailsCreate(generics.CreateAPIView):
 class SenderDetailsUpdate(generics.UpdateAPIView):
     """
 
-    Update sender details
-    Format should be {"senderID":"<register User>", "token":"<token>", "sid":"<sid>", "service_name":"<TWILIO OR INFOBIP OR MSG91 OR TELESIGN>"}
+    Update sender details.
+    Format should be {"senderID":"<Your uniqueID>", "token":"<token>", "sid":"<sid>", "service_name":"<TWILIO OR INFOBIP OR MESSAGEBIRD OR TELESIGN OR GATEWAYAPI>"}
     """
 
     serializer_class = SenderDetailsSerializer
