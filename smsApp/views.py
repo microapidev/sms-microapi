@@ -2356,7 +2356,6 @@ class SenderDetailsCreate(generics.CreateAPIView):
             if serializer.is_valid():
                 value = serializer.save()
                 senderID = value.senderID 
-                print(senderID)
                 details = SenderDetails.objects.filter(senderID=senderID)
                 if len(details) != 0:
                     for detail in details:
@@ -2389,7 +2388,6 @@ class SenderDetailsUpdate(generics.UpdateAPIView):
         senderDetails = get_object_or_404(SenderDetails, senderID=senderID, service_name=service_name)
 
         serializer = SenderDetailsSerializer(senderDetails, data=request.data)
-        print(serializer)
         if serializer.is_valid():
             serializer.save()
             return JsonResponse({"status":status.HTTP_202_ACCEPTED, "success":"True", "details":f"{service_name} Credentials updated"}, status=status.HTTP_202_ACCEPTED)
