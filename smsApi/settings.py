@@ -43,11 +43,20 @@ ALLOWED_HOSTS = ['*']  ##allows all hosts
 
 #Devops suggested we include this for deployment
 SECRET_KEY= 'lmrffsgfhrilklg-za7#57vi!zr)ps8)2anyona25###dl)s-#s=7=vn_'
-TWILIO_ACCOUNT_SID = 'AC24dc3ff423be936f3efd0503045fd4e8'
-TWILIO_AUTH_TOKEN = '70846d53642b6fc91abb485b88a0fa96'
-TWILIO_NUMBER = '+13026637959'
-TELESIGN_API = 'mp6UoFnveiSDjHSQmNdNxLrpNca844of69XAWOHYu+xRZsadpUm5XsQ50utSNAzOl/tj3lOxQMIwlmaHXL2cxQ=='
-TELESIGN_CUST = '163CFEDD-EB4D-4DEE-949C-9F44F6292FA5'
+# TWILIO_ACCOUNT_SID = ''
+# TWILIO_AUTH_TOKEN = ''
+# TWILIO_NUMBER = ''
+# TELESIGN_API = ''
+# TELESIGN_CUST = ''
+# #MessageBird
+# MB_ACCESS_KEY = ''
+# #Gatewayapi.com
+# GA_KEY=''
+# GA_SECRET=''
+# #D7
+# D7_TOKEN= ''
+# D7_USERNAME= ''
+# D7_PASSWORD= ''
 
 #add twillio sid , authentication token and your twilio number
 # TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID") # obtained from twilio.com/console 
@@ -65,6 +74,21 @@ TELESIGN_CUST = '163CFEDD-EB4D-4DEE-949C-9F44F6292FA5'
 # TELESIGN_CUST = os.getenv("TELESIGN_CUST")
 
 # Application definition
+#celery config
+CELERY_BROKER_URL = 'amqp://rabbitmq'
+# CELERY_RESULT_BACKEND = 'django-db'
+# CELERY_RESULT_BACKEND = 'db+sqlite:///db.sqlite3'
+# CELERY_RESULT_EXTENDED = True
+
+# Q_CLUSTER = {
+#     'name': 'DjangORM',
+#     'workers': 4,
+#     'timeout': 90,
+#     'retry': 120,
+#     'queue_limit': 50,
+#     'bulk': 10,
+#     'orm': 'default'
+# }
 
 
 INSTALLED_APPS = [
@@ -83,6 +107,9 @@ INSTALLED_APPS = [
     'broadcast',
     'drf_yasg',
     'coreapi',
+    'django_celery_results',
+    'django_celery_beat',
+    'phonenumber_field',
 ]
 
 MIDDLEWARE = [
@@ -122,7 +149,8 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
-    ]
+    ],
+    'DATETIME_FORMAT': "%Y-%m-%dT%H:%M:%S.%fZ",
 }
 
 # AUTH_USER_MODEL = "smsApp.User"
