@@ -77,8 +77,8 @@ SECRET_KEY= 'lmrffsgfhrilklg-za7#57vi!zr)ps8)2anyona25###dl)s-#s=7=vn_'
 #celery config
 CELERY_BROKER_URL = 'amqp://rabbitmq'
 # CELERY_RESULT_BACKEND = 'django-db'
-CELERY_RESULT_BACKEND = 'db+sqlite:///db.sqlite3'
-CELERY_RESULT_EXTENDED = True
+# CELERY_RESULT_BACKEND = 'db+sqlite:///db.sqlite3'
+# CELERY_RESULT_EXTENDED = True
 
 # Q_CLUSTER = {
 #     'name': 'DjangORM',

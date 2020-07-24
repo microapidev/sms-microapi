@@ -51,13 +51,13 @@ urlpatterns = [
    path("v2/sms/message_recall/<taskID>", MessageRecall.as_view(), name="recall-message"),
 
    #MessageStatus
-   path("v2/sms/message_status/single/<str:messageID>", TransactionID.as_view(), name="message-status"),
-   path("v2/sms/message_status/group/<str:groupToken>", GroupTransactionID.as_view(), name="groupmsg-status"),
+   # path("v2/sms/message_status/single/<str:messageID>", TransactionID.as_view(), name="message-status"),
+   path("v2/sms/message_status/<str:Token>", GroupTransactionID.as_view(), name="groupmsg-status"),
 
    #sendsms
    path("v2/sms/send/send_single_msg", SendSingMsgCreate.as_view(), name="send-one-msg"),
    path("v2/sms/send/send_group_sms", SendGroupSms.as_view(), name="send-group-sms"),
-   path("v2/sms/send/send_flash_sms",  SendFlashSms.as_view(), name="send-flash-sms"),
+   # path("v2/sms/send/send_flash_sms",  SendFlashSms.as_view(), name="send-flash-sms"),
 
 
    #messageDelete

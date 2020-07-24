@@ -6,6 +6,7 @@ from rest_framework.parsers import JSONParser
 # from smsApp.serializers import UserSerializer
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.views.decorators.csrf import csrf_exempt
+from django.db.models import Q
 from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 from rest_framework import generics, views
@@ -32,9 +33,9 @@ from .serializers import SenderSerializer, SenderDetailsSerializer
 from googletrans import Translator
 import uuid
 import logging
-from .tasks import task1, periodicTaskScheduler
+from .tasks import singleMessageSchedule, taskInfobipAsync, taskTelesignAsync, taskTwilioAsync
 from smsApi.celery import app as celeryTaskapp
-from django.core import serializers
+from django.forms.models import model_to_dict
 
 logger = logging.getLogger(__name__)
 
@@ -1387,7 +1388,8 @@ class TeleSignSingleSms(generics.CreateAPIView):
     def post(self, request):
         receiver = request.data["receiver"]
         # print(receiver)
-        text = request.data["content"]
+        content = request.data["content"]
+        dateScheduled = request.data["dateScheduled"]
         sender = request.data["senderID"]
         request.data["service_type"] = "TS"
         serializer = MessageSerializer(data=request.data)
@@ -1396,44 +1398,46 @@ class TeleSignSingleSms(generics.CreateAPIView):
         # api_key = settings.TELESIGN_API
         # customer_id = settings.TELESIGN_CUST
 
-        data = {
-            'phone_number': receiver,
-            'message': text,
-            'message_type': 'ARN'}
-
         if serializer.is_valid():
-            # print(value)
-            # print("break----")
-            # value = serializer.save()
 
             mydata = {
                     'receiver':receiver,
-                    'text':text,
+                    'text':content,
                     'sender':sender
                     }
-            # message = Message.objects.create(
-            #     receiver=mydata['receiver'],
-            #     senderID=mydata['sender'],
-            #     content=mydata['text'],
-            #     service_type="TS",
-            # )
-            # print(message)
-            # message =  serializers.serialize('json', message)
-            # print(message)
-            # task1(mydata)
+            message = Message.objects.create(
+                receiver=receiver,
+                senderID=sender,
+                content=content,
+                service_type="TS",
+                dateScheduled=dateScheduled
+            )
+
+            #calling model method works,but circular import wont allow update on msg obj
+            # message.oneTimeSchedule() 
+
+            #Here we write the schedule fn, to remove circualr imports
+            message.save()
+            messageID = message.messageID
+            print(f'Message is {message}')
+            print(f'MessaageID is {messageID}')
+            task = singleMessageSchedule.apply_async(args=[mydata, messageID], countdown=30)
+            message.scheduleID = task.id
+
 
             # periodicTaskScheduler(5,7)
-            task = periodicTaskScheduler.apply_async(args=[5,7], countdown=5)
 
-            # task = task1.apply_async(args=[mydata], countdown=30)
-            task_id = task.id
+
+            # task = periodicTaskScheduler.apply_async(args=[5,7], countdown=5)
+            # task = singleMessageSchedule.apply_async(args=[mydata], countdown=30)
+            # task_id = task.id
         else:
             return Response({"details": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
         return Response({
             "Success": True,
             "Message": "Message Sending",
             "Data": 'response',
-            "task_id": task_id,
+            "Msg Recall ID": task.id,
             "Service_Type": "TELESIGN"})
 
 
@@ -2069,6 +2073,7 @@ class SendFlashSms(views.APIView):
                 "Success": False,
                 "details": f"{service_type} not available"}, status=status.HTTP_400_BAD_REQUEST)
 
+#NoW REDUNDANT
 class TransactionID(APIView):
     """
     This returns the status of a message given a messageID.
@@ -2157,24 +2162,22 @@ class TransactionID(APIView):
 
 class GroupTransactionID(APIView):
     """
-    This returns the status of a Group message given a groupToken.
-    Format: {"groupToken":'your group token'}
+    This returns the status of a Group message given a groupToken (for group message) or messageID (for single message).
+    Format: {"Token":'your group token OR message ID'}
     """
     serializer = MessageSerializer
-    def get(self, request, groupToken, format=None):
-        # ids = [] #used to store transID
+    def get(self, request, Token, format=None):
         msgResponse = [] #used to store responses
         serializer = MessageSerializer
         try:
-            dbTransID = Message.objects.filter(grouptoken=groupToken)
-            # dbTransID2 = Message.objects.filter(messageID=groupToken)
-            # if (dbTransID.exists()) or (dbTransID2.exists()):
+            dbTransID = Message.objects.filter(Q(messageID=Token) | Q(transactionID=Token))
             if dbTransID.exists(): 
                 for msgID in dbTransID.iterator(): #pick the values in chunks
-                    # ids.append([msgID.transactionID, msgID.messageStatus, msgID.service_type, msgID.receiver])
-                # ids = list(dict.fromkeys(ids))
-                    
                     if msgID.messageStatus == "P":
+                        # userInfo = SenderDetails.objects.get(msgID.senderID)
+                        # api_key = userInfo.token
+                        # customer_id = userInfo.sid
+                        #Telesign
                         if (msgID.service_type.upper() == "TS"): 
                             api_key = settings.TELESIGN_API
                             customer_id = settings.TELESIGN_CUST
@@ -2214,8 +2217,10 @@ class GroupTransactionID(APIView):
 
                                 #For INFOBIP
                         if (msgID.service_type.upper() == "IF"):
+                            # api_key = str(api_key)
                             url = "/sms/1/reports?messageId=" + msgID.transactionID
                             headers = {
+                                # 'Authorization': 'App %s' % (api_key),
                                 'Authorization': 'App 32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b',
                                 'Accept': 'application/json'
                             }
@@ -2248,12 +2253,53 @@ class GroupTransactionID(APIView):
                             else:
                                 result  = {"Transaction ID": msgID.transactionID, "Message Status": "Error retrieving response", "Service Message": data, "Recipient": msgID.receiver}
                                 msgResponse.append(result)
+                        #MessageBird
+                        if (msgID.service_type.upper() == "MB"):
+                                url = "https://rest.messagebird.com/messages?id=" + msgID.transactionID
+                                # api_key = str(api_key)
+                                headers = {
+                                    # 'Authorization': 'AccessKey %s' % (api_key),
+                                    # 'Authorization': 'AccessKey ' + api_key,
+                                    'Authorization': 'AccessKey 32a0fe918d9ce33b532b5de617141e60-a2e949dc-3da9-4715-9450-9d9151e0cf0b',
+                                    'Accept': 'application/json'
+                                }
+                                client = messagebird.Client(api_key)
+                                messages = client.message_list()
+                                # testError = messages["_items"][0]["status"]["groupId"]
+                                # data = json.loads(data)
+                                # testError = data["results"][0]["status"]["groupId"]
+                                if testError == 1:
+                                    msgID.messageStatus = "P"
+                                    msgID.save()
+                                    result  = {"Transaction ID": msgID.transactionID, "Message Status": "P",  "Service Message": data["results"][0]["status"], "Recipient": msgID.receiver }
+                                    msgResponse.append(result)
+                                elif testError == 2:
+                                    msgID.messageStatus = "U"
+                                    msgID.save()
+                                    result  = {"Transaction ID": msgID.transactionID, "Message Status": "U", "Service Message": data["results"][0]["status"], "Recipient": msgID.receiver }
+                                    msgResponse.append(result)
+                                elif testError == 3:
+                                    msgID.messageStatus = "S"
+                                    msgID.save()
+                                    result  = {"Transaction ID": msgID.transactionID, "Message Status": "S",  "Service Message": data["results"][0]["status"], "Recipient": msgID.receiver }
+                                    msgResponse.append(result)
+                                elif testError == 4 or testError == 5:
+                                    msgID.messageStatus = "F"
+                                    msgID.save()
+                                    result  = {"Transaction ID": msgID.transactionID, "Message Status": "F",  "Service Message": data["results"][0]["status"], "Recipient": msgID.receiver }
+                                    msgResponse.append(result)
+                                else:
+                                    result  = {"Transaction ID": msgID.transactionID, "Message Status": "Error retrieving response", "Service Message": data, "Recipient": msgID.receiver}
+                                    msgResponse.append(result)
+                        else:
+                            result  = {"Transaction ID": msgID.transactionID, "Message Status": msgID.messageStatus, "Service Message": " ", "Recipient": msgID.receiver }
+                            msgResponse.append (result)
                     else:
                         result  = {"Transaction ID": msgID.transactionID, "Message Status": msgID.messageStatus, "Service Message": " ", "Recipient": msgID.receiver }
                         msgResponse.append (result)
                 return Response({"Success": "True", "details": "Transaction status retrieved", "Data": {"Service Type": msgID.service_type, "Response": msgResponse }, 'status': status.HTTP_200_OK})
             else:
-                return Response({"Error": status.HTTP_400_BAD_REQUEST, "Message": "Group token not found", "Token": grpToken})
+                return Response({"Error": status.HTTP_400_BAD_REQUEST, "Message": "Token not found", "Token": Token})
         except ObjectDoesNotExist:
             return Response({"Success": "False", "Data": [], 'status': status.HTTP_400_BAD_REQUEST})
 
@@ -2291,8 +2337,8 @@ class SenderRegister(generics.CreateAPIView):
 class SenderDetailsCreate(generics.CreateAPIView):
     """
 
-    User have to specify the given SID and Token supplied by the service provider alongside the name of the senderID
-    Format should be {"senderID":"<register User>", "token":"<token>", "sid":"<sid>", "service_name":"<TWILIO OR INFOBIP OR MSG91 OR TELESIGN>"}
+    User supplies the given SID and Token provided by the service provider alongside the name of the userID. 
+    {"sender":"<ID to associate this credentials with>", "token":"<from SMS gateway>", "sid":"<from SMS gateway>", "service_name":"<TWILIO OR INFOBIP OR MESSAGEBIRD OR TELESIGN OR GATEWAYAPI>"}
     """
     serializer_class = SenderDetailsSerializer
 
@@ -2328,7 +2374,7 @@ class SenderDetailsCreate(generics.CreateAPIView):
 class SenderDetailsUpdate(generics.UpdateAPIView):
     """
 
-    User have to specify the given SID and Token supplied by the service provider alongside the name of the senderID
+    Users have to specify the given SID and Token supplied by the service provider alongside the name of the senderID
     Format should be {"senderID":"<register User>", "token":"<token>", "sid":"<sid>", "service_name":"<TWILIO OR INFOBIP OR MSG91 OR TELESIGN>"}
     """
 
