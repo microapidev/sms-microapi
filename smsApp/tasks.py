@@ -1,10 +1,12 @@
 from __future__ import absolute_import, unicode_literals
-import requests
+import requests, http.client
 from requests.auth import HTTPBasicAuth
 from celery import shared_task
 import uuid, json
 from .models import Message
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
+from twilio.rest import Client
+from twilio.base.exceptions import TwilioRestException
 
 
 @shared_task
@@ -209,6 +211,7 @@ def taskTwilioAsync(myData, is_group):
     language=myData['language']
     content=myData['content']
     client = Client(myData['sid'],myData['token'])
+    print("In Twilio")
     if is_group:
         message.grouptoken=myData['grouptoken']
         for number in myData['numbers']:
