@@ -81,8 +81,8 @@ class SendSingMsgCreate(generics.CreateAPIView):
         senderID = request.data.get("senderID")
         sender = get_object_or_404(Sender, senderID=senderID)
         # sender = Sender.objects.get(senderID=senderID)
-        # sender.details.get(default=2)
         service = sender.details.get(default=True)
+        print(service)
         sid = service.sid
         token = service.token
         service_type = service.service_name
@@ -117,15 +117,15 @@ class SendSingMsgCreate(generics.CreateAPIView):
                             value.language = language
                             
                             message = client.messages.create(
-                                from_=senderID,
+                                from_=verified_no,
                                 to=receiver,
-                                body=content,
+                                body=content
                             )
                         else:
                             message = client.messages.create(
-                                from_=senderID,
+                                from_=verified_no,
                                 to=receiver,
-                                body=content,
+                                body=content
                             )
                         if (message.status == 'sent'):
                             value.messageStatus = "S"
@@ -1695,7 +1695,6 @@ class SendGroupSms(views.APIView):
                         description = data["messages"][0]["status"]["description"]
                         result = {"success":"True","status": value.messageStatus, "message": f"{value.content}", "messageID":f"{value.messageID}","groupToken":f"{value.grouptoken}", "data": {"to": To, "msg-id":IF_MSID, "description":description}}
                         msgstatus.append(result)
-                        print(msgstatus, number)
                     else:
                         result = {"someting went wrong while sending to this {}, please try again".format(number)}
                         msgstatus.append(result)
