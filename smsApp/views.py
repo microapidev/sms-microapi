@@ -2371,7 +2371,7 @@ class SenderDetailsCreate(generics.CreateAPIView):
 class SenderDetailsUpdate(generics.UpdateAPIView):
     """
 
-    User have to specify the given SID and Token supplied by the service provider alongside the name of the senderID
+    Users have to specify the given SID and Token supplied by the service provider alongside the name of the senderID
     Format should be {"senderID":"<register User>", "token":"<token>", "sid":"<sid>", "service_name":"<TWILIO OR INFOBIP OR MSG91 OR TELESIGN>"}
     """
 

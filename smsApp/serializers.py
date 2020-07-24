@@ -99,8 +99,8 @@ class SenderDetailsSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         instance.token = validated_data.get('token', instance.token)
         instance.sid = validated_data.get('sid', instance.sid)
-        if instance.verfied_no:
-            instance.verfied_no = validated_data.get('verfied_no', instance.verfied_no)
+        if instance.verified_no:
+            instance.verified_no = validated_data.get('verified_no', instance.verified_no)
         instance.save()
         return instance
 
