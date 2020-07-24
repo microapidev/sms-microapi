@@ -89,6 +89,7 @@ class SenderDetailsSerializer(serializers.ModelSerializer):
     ]
     service_name = serializers.ChoiceField(choices=SERVICE_CHOICES, required=True)
     verified_no = serializers.CharField(max_length=1200, required=False, label="Registered Number if any")
+    default = serializers.BooleanField()
 
     def create(self, validated_data):
         senderID = validated_data["senderID"]["senderID"]
@@ -99,14 +100,14 @@ class SenderDetailsSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         instance.token = validated_data.get('token', instance.token)
         instance.sid = validated_data.get('sid', instance.sid)
-        if instance.verified_no:
-            instance.verified_no = validated_data.get('verified_no', instance.verified_no)
+        instance.default = validated_data.get('default', instance.default)
+        instance.verified_no = validated_data.get('verified_no', instance.verified_no)
         instance.save()
         return instance
 
 
     class Meta:
         model = SenderDetails
-        fields = ("sid", "token", "service_name", "sender", "verified_no")
+        fields = ( "sender", "service_name", "token", "sid" , "verified_no", "default")
 
     
