@@ -7,7 +7,7 @@ from .views import TeleSignSingleSms, TeleSignMessageList, TeleSignTransactionID
 from .views import TeleSignCollectionSms, MessageRecall
 from .views import GroupList, GroupBySenderList, GroupDetail, GroupCreate, GroupDelete, GroupNumbersList, GroupNumbersBySenderList,  GroupNumbersCreate, update_group_number, GroupNumbersDetail
 from .views import SmsHistoryList, SmsHistoryDetail, SendGroupSms, SendFlashSms, MessageList, UserList
-from .views import SenderDetailsCreate, SenderRegister, SenderDetailsUpdate, SenderDetailsList
+from .views import SenderDetailsCreate, SenderRegister, SenderDetailsUpdate, SenderDetailsList, SenderDetailsDelete
 from django.urls import path
 from .views import create_receipents_details, save_recipients_details  #get_recipient_details
 from rest_framework.schemas.coreapi import AutoSchema
@@ -42,6 +42,7 @@ urlpatterns = [
    path("v2/sms/config/add_config", SenderDetailsCreate.as_view(), name="configure"),
    path("v2/sms/config/update_config", SenderDetailsUpdate.as_view(), name="send-one-msg"),
    path("v2/sms/config/view_config/<senderID>", SenderDetailsList.as_view(), name="send-one-msg"),
+   # path("v2/sms/config/delete_config", SenderDetailsDelete.as_view(), name="send-one-msg"),s
 
    #MessageStatus
    path("v2/sms/message_recall/<taskID>", MessageRecall.as_view(), name="recall-message"),
@@ -69,7 +70,7 @@ urlpatterns = [
    # path("v1/sms/recipients/<str:recipientNumber>", RecipientDetail.as_view(), name="update-recipient"),
    
    #History Views, General Histories
-   path('v2/sms/history/<str:userID>', SmsHistoryList.as_view(), name="history"),
+   path('v2/sms/history/<str:senderID>', SmsHistoryList.as_view(), name="history"),
 
    #TeleSign Views
    # path("v1/sms/telesign/group_sms", TeleSignGroupSms.as_view(), name="telesign-group-message"),
@@ -93,8 +94,8 @@ urlpatterns = [
 
    #swagger docs and etc
    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-   path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
-   path('', include_docs_urls(title='SMS API', description=
+   path('', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+   path('coreapi', include_docs_urls(title='SMS API', description=
    """
        To begin, register your unique userID via '/v2/sms/user_register'. Next, go to the config endpoint via `/v2/sms/config/add_config` to setup your credentials before proceeding to using the Send group endpoint to send single or group messages. NOTE: YOUR FIRST REGISTERED SERVICE IS SET AS DEFAULT. To change default, visit the `/v2/sms/config/update_config` endpoint. To view the status of a sent message, visit /v2/sms/message_status/{Token}
    """

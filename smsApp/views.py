@@ -81,8 +81,8 @@ class SendSingMsgCreate(generics.CreateAPIView):
         senderID = request.data.get("senderID")
         sender = get_object_or_404(Sender, senderID=senderID)
         # sender = Sender.objects.get(senderID=senderID)
-        # sender.details.get(default=2)
         service = sender.details.get(default=True)
+        print(service)
         sid = service.sid
         token = service.token
         service_type = service.service_name
@@ -117,15 +117,15 @@ class SendSingMsgCreate(generics.CreateAPIView):
                             value.language = language
                             
                             message = client.messages.create(
-                                from_=senderID,
+                                from_=verified_no,
                                 to=receiver,
-                                body=content,
+                                body=content
                             )
                         else:
                             message = client.messages.create(
-                                from_=senderID,
+                                from_=verified_no,
                                 to=receiver,
-                                body=content,
+                                body=content
                             )
                         if (message.status == 'sent'):
                             value.messageStatus = "S"
@@ -692,8 +692,9 @@ class SmsHistoryList(generics.ListAPIView):
     serializer_class = MessageSerializer
 
     def get_queryset(self):
-        userID = self.kwargs["userID"]
-        return Message.objects.filter(senderID=userID)
+        senderID = self.kwargs["senderID"]
+        senderID = get_object_or_404(Sender, senderID=senderID)
+        return Message.objects.filter(senderID=senderID)
 
 
 class SmsHistoryDetail(generics.RetrieveAPIView):
@@ -1694,7 +1695,6 @@ class SendGroupSms(views.APIView):
                         description = data["messages"][0]["status"]["description"]
                         result = {"success":"True","status": value.messageStatus, "message": f"{value.content}", "messageID":f"{value.messageID}","groupToken":f"{value.grouptoken}", "data": {"to": To, "msg-id":IF_MSID, "description":description}}
                         msgstatus.append(result)
-                        print(msgstatus, number)
                     else:
                         result = {"someting went wrong while sending to this {}, please try again".format(number)}
                         msgstatus.append(result)
@@ -2419,6 +2419,7 @@ class SenderDetailsUpdate(generics.UpdateAPIView):
             return JsonResponse({"status":status.HTTP_202_ACCEPTED, "success":"True", "details":f"{service_name} Credentials updated"}, status=status.HTTP_202_ACCEPTED)
         return JsonResponse({"status":status.HTTP_400_BAD_REQUEST, "success":"False", "details":"Improper use of endpoint"}, status=status.HTTP_400_BAD_REQUEST)
 
+
 class SenderDetailsList(generics.ListAPIView):
     serializer_class = SenderDetailsSerializer
 
@@ -2429,3 +2430,17 @@ class SenderDetailsList(generics.ListAPIView):
         return queryset
 
     
+class SenderDetailsDelete(generics.DestroyAPIView):
+    serializer_class = SenderDetailsSerializer
+
+    def delete(self, senderID, service_name):
+        print("y")
+        sender = self.kwargs["senderID"]
+        print("yssss")
+        sender = get_object_or_404(Sender, senderID=senderID)
+        print("ysjs")
+        service = self.kwargs["service_name"]
+        service = SenderDetails.objects.get(senderID=sender, service_name=service)
+        service.delete()
+        return JsonResponse({"status":status.HTTP_202_ACCEPTED, "success":"True", "details":f"{service_name} Credentials updated"}, status=status.HTTP_204_NO_CONTENT)
+
