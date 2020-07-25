@@ -26,7 +26,7 @@ schema_view = get_schema_view(
    openapi.Info(
       title="SMS API",
       default_version='v1',
-      description="""To begin, register your unique userID via `/v2/sms/user_register`. Next, go to the config endpoint via `/v2/sms/config/add_config` to setup your credentials before proceeding to using the Send group endpoint to send single or group messages. NOTE: YOUR FIRST REGISTERED SERVICE IS SET AS DEFAULT. To change default, visit the `/v2/sms/config/update_config` endpoint. To view the status of a sent message, visit `/v2/sms/message_status/{Token}`
+      description="""To begin, register your unique userID via `/v2/sms/user_register`. Next, go to the config endpoint via `/v2/sms/config/add_config` to setup your credentials before proceeding to using the Send endpoint to send single or group messages. NOTE: YOUR FIRST REGISTERED SERVICE IS SET AS DEFAULT. To change default, visit the `/v2/sms/config/update_config` endpoint. To view the status of a sent message, visit `/v2/sms/message_status/{Token}`
       """,
       # terms_of_service="https://www.google.com/policies/terms/",
       # contact=openapi.Contact(email="contact@snippets.local"),
