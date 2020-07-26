@@ -29,8 +29,6 @@ services:
     migration:
         build: .
         command: python manage.py migrate
-        depends_on:
-            - db
 
     # celery-beat:
     #     build: .
