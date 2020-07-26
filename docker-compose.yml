@@ -26,9 +26,9 @@ services:
         depends_on:
             - rabbitmq
 
-    migration:
-        build: .
-        command: python manage.py migrate
+#     migration:
+#         build: .
+#         command: python manage.py migrate
 
     # celery-beat:
     #     build: .
