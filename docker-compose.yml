@@ -10,6 +10,13 @@ services:
             - "8000:8000"
         depends_on:
             - rabbitmq
+            - migration
+    
+    migration:
+        build: .
+        command: python manage.py migrate --noinput
+        volumes:
+        - .:/code
 
     celery:
         build: .
