@@ -3,18 +3,18 @@ version: '3'
 services: 
     web:
         build: .
-        command: python manage.py runserver 0.0.0.0:8000
+        command: bash -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
         volumes: 
             - .:/code
         ports:
             - "8099:8000"
         depends_on:
             - rabbitmq
-            - migration
+#             - migration
     
-    migration:
-        build: .
-        command: python manage.py migrate 
+#     migration:
+#         build: .
+#         command: python manage.py migrate 
 #         volumes:
 #         - .:/code
 
