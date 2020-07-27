@@ -81,13 +81,15 @@ class SendSingMsgCreate(generics.CreateAPIView):
         senderID = request.data.get("senderID")
         sender = get_object_or_404(Sender, senderID=senderID)
         # sender = Sender.objects.get(senderID=senderID)
-        service = sender.details.get(default=True)
-        print(service)
-        sid = service.sid
-        token = service.token
-        service_type = service.service_name
-        verified_no = service.verified_no
-        print(service, service_type, token, sid, verified_no)
+        try:
+            service = sender.details.get(default=True)
+            sid = service.sid
+            token = service.token
+            service_type = service.service_name
+            verified_no = service.verified_no
+        except ObjectDoesNotExist:
+            return Response({"success":"False","message": "","messageID":"","data": "N/A", f"error": "no service type configured"}, status=status.HTTP_400_BAD_REQUEST)
+
         receiver = request.data.get("receiver")
         content = request.data.get("content")
         language = request.data.get("language")
@@ -130,7 +132,7 @@ class SendSingMsgCreate(generics.CreateAPIView):
                         if (message.status == 'sent'):
                             value.messageStatus = "S"
                         elif (message.status == 'queued'):
-                            value.messageStatus = "P"
+                            value.messageStatus = "S"
                         elif (message.status == 'failed'):
                             value.messageStatus = "F"
                         elif (message.status == 'delivered'):
@@ -143,6 +145,7 @@ class SendSingMsgCreate(generics.CreateAPIView):
                             return Response({
                                 'success': 'true',
                                 "status": f"{message.status}",
+                                "messageID":f"{value.messageID}",
                                 'message': f"{original_txt[0]}",
                                 'data': {
                                     'receiver': f"{receiver}",
@@ -154,6 +157,7 @@ class SendSingMsgCreate(generics.CreateAPIView):
                         return Response({
                             'success': 'true',
                             "status": f"{message.status}",
+                            "messageID":f"{value.messageID}",
                             'message': 'Message sent',
                             'data': {
                                 'receiver': f"{receiver}",
@@ -1610,11 +1614,14 @@ class SendGroupSms(views.APIView):
         sender = get_object_or_404(Sender, senderID=senderID)
 
         #collecting the info of user from the sender table which is linked to sender details table
-        account = sender.details.get(default=True)
-        sid = account.sid
-        token = account.token
-        service_type = account.service_name
-        verified_no = account.verified_no
+        try:
+            service = sender.details.get(default=True)
+            sid = service.sid
+            token = service.token
+            service_type = service.service_name
+            verified_no = service.verified_no
+        except ObjectDoesNotExist:
+            return Response({"success":"False","message": "","messageID":"","data": "N/A", f"error": "no service type configured"}, status=status.HTTP_400_BAD_REQUEST)
         
         #Original Text before translation occurs
         original_txt = []
@@ -1736,7 +1743,7 @@ class SendGroupSms(views.APIView):
                         if (message.status == 'sent'):
                             value.messageStatus = "S"
                         elif (message.status == 'queued'):
-                            value.messageStatus = "P"
+                            value.messageStatus = "S"
                         elif (message.status == 'failed'):
                             value.messageStatus = "F"
                         elif (message.status == 'delivered'):
