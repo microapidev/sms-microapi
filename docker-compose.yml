@@ -26,10 +26,6 @@ services:
         depends_on:
             - rabbitmq
 
-    migration:
-        build: .
-        command: python manage.py migrate
-
     # celery-beat:
     #     build: .
     #     command: $ celery -A [project-name] worker --beat --scheduler django --loglevel=info
