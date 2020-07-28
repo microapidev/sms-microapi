@@ -87,7 +87,7 @@ class SendSingMsgCreate(generics.CreateAPIView):
             token = service.token
             service_type = service.service_name
             verified_no = service.verified_no
-        except ObjectDoesNotExist:
+        except SenderDetails.DoesNotExis:
             return Response({"success":"False","message": "","messageID":"","data": "N/A", f"error": "no service type configured"}, status=status.HTTP_400_BAD_REQUEST)
 
         receiver = request.data.get("receiver")
@@ -1620,7 +1620,7 @@ class SendGroupSms(views.APIView):
             token = service.token
             service_type = service.service_name
             verified_no = service.verified_no
-        except ObjectDoesNotExist:
+        except SenderDetails.DoesNotExis:
             return Response({"success":"False","message": "","messageID":"","data": "N/A", f"error": "no service type configured"}, status=status.HTTP_400_BAD_REQUEST)
         
         #Original Text before translation occurs
