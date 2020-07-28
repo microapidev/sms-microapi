@@ -14,7 +14,7 @@ services:
     
     migration:
         build: .
-        command: python manage.py migrate 
+        command: bash -c "python manage.py makemigrations smsApp && python manage.py migrate"
 #         volumes:
 #         - .:/code
 
