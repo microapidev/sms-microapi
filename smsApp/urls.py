@@ -70,7 +70,7 @@ urlpatterns = [
    # path("v1/sms/recipients/<str:recipientNumber>", RecipientDetail.as_view(), name="update-recipient"),
    
    #History Views, General Histories
-   path('v2/sms/histoory/<str:senderID>', SmsHistoryList.as_view(), name="history"),
+   path('v2/sms/history/<str:senderID>', SmsHistoryList.as_view(), name="history"),
 
    #TeleSign Views
    # path("v1/sms/telesign/group_sms", TeleSignGroupSms.as_view(), name="telesign-group-message"),

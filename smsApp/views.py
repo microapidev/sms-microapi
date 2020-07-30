@@ -130,7 +130,7 @@ class SendSingMsgCreate(generics.CreateAPIView):
                         if (message.status == 'sent'):
                             value.messageStatus = "S"
                         elif (message.status == 'queued'):
-                            value.messageStatus = "P"
+                            value.messageStatus = "S"
                         elif (message.status == 'failed'):
                             value.messageStatus = "F"
                         elif (message.status == 'delivered'):
@@ -2441,7 +2441,7 @@ class SenderDetailsList(generics.ListAPIView):
 
     def get_queryset(self):
         senderID = self.kwargs["senderID"]
-        senderID = get_object_or_404(Sender, senderID=senderID)
+        senderID = get_object_or_404(Sender, senderID=senderID) 
         queryset = get_list_or_404(SenderDetails, senderID=senderID)
         return queryset
 
