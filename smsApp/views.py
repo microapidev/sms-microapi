@@ -130,7 +130,7 @@ class SendSingMsgCreate(generics.CreateAPIView):
                         if (message.status == 'sent'):
                             value.messageStatus = "S"
                         elif (message.status == 'queued'):
-                            value.messageStatus = "P"
+                            value.messageStatus = "S"
                         elif (message.status == 'failed'):
                             value.messageStatus = "F"
                         elif (message.status == 'delivered'):
@@ -2364,7 +2364,14 @@ class SenderDetailsCreate(generics.CreateAPIView):
     """
 
     User supplies the given SID and Token provided by the service provider alongside the name of the userID. 
-    {"sender":"<Your unique userID>", "token":"<from SMS gateway>", "sid":"<from SMS gateway>", "service_name":"<TWILIO OR INFOBIP OR MESSAGEBIRD OR TELESIGN OR GATEWAYAPI>"}
+    Format should be 
+    {
+        "sender":"<Your uniqueID>", "token":"<token>", 
+        "sid":"<sid>", "service_name":"<TWILIO OR INFOBIP OR MESSAGEBIRD OR TELESIGN OR GATEWAYAPI>",
+        "default":<True or False>, "verified_no":""
+    }
+    Required fields include the Token, Sender, Service name and default fields
+    You can supply the rest depending on the service configuration
     """
     serializer_class = SenderDetailsSerializer
 
@@ -2400,7 +2407,13 @@ class SenderDetailsUpdate(generics.UpdateAPIView):
     """
 
     Update sender details.
-    Format should be {"senderID":"<Your uniqueID>", "token":"<token>", "sid":"<sid>", "service_name":"<TWILIO OR INFOBIP OR MESSAGEBIRD OR TELESIGN OR GATEWAYAPI>"}
+    Format should be 
+    {
+        "sender":"<Your uniqueID>", "token":"<token>", 
+        "sid":"<sid>", "service_name":"<TWILIO OR INFOBIP OR MESSAGEBIRD OR TELESIGN OR GATEWAYAPI>",
+        "default":<True or False>, "verified_no":""
+    }
+    If a particular field isn't needed, it can be omitted or represented as empty string
     """
 
     serializer_class = SenderDetailsSerializer
@@ -2421,11 +2434,14 @@ class SenderDetailsUpdate(generics.UpdateAPIView):
 
 
 class SenderDetailsList(generics.ListAPIView):
+    """
+    Get all the service type configurations for a particular user
+    """
     serializer_class = SenderDetailsSerializer
 
     def get_queryset(self):
         senderID = self.kwargs["senderID"]
-        senderID = get_object_or_404(Sender, senderID=senderID)
+        senderID = get_object_or_404(Sender, senderID=senderID) 
         queryset = get_list_or_404(SenderDetails, senderID=senderID)
         return queryset
 
