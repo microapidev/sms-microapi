@@ -37,6 +37,9 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
+   # Documentation
+   path('v2/documentation/', schema_view.as_view(), {'format': '.json'}, name='schema-json'),
+
    # Config
    path("v2/sms/user_register", SenderRegister.as_view(), name="register"),
    path("v2/sms/config/add_config", SenderDetailsCreate.as_view(), name="configure"),
