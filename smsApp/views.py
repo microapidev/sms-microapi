@@ -3080,7 +3080,7 @@ class SenderDetailsList(generics.ListAPIView):
 
     def get_queryset(self):
         senderID = self.kwargs["senderID"]
-        senderID = get_object_or_404(Sender, senderID=senderID)
+        senderID = get_object_or_404(Sender, senderID=senderID) 
         queryset = get_list_or_404(SenderDetails, senderID=senderID)
         return queryset
 
