@@ -16,6 +16,7 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from rest_framework.documentation import include_docs_urls
+from . import views
 import logging
 
 logger = logging.getLogger(__name__)
@@ -42,6 +43,9 @@ urlpatterns = [
    
    # Config
    path("v2/sms/user_register", SenderRegister.as_view(), name="register"),
+   path("v2/sms/settings", views.senderConfig, name="get_config"),
+   path("v2/sms/info", views.smsInfo, name="get_info"),
+   path("v2/sms/docs", views.smsDocs, name="get_docs"),
    path("v2/sms/config/add_config", SenderDetailsCreate.as_view(), name="configure"),
    path("v2/sms/config/update_config", SenderDetailsUpdate.as_view(), name="send-one-msg"),
    path("v2/sms/config/view_config/<senderID>", SenderDetailsList.as_view(), name="send-one-msg"),
