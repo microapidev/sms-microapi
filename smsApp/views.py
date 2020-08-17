@@ -80,15 +80,23 @@ class SendSingMsgCreate(generics.CreateAPIView):
 
         senderID = request.data.get("senderID")
         sender = get_object_or_404(Sender, senderID=senderID)
+<<<<<<< HEAD
 
         #catching errors when user has not added any info to the platform.
+=======
+        # sender = Sender.objects.get(senderID=senderID)
+>>>>>>> 08130f04e7ebd6abe08d9cbfb9731f448b182740
         try:
             service = sender.details.get(default=True)
             sid = service.sid
             token = service.token
             service_type = service.service_name
             verified_no = service.verified_no
+<<<<<<< HEAD
         except SenderDetails.DoesNotExist:
+=======
+        except SenderDetails.DoesNotExis:
+>>>>>>> 08130f04e7ebd6abe08d9cbfb9731f448b182740
             return Response({"success":"False","message": "","messageID":"","data": "N/A", f"error": "no service type configured"}, status=status.HTTP_400_BAD_REQUEST)
 
         receiver = request.data.get("receiver")
@@ -146,6 +154,7 @@ class SendSingMsgCreate(generics.CreateAPIView):
                             return Response({
                                 'success': 'true',
                                 "status": f"{message.status}",
+                                "messageID":f"{value.messageID}",
                                 'message': f"{original_txt[0]}",
                                 "messageID":f"{value.messageID}",
                                 'data': {
@@ -158,6 +167,7 @@ class SendSingMsgCreate(generics.CreateAPIView):
                         return Response({
                             'success': 'true',
                             "status": f"{message.status}",
+                            "messageID":f"{value.messageID}",
                             'message': 'Message sent',
                             "messageID":f"{value.messageID}",
                             'data': {
@@ -1616,6 +1626,7 @@ class SendGroupSms(views.APIView):
 
         #collecting the info of user from the sender table which is linked to sender details table
         try:
+<<<<<<< HEAD
             account = sender.details.get(default=True)
             sid = account.sid
             token = account.token
@@ -1624,6 +1635,16 @@ class SendGroupSms(views.APIView):
         except SenderDetails.DoesNotExist:
             return Response({"success":"False","message": "","messageID":"","data": "N/A", f"error": "no service type configured"}, status=status.HTTP_400_BAD_REQUEST)
 
+=======
+            service = sender.details.get(default=True)
+            sid = service.sid
+            token = service.token
+            service_type = service.service_name
+            verified_no = service.verified_no
+        except SenderDetails.DoesNotExis:
+            return Response({"success":"False","message": "","messageID":"","data": "N/A", f"error": "no service type configured"}, status=status.HTTP_400_BAD_REQUEST)
+        
+>>>>>>> 08130f04e7ebd6abe08d9cbfb9731f448b182740
         #Original Text before translation occurs
         original_txt = []
         #log error
