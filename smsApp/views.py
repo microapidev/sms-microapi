@@ -2377,13 +2377,50 @@ def senderConfig(request):
                 "message": "info retrieved",
                 "data":
                 [
-                    {
-                        "sender": "string",
-                        "service_name": "string",
-                        "token": "string",
-                        "sid": "string",
-                        "verified_no": "string",
-                        "default": True
+                    {   
+                       {
+                           "setting_name": "sender",
+                           "setting_type": "string",
+                           "setting_key": None,
+                           "setting_required": True,
+                           "setting_value" : None
+                        },
+                       {
+                           "setting_name": "token",
+                           "setting_type": "string",
+                           "setting_key": None,
+                           "setting_required": True,
+                           "setting_value" : None
+                        },
+                       {
+                           "setting_name": "service_name",
+                           "setting_type": "string",
+                           "setting_key": None,
+                           "setting_required": True,
+                           "setting_value" : None
+                        },
+                        
+                       {
+                           "setting_name": "sid",
+                           "setting_type": "string",
+                           "setting_key": None,
+                           "setting_required": False,
+                           "setting_value" : None
+                        },
+                       {
+                           "setting_name": "verified_no",
+                           "setting_type": "string",
+                           "setting_key": None,
+                           "setting_required": True,
+                           "setting_value" : None
+                        },
+                       {
+                           "setting_name": "default",
+                           "setting_type": "boolean(True/False)",
+                           "setting_key": None,
+                           "setting_required": True,
+                           "setting_value" : None
+                        }                      
                     }
                 ],
                 "success": True
