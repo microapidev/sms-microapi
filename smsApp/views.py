@@ -2376,14 +2376,16 @@ def senderConfig(request):
             {
                 "message": "info retrieved",
                 "data":
-                {
-                    "sender": "string",
-                    "service_name": "string",
-                    "token": "string",
-                    "sid": "string",
-                    "verified_no": "string",
-                    "default": True
-                },
+                [
+                    {
+                        "sender": "string",
+                        "service_name": "string",
+                        "token": "string",
+                        "sid": "string",
+                        "verified_no": "string",
+                        "default": True
+                    }
+                ],
                 "success": True
             }
         )
