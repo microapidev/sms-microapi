@@ -80,14 +80,17 @@ class SendSingMsgCreate(generics.CreateAPIView):
 
         senderID = request.data.get("senderID")
         sender = get_object_or_404(Sender, senderID=senderID)
-        # sender = Sender.objects.get(senderID=senderID)
-        service = sender.details.get(default=True)
-        print(service)
-        sid = service.sid
-        token = service.token
-        service_type = service.service_name
-        verified_no = service.verified_no
-        print(service, service_type, token, sid, verified_no)
+
+        #catching errors when user has not added any info to the platform.
+        try:
+            service = sender.details.get(default=True)
+            sid = service.sid
+            token = service.token
+            service_type = service.service_name
+            verified_no = service.verified_no
+        except SenderDetails.DoesNotExist:
+            return Response({"success":"False","message": "","messageID":"","data": "N/A", f"error": "no service type configured"}, status=status.HTTP_400_BAD_REQUEST)
+
         receiver = request.data.get("receiver")
         content = request.data.get("content")
         language = request.data.get("language")
@@ -143,7 +146,9 @@ class SendSingMsgCreate(generics.CreateAPIView):
                             return Response({
                                 'success': 'true',
                                 "status": f"{message.status}",
+                                "messageID":f"{value.messageID}",
                                 'message': f"{original_txt[0]}",
+                                "messageID":f"{value.messageID}",
                                 'data': {
                                     'receiver': f"{receiver}",
                                     # 'userID': f"{senderID}",
@@ -154,7 +159,9 @@ class SendSingMsgCreate(generics.CreateAPIView):
                         return Response({
                             'success': 'true',
                             "status": f"{message.status}",
+                            "messageID":f"{value.messageID}",
                             'message': 'Message sent',
+                            "messageID":f"{value.messageID}",
                             'data': {
                                 'receiver': f"{receiver}",
                                 # 'userID': f"{senderID}",
@@ -1610,12 +1617,15 @@ class SendGroupSms(views.APIView):
         sender = get_object_or_404(Sender, senderID=senderID)
 
         #collecting the info of user from the sender table which is linked to sender details table
-        account = sender.details.get(default=True)
-        sid = account.sid
-        token = account.token
-        service_type = account.service_name
-        verified_no = account.verified_no
-        
+        try:
+            account = sender.details.get(default=True)
+            sid = account.sid
+            token = account.token
+            service_type = account.service_name
+            verified_no = account.verified_no
+        except SenderDetails.DoesNotExist:
+            return Response({"success":"False","message": "","messageID":"","data": "N/A", f"error": "no service type configured"}, status=status.HTTP_400_BAD_REQUEST)
+
         #Original Text before translation occurs
         original_txt = []
         #log error
@@ -1736,7 +1746,7 @@ class SendGroupSms(views.APIView):
                         if (message.status == 'sent'):
                             value.messageStatus = "S"
                         elif (message.status == 'queued'):
-                            value.messageStatus = "P"
+                            value.messageStatus = "S"
                         elif (message.status == 'failed'):
                             value.messageStatus = "F"
                         elif (message.status == 'delivered'):
@@ -2358,6 +2368,637 @@ class SenderRegister(generics.CreateAPIView):
             return JsonResponse({"status":status.HTTP_400_BAD_REQUEST, "success":"False", "details":"Improper use of endpoint"})
         else:
             return JsonResponse({"status":status.HTTP_400_BAD_REQUEST, "success":"False", "details":"Sender ID already exists"})
+
+@api_view(['GET'])
+def senderConfig(request):
+    if request.method == 'GET':
+        return Response(
+            {
+                "message": "info retrieved",
+                "data":
+                [
+                    {
+                        "sender": "string",
+                        "service_name": "string",
+                        "token": "string",
+                        "sid": "string",
+                        "verified_no": "string",
+                        "default": True
+                    }
+                ],
+                "success": True
+            }
+        )
+
+@api_view(['GET'])
+def smsInfo(request):
+    if request.method == 'GET':
+        return Response(
+            {
+                "message": "info retrieved",
+                "data": {
+                    "title": "SMS MicroAPI",
+                    "description": "SMS MicroAPI is a microservice for handling sending sms. We currently support INFOBIP, TWILIO, GATEWAYAPI, TELESIGN, MESSAGEBIRD",
+                    "icon": "https://www.cleanpng.com/png-computer-icons-sms-text-messaging-instant-messagin-608501/"
+                },
+                "success": True
+            })
+
+
+@api_view(['GET'])
+def smsDocs(request):
+    if request.method == 'GET':
+        return Response(
+            {
+                "message": "info retrieved",
+                "data": {
+  "openapi": "3.0.1",
+  "info": {
+    "title": "SMS API",
+    "description": "To begin, register your unique userID via `/v2/sms/user_register`. Next, go to the config endpoint via `/v2/sms/config/add_config` to setup your credentials before proceeding to using the Send group endpoint to send single or group messages. NOTE: YOUR FIRST REGISTERED SERVICE IS SET AS DEFAULT. To change this, visit the `/v2/sms/config/update_config` endpoint. To view the status of a sent message, visit `/v2/sms/message_status/{Token}`\n",
+    "version": "v1"
+  },
+  "servers": [
+    {
+      "url": "http://sms-microapi.herokuapp.com/v2/sms"
+    }
+  ],
+  "security": [
+    {
+      "Basic": []
+    }
+  ],
+  "paths": {
+    "/config/add_config": {
+      "post": {
+        "tags": [
+          "config"
+        ],
+        "description": "User supplies the given SID and Token provided by the service provider alongside the name of the userID. \nFormat should be \n{\n    \"sender\":\"<Your uniqueID>\", \"token\":\"<token>\", \n    \"sid\":\"<sid>\", \"service_name\":\"<TWILIO OR INFOBIP OR MESSAGEBIRD OR TELESIGN OR GATEWAYAPI>\",\n    \"default\":<True or False>, \"verified_no\":\"\"\n}\nRequired fields include the Token, Sender, Service name and default fields\nYou can supply the rest depending on the service configuration",
+        "operationId": "config_add_config_create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SenderDetails"
+              }
+            }
+          },
+          "required": True
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SenderDetails"
+                }
+              }
+            }
+          }
+        },
+        "x-codegen-request-body-name": "data"
+      }
+    },
+    "/config/update_config": {
+      "put": {
+        "tags": [
+          "config"
+        ],
+        "description": "Update sender details.\nFormat should be \n{\n    \"sender\":\"<Your uniqueID>\", \"token\":\"<token>\", \n    \"sid\":\"<sid>\", \"service_name\":\"<TWILIO OR INFOBIP OR MESSAGEBIRD OR TELESIGN OR GATEWAYAPI>\",\n    \"default\":<True or False>, \"verified_no\":\"\"\n}\nIf a particular field isn't needed, it can be omitted or represented as empty string",
+        "operationId": "config_update_config_update",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SenderDetails"
+              }
+            }
+          },
+          "required": True
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SenderDetails"
+                }
+              }
+            }
+          }
+        },
+        "x-codegen-request-body-name": "data"
+      },
+      "patch": {
+        "tags": [
+          "config"
+        ],
+        "description": "Update sender details.\nFormat should be \n{\n    \"sender\":\"<Your uniqueID>\", \"token\":\"<token>\", \n    \"sid\":\"<sid>\", \"service_name\":\"<TWILIO OR INFOBIP OR MESSAGEBIRD OR TELESIGN OR GATEWAYAPI>\",\n    \"default\":<True or False>, \"verified_no\":\"\"\n}\nIf a particular field isn't needed, it can be omitted or represented as empty string",
+        "operationId": "config_update_config_partial_update",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SenderDetails"
+              }
+            }
+          },
+          "required": True
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SenderDetails"
+                }
+              }
+            }
+          }
+        },
+        "x-codegen-request-body-name": "data"
+      }
+    },
+    "/config/view_config/{senderID}": {
+      "get": {
+        "tags": [
+          "config"
+        ],
+        "description": "Get all the service type configurations for a particular user",
+        "operationId": "config_view_config_read",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SenderDetails"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "senderID",
+          "in": "path",
+          "required": True,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "/histoory/{senderID}": {
+      "get": {
+        "tags": [
+          "histoory"
+        ],
+        "description": "This is used to pull sms history on database\nThe senderID should be added at endpoint \n/v1/sms/sms_history/<senderID>",
+        "operationId": "histoory_read",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Message"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "senderID",
+          "in": "path",
+          "required": True,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "/message_recall/{taskID}": {
+      "delete": {
+        "tags": [
+          "message_recall"
+        ],
+        "description": "Trying to terminate or recall a message",
+        "operationId": "message_recall_delete",
+        "responses": {
+          "204": {
+            "description": "",
+            "content": {}
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "taskID",
+          "in": "path",
+          "required": True,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "/message_status/{Token}": {
+      "get": {
+        "tags": [
+          "message_status"
+        ],
+        "description": "This returns the status of a Group message given a groupToken (for group message) or messageID (for single message).",
+        "operationId": "message_status_read",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {}
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "Token",
+          "in": "path",
+          "required": True,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "/send/send_group_sms": {
+      "post": {
+        "tags": [
+          "send"
+        ],
+        "description": "Send SMS to multiple recipients. \n{\n\"senderID\": \"existing senderID\",\n\"content\": \"body\",\n\"receiver\": \"multiple numbers separated by comma and must start with '+' or '1' or '0' or all three\",\n\"language\": \"can be null (google api translation of languages are used...e.g \"en\" represents 'english')\"\n}",
+        "operationId": "send_send_group_sms_create",
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/send/send_single_msg": {
+      "post": {
+        "tags": [
+          "send"
+        ],
+        "description": "Send SMS to a single recipient\n{\n    \"senderID\" : \"\",\n    \"receiver\" : \"phone number\",\n    \"content\" :  \"message body\"\n}",
+        "operationId": "send_send_single_msg_create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Message"
+              }
+            }
+          },
+          "required": True
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          }
+        },
+        "x-codegen-request-body-name": "data"
+      }
+    },
+    "/user_register": {
+      "post": {
+        "tags": [
+          "user_register"
+        ],
+        "description": "Create a user by simply passing an authorised senderid",
+        "operationId": "user_register_create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sender"
+              }
+            }
+          },
+          "required": True
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sender"
+                }
+              }
+            }
+          }
+        },
+        "x-codegen-request-body-name": "data"
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "SenderDetails": {
+        "required": [
+          "default",
+          "sender",
+          "service_name",
+          "token"
+        ],
+        "type": "object",
+        "properties": {
+          "sender": {
+            "title": "Sender",
+            "minLength": 1,
+            "type": "string"
+          },
+          "service_name": {
+            "title": "Service name",
+            "type": "string",
+            "enum": [
+              "INFOBIP",
+              "TWILIO",
+              "TELESIGN",
+              "MESSAGEBIRD",
+              "GATEWAYAPI"
+            ]
+          },
+          "token": {
+            "title": "Token or Access key or Username",
+            "maxLength": 1200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "sid": {
+            "title": "SID or Password",
+            "maxLength": 1200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "verified_no": {
+            "title": "Registered Number if any",
+            "maxLength": 1200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "default": {
+            "title": "Default",
+            "type": "boolean"
+          }
+        }
+      },
+      "Message": {
+        "required": [
+          "content",
+          "receiver",
+          "senderID"
+        ],
+        "type": "object",
+        "properties": {
+          "senderID": {
+            "title": "Senderid",
+            "type": "string"
+          },
+          "content": {
+            "title": "Content",
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "receiver": {
+            "title": "Receiver",
+            "maxLength": 80,
+            "minLength": 1,
+            "type": "string"
+          },
+          "service_type": {
+            "title": "Service type",
+            "type": "string",
+            "readOnly": True,
+            "enum": [
+              "IF",
+              "TW",
+              "TS",
+              "MB",
+              "GA"
+            ]
+          },
+          "messageStatus": {
+            "title": "Messagestatus",
+            "type": "string",
+            "readOnly": True,
+            "enum": [
+              "D",
+              "S",
+              "F",
+              "R",
+              "P",
+              "U",
+              "SC"
+            ]
+          },
+          "dateScheduled": {
+            "title": "Datescheduled",
+            "type": "string",
+            "format": "date-time"
+          },
+          "date_created": {
+            "title": "Date created",
+            "minLength": 1,
+            "type": "string",
+            "readOnly": True
+          },
+          "transactionID": {
+            "title": "Transactionid",
+            "minLength": 1,
+            "type": "string",
+            "readOnly": True
+          },
+          "grouptoken": {
+            "title": "Grouptoken",
+            "minLength": 1,
+            "type": "string",
+            "readOnly": True
+          },
+          "language": {
+            "title": "Language",
+            "type": "string",
+            "default": "en",
+            "enum": [
+              "af",
+              "sq",
+              "am",
+              "ar",
+              "hy",
+              "az",
+              "eu",
+              "be",
+              "bn",
+              "bs",
+              "bg",
+              "ca",
+              "ceb",
+              "ny",
+              "zh-cn",
+              "zh-tw",
+              "co",
+              "hr",
+              "cs",
+              "da",
+              "nl",
+              "en",
+              "eo",
+              "et",
+              "tl",
+              "fi",
+              "fr",
+              "fy",
+              "gl",
+              "ka",
+              "de",
+              "el",
+              "gu",
+              "ht",
+              "ha",
+              "haw",
+              "iw",
+              "hi",
+              "hmn",
+              "hu",
+              "is",
+              "ig",
+              "id",
+              "ga",
+              "it",
+              "ja",
+              "jw",
+              "kn",
+              "kk",
+              "km",
+              "ko",
+              "ku",
+              "ky",
+              "lo",
+              "la",
+              "lv",
+              "lt",
+              "lb",
+              "mk",
+              "mg",
+              "ms",
+              "ml",
+              "mt",
+              "mi",
+              "mr",
+              "mn",
+              "my",
+              "ne",
+              "ps",
+              "fa",
+              "pl",
+              "pt",
+              "pa",
+              "ro",
+              "ru",
+              "sm",
+              "gd",
+              "sr",
+              "st",
+              "sn",
+              "sd",
+              "si",
+              "sk",
+              "sl",
+              "so",
+              "es",
+              "su",
+              "sw",
+              "sv",
+              "tg",
+              "ta",
+              "te",
+              "th",
+              "tr",
+              "uk",
+              "ur",
+              "uz",
+              "vi",
+              "cy",
+              "xh",
+              "yi",
+              "yo",
+              "zu",
+              "fil",
+              "he"
+            ]
+          },
+          "messageID": {
+            "title": "Messageid",
+            "type": "string",
+            "format": "uuid",
+            "readOnly": True
+          }
+        }
+      },
+      "Sender": {
+        "required": [
+          "senderID"
+        ],
+        "type": "object",
+        "properties": {
+          "senderID": {
+            "title": "SenderID",
+            "maxLength": 65,
+            "minLength": 1,
+            "type": "string"
+          },
+          "sender_details": {
+            "uniqueItems": True,
+            "type": "array",
+            "readOnly": True,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "Basic": {
+        "type": "http",
+        "scheme": "basic"
+      }
+    }
+  }
+}
+            }
+        )
+
         
 
 class SenderDetailsCreate(generics.CreateAPIView):
