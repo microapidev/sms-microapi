@@ -1,8 +1,32 @@
 import django_heroku
 import os
 from dotenv import load_dotenv
+import logging
+
+logger = logging.getLogger(__name__)
 
 load_dotenv()
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'WARNING',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+            'propagate': False,
+        },
+    },
+}
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -12,28 +36,59 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 
-SECRET_KEY = os.environ.get('SECRET_KEY')
-# SECRET_KEY = 'fjfskjfksdnfjfd'
-# SECURITY WARNING: don't run with debug turned on in production!
+#SECRET_KEY = os.environ.get('SECRET_KEY', "sdjsdshhskdj")
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']  ##allows all hosts
 
-# add twillio sid , authentication token and your twilio number
-TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID") # obtained from twilio.com/console 
-TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN") # also obtained from twilio.com/console 
-TWILIO_NUMBER = os.getenv("TWILIO_NUMBER")  # use the number you received when signing up or buy a new number 
+#Devops suggested we include this for deployment
+SECRET_KEY= 'lmrffsgfhrilklg-za7#57vi!zr)ps8)2anyona25###dl)s-#s=7=vn_'
+# TWILIO_ACCOUNT_SID = ''
+# TWILIO_AUTH_TOKEN = ''
+# TWILIO_NUMBER = ''
+# TELESIGN_API = ''
+# TELESIGN_CUST = ''
+# #MessageBird
+# MB_ACCESS_KEY = ''
+# #Gatewayapi.com
+# GA_KEY=''
+# GA_SECRET=''
+# #D7
+# D7_TOKEN= ''
+# D7_USERNAME= ''
+# D7_PASSWORD= ''
+
+#add twillio sid , authentication token and your twilio number
+# TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID") # obtained from twilio.com/console 
+# TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN") # also obtained from twilio.com/console 
+# TWILIO_NUMBER = os.getenv("TWILIO_NUMBER")  # use the number you received when signing up or buy a new number 
+
 
 # add infobip login credentials
-INFOBIP_USERNAME = os.getenv("INFOBIP_USERNAME")
-INFOBIP_PASSWORD = os.getenv("INFOBIP_PASSWORD")
-INFOBIP_APIKEY = os.getenv("INFOBIP_APIKEY")
+#INFOBIP_USERNAME = os.getenv("INFOBIP_USERNAME")
+#INFOBIP_PASSWORD = os.getenv("INFOBIP_PASSWORD")
+#INFOBIP_APIKEY = os.getenv("INFOBIP_APIKEY")
 
 # add Telesign credentials
-TELESIGN_API = os.getenv("TELESIGN_API")
-TELESIGN_CUST = os.getenv("TELESIGN_CUST")
+# TELESIGN_API = os.getenv("TELESIGN_API")
+# TELESIGN_CUST = os.getenv("TELESIGN_CUST")
 
 # Application definition
+#celery config
+CELERY_BROKER_URL = 'amqp://rabbitmq'
+# CELERY_RESULT_BACKEND = 'django-db'
+# CELERY_RESULT_BACKEND = 'db+sqlite:///db.sqlite3'
+# CELERY_RESULT_EXTENDED = True
+
+# Q_CLUSTER = {
+#     'name': 'DjangORM',
+#     'workers': 4,
+#     'timeout': 90,
+#     'retry': 120,
+#     'queue_limit': 50,
+#     'bulk': 10,
+#     'orm': 'default'
+# }
 
 
 INSTALLED_APPS = [
@@ -52,6 +107,9 @@ INSTALLED_APPS = [
     'broadcast',
     'drf_yasg',
     'coreapi',
+    'django_celery_results',
+    'django_celery_beat',
+    'phonenumber_field',
 ]
 
 MIDDLEWARE = [
@@ -91,7 +149,8 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
-    ]
+    ],
+    'DATETIME_FORMAT': "%Y-%m-%dT%H:%M:%S.%fZ",
 }
 
 # AUTH_USER_MODEL = "smsApp.User"
@@ -159,6 +218,6 @@ STATICFILES_DIRS = (
 
 #  Add configuration for static files storage using whitenoise
 # STATICFILES_STORAGE = 'whitenoise.django.CompressedManifestStaticFilesStorage'
-
+logger.error("In settings.py, works fine")
 # Activate Django-Heroku.
 django_heroku.settings(locals())

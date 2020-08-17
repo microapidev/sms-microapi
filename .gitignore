@@ -84,6 +84,7 @@ env/
 venv/
 venv2/ 
 smsvenv/ 
+penv/
 ENV/ 
 env.bak/ 
 venv.bak/ 
@@ -119,3 +120,8 @@ GitHub.sublime-settings
 !.vscode/launch.json 
 !.vscode/extensions.json 
 .history
+smsApp/migrations/0007_auto_20200720_1854.py
+
+
+# Virtual Env
+menv

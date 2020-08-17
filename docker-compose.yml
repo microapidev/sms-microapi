@@ -3,13 +3,40 @@ version: '3'
 services: 
     web:
         build: .
-        command: python manage.py runserver 0.0.0.0:8000
+        command: bash -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
         volumes: 
             - .:/code
         ports:
-            - "8000:8000"
+            - "8099:8000"
+        depends_on:
+            - rabbitmq
+#             - migration
+    
+    migration:
+        build: .
+        command: bash -c "python manage.py makemigrations smsApp && python manage.py migrate"
+#         volumes:
+#         - .:/code
+
+    celery:
+        build: .
+        command: celery -A smsApi worker --beat --scheduler django --loglevel=info
+        volumes: 
+            - .:/code
         depends_on:
             - rabbitmq
 
+
+    # celery-beat:
+    #     build: .
+    #     command: $ celery -A [project-name] worker --beat --scheduler django --loglevel=info
+    #     volumes: 
+    #         - .:/code
+    #     depends_on:
+    #         - rabbitmq
+
     rabbitmq:
         image: rabbitmq:3.7
+
+#celery -A smsApi beat -l info
+#celery -A smsApi beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
