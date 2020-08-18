@@ -2376,7 +2376,7 @@ def senderConfig(request):
             {
                 "message": "info retrieved",
                 "data":
-                [ 
+                [
                     {
                         "setting_name": "sender",
                         "setting_type": "string",
@@ -2419,7 +2419,7 @@ def senderConfig(request):
                         "setting_key": None,
                         "setting_required": True,
                         "setting_value" : None
-                    }                      
+                    }      
                 ],
                 "success": True
             }
