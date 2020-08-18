@@ -42,8 +42,7 @@ DEBUG = True
 ALLOWED_HOSTS = ['*']  ##allows all hosts
 
 #Devops suggested we include this for deployment
-# SECRET_KEY= 'lmrffsgfhrilklg-za7#57vi!zr)ps8)2anyona25###dl)s-#s=7=vn_'
-SECRET_KEY = os.getenv("SECRET_KEY") 
+SECRET_KEY= 'lmrffsgfhrilklg-za7#57vi!zr)ps8)2anyona25###dl)s-#s=7=vn_'
 # TWILIO_ACCOUNT_SID = ''
 # TWILIO_AUTH_TOKEN = ''
 # TWILIO_NUMBER = ''
