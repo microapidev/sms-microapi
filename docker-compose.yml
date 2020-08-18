@@ -12,9 +12,9 @@ services:
             - rabbitmq
 #             - migration
     
-#     migration:
-#         build: .
-#         command: python manage.py migrate 
+    migration:
+        build: .
+        command: bash -c "python manage.py makemigrations smsApp && python manage.py migrate"
 #         volumes:
 #         - .:/code
 
@@ -26,9 +26,6 @@ services:
         depends_on:
             - rabbitmq
 
-#     migration:
-#         build: .
-#         command: python manage.py migrate
 
     # celery-beat:
     #     build: .
