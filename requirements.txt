@@ -21,7 +21,7 @@ dj-static==0.0.6
 Django==3.0.7
 django-allauth==0.40.0
 django-celery-beat==2.0.0
-django-celery-results==1.2.1
+django-celery-results==2.4.0
 django-cors-headers==3.4.0
 django-filter==2.3.0
 django-heroku==0.3.1
